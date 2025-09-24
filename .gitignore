@@ -1,7 +1,9 @@
+# --- Laravel ---
 /vendor/
 node_modules/
-npm-debug.log
-yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Laravel 4 specific
 bootstrap/compiled.php
@@ -17,6 +19,7 @@ public_html/hot
 
 storage/*.key
 .env
+.env.*        # Ignore all environment-specific files (.env.production, .env.local, etc.)
 Homestead.yaml
 Homestead.json
 /.vagrant
@@ -24,7 +27,23 @@ Homestead.json
 
 /public/build
 /storage/pail
-.env.backup
-.env.production
 .phpactor.json
 auth.json
+
+# --- Vue.js / Frontend ---
+/dist/          # Production build
+/.cache/
+/*.local
+
+# Log files
+*.log
+
+# IDE & Editor files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Misc ---
+/.env.backup
