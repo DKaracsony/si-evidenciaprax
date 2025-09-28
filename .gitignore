@@ -1,49 +1,24 @@
-# --- Laravel ---
-/vendor/
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Laravel 4 specific
-bootstrap/compiled.php
-app/storage/
-
-# Laravel 5 & Lumen specific
-public/storage
-public/hot
-
-# Laravel 5 & Lumen specific with changed public path
-public_html/storage
-public_html/hot
-
-storage/*.key
-.env
-.env.*        # Ignore all environment-specific files (.env.production, .env.local, etc.)
-Homestead.yaml
-Homestead.json
-/.vagrant
-.phpunit.result.cache
-
-/public/build
-/storage/pail
-.phpactor.json
-auth.json
-
-# --- Vue.js / Frontend ---
-/dist/          # Production build
-/.cache/
-/*.local
-
-# Log files
 *.log
-
-# IDE & Editor files
-.idea/
-*.iml
-.vscode/
 .DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
 Thumbs.db
-
-# --- Misc ---
-/.env.backup
