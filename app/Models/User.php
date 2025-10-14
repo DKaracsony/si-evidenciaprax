@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    protected $table = 'users';
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
@@ -18,9 +20,16 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
+        'title_before',
+        'title_after',
         'email',
-        'password',
+        'password_hash',
+        'phone_number',
+        'role_id',
+        'active',
+        'last_login_at'
     ];
 
     /**
@@ -29,8 +38,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password_hash',
     ];
 
     /**
@@ -41,8 +49,20 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'active' => 'bool',
+            'last_login_at' => 'datetime',
         ];
     }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    // get all permissions of user through role
+    public function allPermissions()
+    {
+        return $this->role ? $this->role->permissions : collect();
+    }
+
 }
