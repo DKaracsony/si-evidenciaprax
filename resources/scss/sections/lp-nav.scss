@@ -1,0 +1,130 @@
+@use '../settings/breakpoints' as *;
+
+/* =============================================================================
+   Landing Page — Header (lp-nav)
+   Purpose:
+   - Sticky top bar with centered logo on ≥ $bp-md.
+   - Below $bp-md the logo shifts left, button stays at the right.
+   Notes:
+   - Relies on container CSS vars (--gutter, --container) defined globally.
+   ========================================================================== */
+
+.lp-nav {
+    background: var(--color-primary-600);
+    color: var(--text-inverse);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 4px solid var(--color-primary-700);
+
+    /* Prevent rare horizontal scroll caused by large shadows near the edges */
+    overflow-x: clip;
+}
+
+/* Layout grid
+   Default (tablet/desktop): 1fr | auto | 1fr keeps the logo perfectly centered. */
+.lp-nav__wrap {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;  /* spacer | logo | spacer */
+    align-items: center;
+    height: 88px;
+
+    @include up($bp-md) { height: 96px; }
+}
+
+/* Responsive switch
+   < $bp-md:
+   - Remove the left spacer
+   - Shift the logo to the start so it aligns with container padding
+   - Keep the button aligned to the right end */
+@media (max-width: $bp-md) {
+    .lp-nav__wrap {
+        grid-template-columns: auto 1fr auto; /* logo | flexible space | button */
+    }
+    .lp-nav__wrap > :first-child {
+        display: none; /* spacer not needed once the logo is left-aligned */
+    }
+    .lp-nav__logo {
+        justify-self: start;
+    }
+}
+
+/* Logo block: centers by default via grid; image scales with breakpoints */
+.lp-nav__logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+        display: block;
+        height: 44px;
+        width: auto;
+
+        @include up($bp-md) { height: 56px; }
+    }
+}
+
+/* Primary CTA button (right column)
+   - Slightly thicker border and pronounced shadow per design
+   - Clamp-based negative margin subtly pulls it toward the edge on wide screens
+     without overflowing on narrow screens. Uses global --gutter/--container vars. */
+.lp-nav__btn {
+    justify-self: end;
+    border: 3px solid var(--focus-ring); /* e.g., #A9C9FF */
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    text-decoration: none;
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms ease;
+    will-change: transform;
+    backface-visibility: hidden;
+
+    padding: 12px 28px;
+    font-size: 16px;
+    border-radius: 12px;
+
+    /* Pull toward the container edge on large screens; clamp to 0 when tight */
+    margin-right: clamp(
+        -200px,
+        calc(var(--gutter) - (100vw - var(--container)) / 2),
+        0px
+    );
+
+    &:active {
+        transform: translateY(0.5px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+    }
+
+    @include up($bp-md) {
+        padding: 14px 32px;
+        font-size: 17px;
+    }
+}
+
+/* Pointer/hover-capable devices: elevate on hover */
+@media (hover: hover) and (pointer: fine) {
+    .lp-nav__btn:hover {
+        transform: scale(1.03);
+        border-color: var(--color-primary-700);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+    }
+}
+
+/* Tighten spacing on small phones */
+@media (max-width: $bp-sm) {
+    .lp-nav__btn { padding: 12px 24px; }
+}
+
+/* Ultra-narrow phones: keep logo legible and button compact */
+@media (max-width: 360px) {
+    .lp-nav__logo img { height: 40px; }
+    .lp-nav__btn { padding: 10px 20px; font-size: 15px; }
+}
+
+/* A11y: high-visibility focus ring */
+.lp-nav__btn:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+}

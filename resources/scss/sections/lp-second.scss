@@ -1,0 +1,242 @@
+@use '../settings/breakpoints' as *;
+
+/* =============================================================================
+   Landing Page — Section 2 (lp-second)
+   Purpose:
+   - Card with two hanging tabs (Študenti / Firma) and a 4-step flow.
+   - Desktop: 7-column grid (step | arrow | step | …).
+   - Small screens: vertical stack with rotated arrows.
+   Notes:
+   - Uses CSS var --step-text-min to normalize the first row height of each step,
+     so icons line up even if lines wrap differently.
+   ========================================================================== */
+
+/* ------- Section wrapper ------- */
+.lp-second {
+    --lp-gutter: clamp(16px, 3vw, 40px);
+
+    /* Unify first-row text height across steps (tuned for ~1–3 lines) */
+    --step-text-min: clamp(56px, 6.8vw, 84px);
+
+    padding-block: 64px;
+    background: #ffffff; /* primary-200 */
+    border-bottom: 4px solid var(--color-primary-700);
+
+    @include up($bp-md) { padding-block: 88px; }
+    @include up($bp-xl) { padding-block: 112px; }
+
+    > .container {
+        max-width: 1520px;
+        width: 100%;
+        margin-inline: auto;
+        padding-left: var(--lp-gutter);
+        padding-right: var(--lp-gutter);
+    }
+}
+
+/* ------- Card: thicker border, no shadow, generous height ------- */
+.lp-second__card {
+    position: relative;
+    margin-inline: auto;
+    max-width: 1500px;
+
+    min-height: clamp(380px, 44vw, 600px);
+    padding: clamp(22px, 3.6vw, 36px) clamp(20px, 3.6vw, 36px) clamp(30px, 3.8vw, 44px);
+    background: #7CADFA; /* primary-400 */
+    border: 7px solid var(--color-primary-300);
+    border-radius: 16px;
+    box-shadow: none;
+
+    /* Clips the top of the hanging tabs so only bottom arcs are visible */
+    overflow: hidden;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(18px, 3vw, 32px);
+}
+
+/* Keep card from feeling too tall on very small screens */
+@media (max-width: $bp-sm) {
+    .lp-second__card {
+        min-height: clamp(320px, 64vh, 520px);
+    }
+}
+
+/* ------- Hanging tabs ------- */
+.lp-second__tabs {
+    position: absolute;
+    left: 50%;
+    top: -10px; /* push up so top edges are clipped by card */
+    transform: translateX(-50%);
+    display: inline-flex;
+    gap: clamp(8px, 1.2vw, 16px);
+    z-index: 1;
+}
+@media (max-width: $bp-sm) {
+    .lp-second__tabs {
+        top: -8px;
+        gap: clamp(6px, 2vw, 12px);
+    }
+}
+
+/* Tab buttons: bottom-rounded only; no top border (hidden anyway) */
+.lp-second__btn {
+    --tab-border-color: #a9c9ff;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+
+    height: clamp(60px, 7.2vw, 78px);
+    padding: 0 clamp(58px, 6.5vw, 100px);
+    font-size: clamp(18px, 2.2vw, 24px);
+    font-weight: 400;
+    border-radius: 0 0 18px 18px;
+    line-height: 1;
+    white-space: nowrap;
+
+    text-decoration: none;
+    cursor: pointer;
+
+    background: #1868db;
+    border: 5px solid var(--tab-border-color);
+    border-top-width: 0;
+    color: var(--text-inverse, #fff);
+    box-shadow: none;
+
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms ease;
+}
+.lp-second__btn:hover {
+    background: #155CC4;
+    transform: translateY(0);
+    border-color: var(--color-primary-700);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+}
+.lp-second__btn:active {
+    background: #134FAA;
+    transform: translateY(0.5px);
+}
+.lp-second__btn.is-active { background: #0a2c5c; }
+.lp-second__btn.is-active:hover {
+    background: #082349;
+    border-color: var(--color-primary-700);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+}
+.lp-second__btn.is-active:active {
+    background: #061c3a;
+    transform: translateY(0.5px);
+}
+.lp-second__btn:focus-visible {
+    outline: 3px solid var(--tab-border-color);
+    outline-offset: 2px;
+}
+
+/* Tiny screens: ease sizing so labels fit comfortably */
+@media (max-width: $bp-sm) {
+    .lp-second__btn {
+        height: 54px;
+        padding: 0 clamp(36px, 8vw, 64px);
+        font-size: 16px;
+        border-radius: 0 0 14px 14px;
+    }
+}
+
+/* Motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .lp-second__btn { transition: none; }
+}
+
+/* ------- Flow: 4 steps with arrows between ------- */
+.lp-second__flow {
+    display: grid;
+
+    /* Desktop: 7 cols -> step | arrow | step | arrow | step | arrow | step */
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    align-items: center;
+
+    column-gap: clamp(0px, 0.4vw, 8px);
+    row-gap: clamp(4px, 0.8vw, 8px);
+    padding-top: clamp(10px, 1.2vw, 16px);
+
+    @include up($bp-md) { column-gap: clamp(10px, 1.6vw, 20px); }
+    @include up($bp-xl) { column-gap: clamp(12px, 1.6vw, 22px); }
+}
+
+.lp-second__step {
+    display: grid;
+    /* First row reserves min height for text to align icons */
+    grid-template-rows: minmax(var(--step-text-min), auto) auto;
+
+    justify-items: center;
+    text-align: center;
+
+    row-gap: 6px;
+    padding: clamp(8px, 1.2vw, 12px);
+}
+
+/* Step text: bold, compact line-height, limited line-length */
+.lp-second__step-text {
+    max-width: 20ch;
+    font-weight: 700;
+    font-size: clamp(18px, 2.4vw, 24px);
+    line-height: 1.15;
+    color: #0a1b3d;
+}
+
+/* Icons: visibly larger, contained */
+.lp-second__step-icon {
+    width: clamp(72px, 9.2vw, 112px);
+    height: clamp(72px, 9.2vw, 112px);
+    object-fit: contain;
+}
+
+/* Arrows: larger and pulled closer to steps */
+.lp-second__arrow {
+    width: clamp(140px, 18vw, 200px);
+    height: auto;
+    justify-self: center;
+    align-self: center;
+    margin-inline: clamp(-28px, -3vw, -20px);
+}
+
+/* ------- Small screens: stack vertically, rotate arrow ------- */
+@media (max-width: 680px) {
+    .lp-second__flow {
+        grid-template-columns: 1fr;
+        row-gap: 10px;
+        padding-top: 8px;
+    }
+
+    /* Add headroom for hanging tabs; relax min-height + bottom padding */
+    .lp-second__card {
+        padding-top: calc(clamp(22px, 3.6vw, 36px) + 58px);
+        min-height: auto;
+        padding-bottom: clamp(22px, 3.4vw, 36px);
+    }
+
+    /* Let steps flow naturally (no forced first-row height) */
+    .lp-second { --step-text-min: 0px; }
+    .lp-second__step { grid-template-rows: auto auto; }
+
+    .lp-second__step-text {
+        font-size: clamp(16px, 4.6vw, 18px);
+        line-height: 1.2;
+        max-width: 24ch;
+    }
+    .lp-second__step-icon {
+        width: clamp(56px, 18vw, 84px);
+        height: clamp(56px, 18vw, 84px);
+    }
+
+    /* Arrow rotates and shrinks */
+    .lp-second__arrow {
+        transform: rotate(90deg);
+        margin: -2px auto 6px;
+        width: clamp(64px, 20vw, 88px);
+    }
+}

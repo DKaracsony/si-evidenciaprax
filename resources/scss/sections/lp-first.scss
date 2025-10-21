@@ -1,0 +1,286 @@
+@use '../settings/breakpoints' as *;
+
+/* =============================================================================
+   Landing Page — Section 1 (lp-first)
+   Purpose:
+   - Hero card with title, visual preview, 3 short points, and a CTA button.
+   - Phone: single-column flow; Tablet/desktop: split grid with media at right.
+   Dependencies:
+   - Uses global CSS vars: --radius, --color-primary-*, --text-inverse.
+   ========================================================================== */
+
+/* ------- Section wrapper ------- */
+.lp-first {
+    --lp-gutter: clamp(16px, 3vw, 40px);
+    --btn-h: 50px;
+    padding-block: 48px;
+    background: #CDE0FF;
+
+    @include up($bp-md) {           /* tablet */
+        --btn-h: 48px;
+        padding-block: 72px;
+    }
+    @include up($bp-xl) {           /* desktop XL */
+        --btn-h: 64px;
+        padding-block: 96px;
+    }
+
+    > .container {
+        max-width: 1520px;
+        width: 100%;
+        margin-inline: auto;
+        padding-left: var(--lp-gutter);
+        padding-right: var(--lp-gutter);
+    }
+}
+
+/* ------- Card ------- */
+.lp-first__card {
+    margin-inline: auto;
+    max-width: 1500px;
+
+    /* Phone: one column; wider: two-column layout with named areas */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+
+    background: var(--color-primary-400);
+    border: 6px solid #a9c9ff;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.10);
+
+    @include up($bp-md) {
+        grid-template-columns: 1.2fr 1fr;
+        grid-template-areas:
+            "title   media"
+            "points  media"
+            "actions media";
+        min-height: 420px;
+    }
+    @include up($bp-xl) {
+        grid-template-columns: 1.15fr 1fr;
+        max-width: 1520px;
+        min-height: 500px;
+    }
+}
+
+/* ------- Body & flow ------- */
+.lp-first__body {
+    color: var(--text-inverse);
+    padding: 20px;
+    display: grid;
+    row-gap: 10px;
+
+    /* On tablet+ we let grid-areas on the parent place children directly */
+    @include up($bp-md) { display: contents; }
+}
+
+/* ------- Title with divider ------- */
+.lp-first__title {
+    margin: 0;
+    color: #000;
+    text-align: center;
+
+    &.h1 {
+        font-size: clamp(21px, 3vw, 30px);
+        line-height: 1.16;
+        font-weight: 700;
+        letter-spacing: -0.012em;
+    }
+
+    /* Centered short divider under the title */
+    position: relative;
+    &::after {
+        content: '';
+        display: block;
+        height: 3px;
+        width: min(92%, 920px);
+        background: var(--color-primary-900);
+        margin: 18px auto 0;
+        border-radius: 9999px;
+    }
+
+    @include up($bp-md) { grid-area: title; padding: 20px 36px 0; }
+    @include up($bp-xl) { padding: 24px 40px 0; }
+}
+
+/* ------- Image (preview) ------- */
+.lp-first__media {
+    border: 6px solid #a9c9ff;
+    background: #fff0;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    margin: 20px;
+    border-radius: var(--radius);
+
+    /* Clip hover-scale within rounded border */
+    overflow: hidden;
+    transition: box-shadow 240ms ease, border-color 240ms ease;
+
+    @include up($bp-md) { grid-area: media; margin: 24px 24px 24px 0; }
+    @include up($bp-xl) { margin: 28px 28px 28px 0; }
+
+    img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+
+        /* Phone: keep aspect; tablet+: let height flow with card */
+        aspect-ratio: 4 / 3;
+        @include up($bp-md) { aspect-ratio: auto; max-height: 100%; }
+
+        border-radius: inherit;
+
+        /* Hover prep */
+        transition: transform 280ms ease, filter 280ms ease;
+        will-change: transform;
+        backface-visibility: hidden;
+    }
+}
+
+/* ------- Points (icon + text) ------- */
+.lp-first__points {
+    display: grid;
+    gap: 12px;
+
+    @include up($bp-md) { grid-area: points; padding: 0 36px; gap: 14px; }
+    @include up($bp-xl) { padding: 0 40px; gap: 16px; }
+}
+
+.lp-first__point {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    color: #000;
+    line-height: 1.45;
+    font-weight: 600;
+
+    font-size: clamp(16px, 1.9vw, 20px);
+    @include up($bp-xl) { font-size: 21px; }
+}
+
+/* Icon sizing scales with text via ems */
+.lp-first__point-icon {
+    flex: 0 0 auto;
+    display: inline-block;
+    vertical-align: middle;
+    width: 1.6em; height: 1.6em;
+
+    @include up($bp-md) { width: 1.65em; height: 1.65em; }
+    @include up($bp-xl) { width: 1.7em;  height: 1.7em; }
+}
+
+.lp-first__point span { flex: 1; }
+
+/* ------- CTA container ------- */
+.lp-first__actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+
+    @include up($bp-md) { grid-area: actions; padding: 0 36px; margin-top: 16px; margin-bottom: 20px; }
+    @include up($bp-xl) {
+        padding: 0 40px;
+        margin-top: 40px;   /* Push the button further down on XL only */
+        margin-bottom: 24px;
+    }
+}
+
+/* ------- CTA button ------- */
+.lp-first__btn-register {
+    border: 4px solid #a9c9ff;
+    background: #1868DB !important;
+    color: var(--text-inverse) !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    text-decoration: none;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+
+    /* Fixed visual height via custom prop */
+    padding: 0 40px;
+    line-height: 1;
+    block-size: var(--btn-h);
+    min-block-size: var(--btn-h);
+    max-block-size: var(--btn-h);
+
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: calc(var(--radius) - 2px);
+
+    will-change: transform;
+    backface-visibility: hidden;
+
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms ease;
+
+    &:hover {
+        background: #155CC4 !important;
+        color: var(--text-inverse) !important;
+        border-color: var(--color-primary-700);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+    }
+    &:active { background: #134FAA !important; transform: translateY(0.5px); }
+    &:focus-visible { outline: 3px solid #a9c9ff; outline-offset: 2px; }
+}
+
+/* Button: responsive tweaks */
+@media (min-width: $bp-md) {
+    .lp-first__btn-register {
+        padding: 0 48px;
+        font-size: 17px;
+    }
+}
+@media (min-width: $bp-xl) {
+    .lp-first__btn-register {
+        padding: 0 64px;
+        font-size: 20px;
+    }
+}
+
+/* ------- Narrow screens ------- */
+@media (max-width: 360px) {
+    .lp-first { padding-block: 40px; --btn-h: 45px; }
+    .lp-first__body { padding: 16px; }
+    .lp-first__card { border-width: 5px; }
+    .lp-first__media { border-width: 5px; margin: 16px; }
+}
+
+/* ------- Tablet+ guardrails ------- */
+@media (min-width: $bp-md) {
+    .lp-first__card { grid-auto-columns: 1fr; }
+    .lp-first__media { min-height: 300px; } /* Adjust if the preview needs more height */
+}
+
+/* ------- Hover polish (only on hover-capable devices) ------- */
+@media (hover: hover) and (pointer: fine) {
+    .lp-first__media:hover {
+        border-color: var(--color-primary-700);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+    }
+    .lp-first__media:hover img {
+        transform: scale(1.03);
+        filter: saturate(1.03) contrast(1.02);
+    }
+    .lp-first__btn-register:hover {
+        transform: scale(1.03);
+    }
+}
+
+/* ------- Reduced motion ------- */
+@media (prefers-reduced-motion: reduce) {
+    .lp-first__media,
+    .lp-first__media img {
+        transition: none;
+    }
+}

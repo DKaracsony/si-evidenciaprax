@@ -1,5 +1,18 @@
 <template>
-    <h1>Softvérové inžinierstvo - Evidencia Prax. Študentov</h1>
+    <LandingHeader />
+
+    <main>
+        <LandingFirst />
+        <LandingSecond />
+    </main>
+
+
+    <LandingFooter />
 </template>
-<script>
+
+<script setup>
+import LandingHeader from './components/LandingHeader.vue'
+import LandingFirst from "./components/LandingFirst.vue";
+import LandingSecond from './components/LandingSecond.vue'
+import LandingFooter from './components/LandingFooter.vue'
 </script>
