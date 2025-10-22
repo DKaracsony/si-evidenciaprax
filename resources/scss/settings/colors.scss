@@ -1,1 +1,114 @@
-$primary: #000000
+/* Palettes (SCSS maps) */
+$primary-scale: (
+    50: #F2F7FF, 100: #E6EFFF, 200: #CDE0FF, 300: #A9C9FF,
+    400: #7CADFA, 500: #4E90EE, 600: #1868DB, 700: #1454B2,
+    800: #0F418A, 900: #0A2C5C
+);
+
+$neutral-scale: (
+    0: #FFFFFF, 50: #F8FAFC, 100: #F1F5F9, 200: #E2E8F0,
+    300: #CBD5E1, 400: #94A3B8, 500: #64748B, 600: #475569,
+    800: #1F2937
+);
+
+$accent-warm: #E79724;
+$accent-cool: #1FB6A6;
+$accent-indigo: #4C5FD7;
+
+$success: #16A34A; $success-hover:#15803D;
+$warning: #F59E0B; $warning-hover:#D97706;
+$danger:  #DC2626; $danger-hover:#B91C1C;
+
+$radius: 16px;
+
+/* Export as CSS variables (so Vue/components can consume them) */
+:root {
+    @each $k, $v in $primary-scale { --color-primary-#{$k}: #{$v}; }
+    @each $k, $v in $neutral-scale { --color-neutral-#{$k}: #{$v}; }
+
+    --color-accent-warm: #{$accent-warm};
+    --color-accent-cool: #{$accent-cool};
+    --color-accent-indigo: #{$accent-indigo};
+
+    /* Semantic text */
+    --text: #1F2937;               /* Neutral 800 */
+    --text-secondary: #64748B;     /* Neutral 500 */
+    --text-inverse: #FFFFFF;
+
+    /* Surfaces */
+    --bg-page: #F8FAFC;            /* Neutral 50 */
+    --bg-section-alt: #F1F5F9;     /* Neutral 100 */
+    --bg-card: #FFFFFF;
+    --border-card: #E2E8F0;        /* Neutral 200 */
+
+    /* Inputs */
+    --input-bg: #FFFFFF;
+    --input-border: #CBD5E1;       /* Neutral 300 */
+    --focus-ring: #A9C9FF;         /* Primary 300 */
+
+    /* Buttons */
+    --btn-primary-bg: var(--color-primary-600);
+    --btn-primary-hover: var(--color-primary-700);
+    --btn-primary-active: var(--color-primary-800);
+    --btn-primary-text: var(--text-inverse);
+
+    --btn-secondary-border: var(--color-primary-600);
+    --btn-secondary-text: var(--color-primary-600);
+    --btn-secondary-hover-bg: var(--color-primary-50);
+
+    --btn-danger-bg: #DC2626;
+    --btn-danger-hover: #B91C1C;
+
+    --radius: #{$radius};
+}
+
+/* Base usage */
+body { color: var(--text); background: var(--bg-page); }
+/* Links (exclude buttons) */
+a { color: var(--color-primary-600); text-decoration: none; }
+
+/* This prevents anchor buttons (like .btn-primary) from inheriting link hover color */
+a:not(.btn-primary):not(.btn-secondary):not(.btn-danger):hover {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+}
+
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* Reusable button mixins & classes */
+@mixin btn-reset {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px 16px; font-weight: 600;
+    border-radius: var(--radius); border: 1px solid transparent;
+    cursor: pointer; line-height: 1;
+}
+
+.btn-primary { @include btn-reset;
+    background: var(--btn-primary-bg); color: var(--btn-primary-text);
+    &:hover { background: var(--btn-primary-hover); }
+    &:active { background: var(--btn-primary-active); }
+    &:disabled { background: var(--color-neutral-400); color: var(--color-neutral-200); cursor: not-allowed; }
+}
+
+.btn-secondary { @include btn-reset;
+    background: transparent; color: var(--btn-secondary-text);
+    border-color: var(--btn-secondary-border);
+    &:hover { background: var(--btn-secondary-hover-bg); }
+}
+
+.btn-danger { @include btn-reset;
+    background: var(--btn-danger-bg); color: var(--text-inverse);
+    &:hover { background: var(--btn-danger-hover); }
+}
+
+/* Soft badges */
+.badge-warm { background: var(--color-accent-warm); color: var(--text); padding: 4px 8px; border-radius: 9999px; }
+.badge-primary-soft { background: var(--color-primary-100); color: var(--color-primary-700); padding: 4px 8px; border-radius: 9999px; }
+
+/* Card + input defaults */
+.card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius); }
+.input {
+    background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius);
+    padding: 10px 12px;
+    &:focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+}

@@ -1,0 +1,41 @@
+/* =============================================================================
+   Landing Page — Footer (lp-footer)
+   Purpose:
+   - Ultra-minimal center-aligned brand strip on a solid primary background.
+   Dependencies:
+   - Uses global container spacing variables via local --lp-gutter.
+   ========================================================================== */
+
+.lp-footer {
+    --lp-gutter: clamp(16px, 3vw, 40px);
+    background: #1868db;
+    color: #ffffff;
+    padding-block: 24px;
+
+    > .container {
+        max-width: 1520px;
+        width: 100%;
+        margin-inline: auto;
+        padding-left: var(--lp-gutter);
+        padding-right: var(--lp-gutter);
+    }
+}
+
+/* Centered inline group: [logo] | [text] */
+.lp-footer__center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.lp-footer__logo {
+    display: block;
+    height: 28px;
+    width: auto;
+}
+
+.lp-footer__sep { opacity: 0.8; }
+
+.lp-footer__text { font-size: 14px; }

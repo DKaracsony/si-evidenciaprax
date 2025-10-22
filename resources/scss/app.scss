@@ -2,4 +2,25 @@
 @use 'settings/colors' as *;
 @use 'settings/breakpoints' as *;
 
+@use 'sections/lp-nav';
+@use 'sections/lp-first';
+@use 'sections/lp-second';
+@use 'sections/lp-footer';
+
 //SECTIONS
+
+:root {
+    --container: 1200px;  /* matches your .container max-width */
+    --gutter: 16px;       /* matches your mobile container padding */
+}
+@include up($bp-md) {
+    :root { --gutter: 24px; } /* matches your md+ container padding */
+}
+
+.container { max-width: 1200px; margin-inline: auto; padding-inline: 16px; }
+@include up($bp-md) { .container { padding-inline: 24px; } }
+
+:root { --h1: 40px; --h1-md: 56px; --lead: 18px; }
+.h1 { font-size: var(--h1); line-height: 1.1;
+    @include up($bp-md){ font-size: var(--h1-md); } }
+.lead { font-size: var(--lead); color: #555; }

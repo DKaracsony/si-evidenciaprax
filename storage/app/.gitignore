@@ -1,4 +1,13 @@
+# Ignore everything by default
 *
-!private/
-!public/
+
+# Keep this file
 !.gitignore
+
+# Track the entire public subtree (files and folders)
+!public/
+!public/**
+
+# Keep "private" ignored (except its own .gitignore)
+private/**
+!private/.gitignore

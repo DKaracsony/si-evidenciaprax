@@ -17,7 +17,8 @@ class UserSeeder extends Seeder
                 'password_hash' => bcrypt('password'),
                 'role_id' => 1,
                 'active' => true,
-                'phone_number' => '0905123456'
+                'phone_number' => '0905123456',
+                'created_at' => now()
             ],
             [
                 'first_name' => 'Test',
@@ -26,7 +27,8 @@ class UserSeeder extends Seeder
                 'password_hash' => bcrypt('password'),
                 'role_id' => 2,
                 'active' => true,
-                'phone_number' => '0905987654'
+                'phone_number' => '0905987654',
+                'created_at' => now()
             ],
             [
                 'first_name' => 'Test',
@@ -35,7 +37,8 @@ class UserSeeder extends Seeder
                 'password_hash' => bcrypt('password'),
                 'role_id' => 3,
                 'active' => true,
-                'phone_number' => '0905345678'
+                'phone_number' => '0905345678',
+                'created_at' => now()
             ]
         ];
 
