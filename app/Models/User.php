@@ -65,4 +65,7 @@ class User extends Authenticatable
         return $this->role ? $this->role->permissions : collect();
     }
 
+    public function studentProfile(){
+        return $this->hasOne(StudentProfile::class, 'student_user_id');
+    }
 }
