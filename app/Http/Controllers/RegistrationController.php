@@ -22,9 +22,7 @@ class RegistrationController extends Controller
     {
         $this->register_type = $request->input('form_type');
         $this->data = $request->all();
-
-        //return response()->json(['message' => ], 501);
-
+        
         $validated = $this->validateByType();
         if ($validated instanceof JsonResponse) {
             return $validated;
