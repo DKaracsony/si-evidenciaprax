@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Faculty;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use App\Services\FacultyService;
+use Illuminate\Http\JsonResponse;
 
 class FacultyController extends Controller
 {
-    public function index()
-    {
-        $faculties = Cache::remember('faculties', 3600, function () {
-            return \App\Models\Faculty::all();
-        });
+    public function __construct(private FacultyService $facultyService) {}
 
-        return response()->json($faculties);
+    public function index(): JsonResponse
+    {
+        return response()->json($this->facultyService->all());
     }
 }

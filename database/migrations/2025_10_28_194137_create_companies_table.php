@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('website')->nullable();
-            $table->unsignedBigInteger('address_id')->nullable();
+            $table->unsignedBigInteger('address_id');
             $table->timestamps();
 
-            $table->foreign('address_id')->references('id')->on('addresses')->onDelete('set null');
+            $table->foreign('address_id')->references('id')->on('addresses')->onDelete('cascade');
         });
     }
 

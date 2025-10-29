@@ -16,13 +16,13 @@ return new class extends Migration
             $table->boolean('is_active')->default(false);
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('company_activation_id')->nullable();
-            $table->unsignedBigInteger('company_user_id')->nullable();
+            $table->unsignedBigInteger('company_user_id');
             $table->string('role_at_company', 200)->nullable();
             $table->timestamps();
 
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('company_activation_id')->references('id')->on('company_activations')->onDelete('set null');
-            $table->foreign('company_user_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('company_user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

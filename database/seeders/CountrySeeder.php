@@ -11,12 +11,12 @@ class CountrySeeder extends Seeder
     public function run(): void
     {
         $countries = [
-            ['name' => 'Slovenská republika', 'origin' => 'SK'],
-            ['name' => 'Česká republika', 'origin' => 'CZ'],
-            ['name' => 'Maďarsko', 'origin' => 'HU'],
-            ['name' => 'Poľsko', 'origin' => 'PL'],
-            ['name' => 'Rakúsko', 'origin' => 'AT'],
-            ['name' => 'Ukrajina', 'origin' => 'UA'],
+            ['name' => 'Slovenská republika', 'icon' => '🇸🇰'],
+            ['name' => 'Česká republika', 'icon' => '🇨🇿'],
+            ['name' => 'Maďarsko', 'icon' => '🇭🇺'],
+            ['name' => 'Poľsko', 'icon' => '🇵🇱'],
+            ['name' => 'Rakúsko', 'icon' => '🇦🇹'],
+            ['name' => 'Ukrajina', 'icon' => '🇺🇦'],
         ];
 
         foreach ($countries as &$country) {
