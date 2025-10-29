@@ -26,6 +26,7 @@ class User extends Authenticatable
         'title_after',
         'email',
         'password_hash',
+        'password_reset_needed',
         'phone_number',
         'role_id',
         'active',
@@ -49,7 +50,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'active' => 'bool',
+            'active' => 'boolean',
+            'password_reset_needed' => 'boolean',
             'last_login_at' => 'datetime',
         ];
     }
