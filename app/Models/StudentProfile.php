@@ -12,6 +12,7 @@ class StudentProfile extends Model
       'student_email',
       'faculty_id',
       'address_id',
+      'student_user_id',
     ];
 
     public function address(){
