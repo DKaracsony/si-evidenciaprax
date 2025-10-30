@@ -7,7 +7,7 @@
     <title>{{ config('app.name', 'Evidencia praxí') }}</title>
     <meta name="description" content="Platforma na evidenciu študentských praxí.">
 
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" href="{{ asset('storage/favicon.ico') }}">
 
     <!-- Basic Open Graph -->
     <meta property="og:type" content="website">
