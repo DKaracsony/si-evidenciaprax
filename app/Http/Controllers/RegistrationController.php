@@ -63,10 +63,14 @@ class RegistrationController extends Controller
                 ],
                 'faculty'       => ['required','integer','exists:faculties,id'],
             ])
-            //COMPANY
+            // COMPANY
             : array_merge($common, [
-                //TODO: implement Atus other validations for company
+                'company_name'  => ['required', 'string', 'max:255'],
+                'contact_name'  => ['required', 'string', 'max:255'],
+                'contact_email' => ['required', 'email', 'max:255', 'unique:users,email'],
+                'contact_phone' => ['required', 'regex:/^\+?\d{9,15}$/'],
             ]);
+
 
         $validator = Validator::make($this->data, $rules);
         if ($validator->fails()) {
@@ -122,6 +126,58 @@ class RegistrationController extends Controller
 
     public function registerCompany()
     {
-        //TODO: implement Atus - without password, password will be set later if activation was successful
+        $role_id = $this->roles->all()->firstWhere('name', 'firma')?->id;
+        if (!$role_id) {
+            return [__('registration.ROLE_COMPANY_NOT_FOUND'), null, 422];
+        }
+
+        // Kontakt osoba – používateľ bez hesla, zatiaľ neaktívny
+        $user = User::create([
+            'first_name'    => $this->data['contact_name'],
+            'last_name'     => null,
+            'title_before'  => null,
+            'email'         => $this->data['contact_email'],
+            'password_hash' => null, // nastaví sa po aktivácii
+            'phone_number'  => $this->data['contact_phone'],
+            'role_id'       => $role_id,
+            'active'        => false,
+        ]);
+
+        // Uloženie adresy
+        $address = Address::create([
+            'city'          => $this->data['city'],
+            'street'        => $this->data['street'],
+            'house_number'  => $this->data['house_number'],
+            'postal_code'   => $this->data['postal_code'],
+            'country_id'    => $this->data['country'],
+        ]);
+
+        // Vytvorenie firmy
+        $company = \App\Models\Company::create([
+            'name'        => $this->data['company_name'],
+            'address_id'  => $address->id,
+        ]);
+
+        //Generovanie aktivačného tokenu
+        $token = \Illuminate\Support\Str::random(64);
+
+        $activation = \App\Models\CompanyActivation::create([
+            'hash' => $token,
+            'sent_to_mail' => $user->email,
+        ]);
+
+        //Prepojenie používateľa s firmou (profil)
+        $ownerProfile = \App\Models\CompanyOwnerProfile::create([
+            'is_active'             => false,
+            'company_id'            => $company->id,
+            'company_activation_id' => $activation->id,
+            'company_user_id'       => $user->id,
+            'role_at_company'       => null,
+        ]);
+
+        // Načítanie údajov (pre response)
+        $user->load(['companyOwnerProfile.company']);
+
+        return [__('registration.COMPANY_REGISTERED_PENDING_ACTIVATION'), $user, 201];
     }
 }
