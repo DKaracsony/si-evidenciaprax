@@ -40,7 +40,7 @@
 
                     <!-- Primary CTA -->
                     <div class="lp-first__actions">
-                        <a href="/register" class="btn-primary lp-first__btn-register">Registrovať</a>
+                        <a href="/register" class="btn-primary lp-first__btn-register" @click.prevent="$router.push('/register')">Registrovať</a>
                     </div>
                 </div>
             </article>
