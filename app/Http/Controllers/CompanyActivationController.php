@@ -3,57 +3,65 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompanyActivation;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class CompanyActivationController extends Controller
 {
     public function activate(Request $request)
     {
-        $token = $request->query('token');
+        $tokenPlain = $request->query('token');
 
-        if (!$token) {
+        if (!$tokenPlain) {
             return response()->json(['message' => 'Token chýba.'], 400);
         }
 
-        $activation = CompanyActivation::where('hash', $token)->first();
+        $activation = DB::transaction(function () use ($tokenPlain) {
+
+            $candidates = CompanyActivation::whereNull('revoked_at')
+                ->where('expires_at', '>', now())
+                ->lockForUpdate()
+                ->get();
+
+            return $candidates->first(fn($t) => Hash::check($tokenPlain, $t->hash));
+        });
 
         if (!$activation) {
-            return response()->json(['message' => 'Neplatný alebo neexistujúci token.'], 404);
+            return response()->json(['message' => 'Neplatný alebo expirovaný token.'], 410);
         }
 
-        if ($activation->consumed_at) {
-            return response()->json(['message' => 'Token už bol použitý.'], 400);
+        if ($activation->consumed_at !== null) {
+            return response()->json(['message' => 'Účet už bol aktivovaný.'], 200);
         }
 
-        if ($activation->created_at->lt(Carbon::now()->subDay())) {
-            return response()->json(['message' => 'Aktivačný token expiroval.'], 400);
-        }
-
-        $ownerProfile = \App\Models\CompanyOwnerProfile::where('company_activation_id', $activation->id)->first();
+        $ownerProfile = $activation->ownerProfile;
 
         if (!$ownerProfile) {
-            return response()->json(['message' => 'K aktivácii nebol nájdený profil firmy.'], 404);
+            return response()->json(['message' => 'Nenájdený profil firmy pre tento token.'], 404);
         }
 
         $company = $ownerProfile->company;
         $user = $ownerProfile->user;
 
         if ($company) {
-            $company->active = true;
-            $company->save();
+            $company->update(['active' => true]);
         }
 
         if ($user) {
-            $user->active = true;
-            $user->save();
+            $user->update(['active' => true]);
         }
 
-        $ownerProfile->is_active = true;
-        $ownerProfile->save();
+        $ownerProfile->update(['is_active' => true]);
 
-        $activation->update(['consumed_at' => Carbon::now()]);
+        $activation->update(['consumed_at' => now()]);
 
-        return response()->json(['message' => 'Účet bol úspešne aktivovaný.']);
+        CompanyActivation::where('company_id', $activation->company_id)
+            ->where('id', '!=', $activation->id)
+            ->update([
+                'revoked_at' => now(),
+            ]);
+
+        return response()->json(['message' => 'Účet bol úspešne aktivovaný.'], 200);
     }
 }

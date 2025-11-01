@@ -9,6 +9,8 @@ use App\Services\RoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class RegistrationController extends Controller
 {
@@ -22,7 +24,7 @@ class RegistrationController extends Controller
     {
         $this->register_type = $request->input('form_type');
         $this->data = $request->all();
-        
+
         $validated = $this->validateByType();
         if ($validated instanceof JsonResponse) {
             return $validated;
@@ -65,10 +67,11 @@ class RegistrationController extends Controller
             ])
             // COMPANY
             : array_merge($common, [
-                'company_name'  => ['required', 'string', 'max:255'],
-                'contact_name'  => ['required', 'string', 'max:255'],
-                'contact_email' => ['required', 'email', 'max:255', 'unique:users,email'],
-                'contact_phone' => ['required', 'regex:/^\+?\d{9,15}$/'],
+                'company_name'     => ['required','string','min:2','max:150'],
+                'role_in_company'  => ['nullable','string','max:50'],
+                'description'      => ['nullable','string','max:800'],
+                'website'          => ['nullable','string','max:255'],
+                'title_after'      => ['nullable','string','max:30'],
             ]);
 
 
@@ -133,12 +136,13 @@ class RegistrationController extends Controller
 
         // Kontakt osoba – používateľ bez hesla, zatiaľ neaktívny
         $user = User::create([
-            'first_name'    => $this->data['contact_name'],
-            'last_name'     => null,
-            'title_before'  => null,
-            'email'         => $this->data['contact_email'],
-            'password_hash' => null, // nastaví sa po aktivácii
-            'phone_number'  => $this->data['contact_phone'],
+            'first_name'    => $this->data['first_name'],
+            'last_name'     => $this->data['last_name'],
+            'email'         => $this->data['email'],
+            'title_before'  => $this->data['title_before'] ?? null,
+            'title_after'   => $this->data['title_after'] ?? null,
+            'password_hash' => null,
+            'phone_number'  => $this->data['phone_number'],
             'role_id'       => $role_id,
             'active'        => false,
         ]);
@@ -156,14 +160,18 @@ class RegistrationController extends Controller
         $company = \App\Models\Company::create([
             'name'        => $this->data['company_name'],
             'address_id'  => $address->id,
+            'description' => $this->data['description'] ?? null,
+            'website'     => $this->data['website'] ?? null,
         ]);
 
         //Generovanie aktivačného tokenu
-        $token = \Illuminate\Support\Str::random(64);
+        $plainToken = Str::random(64);
 
         $activation = \App\Models\CompanyActivation::create([
-            'hash' => $token,
+            'company_id'   => $company->id,
+            'hash'         => Hash::make($plainToken),
             'sent_to_mail' => $user->email,
+            'expires_at'   => now()->addHours(48),
         ]);
 
         //Prepojenie používateľa s firmou (profil)
@@ -172,11 +180,16 @@ class RegistrationController extends Controller
             'company_id'            => $company->id,
             'company_activation_id' => $activation->id,
             'company_user_id'       => $user->id,
-            'role_at_company'       => null,
+            'role_at_company'       => $this->data['role_in_company'] ?? null
         ]);
 
         // Načítanie údajov (pre response)
         $user->load(['companyOwnerProfile.company']);
+
+        // Send activation email
+        \Mail::to($user->email)->send(
+            new \App\Mail\CompanyActivationMail($activation, $plainToken)
+        );
 
         return [__('registration.COMPANY_REGISTERED_PENDING_ACTIVATION'), $user, 201];
     }
