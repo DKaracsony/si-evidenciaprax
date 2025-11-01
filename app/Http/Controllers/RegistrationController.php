@@ -22,7 +22,6 @@ class RegistrationController extends Controller
     {
         $this->register_type = $request->input('form_type');
         $this->data = $request->all();
-        
         $validated = $this->validateByType();
         if ($validated instanceof JsonResponse) {
             return $validated;
@@ -72,7 +71,7 @@ class RegistrationController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => __('registration.VALIDATION_FAILED'),
-                'errors'  => $validator->errors()->all()
+                'errors'  => $validator->errors()->toArray(),
             ], 422);
         }
 
