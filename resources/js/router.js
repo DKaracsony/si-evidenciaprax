@@ -1,3 +1,4 @@
+// resources/js/router.js
 import { createRouter, createWebHistory } from 'vue-router'
 
 import LandingPage from "./pages/LandingPage.vue";
@@ -12,6 +13,6 @@ export const router = createRouter({
         { path: '/register', component: RegisterPage, name: 'RegisterPage' },
         { path: '/register/sent', component: RegisterConfirmationPage, name: 'RegisterConfirmationPage' },
         { path: '/activation/company/:token', component: CompanyActivationPage, name: 'CompanyActivationPage' },
-        { path: '/:pathMatch(.*)*', redirect: '/' }, // or 404, David Karacsony?
+        { path: '/:pathMatch(.*)*', redirect: '/' },
     ],
 })

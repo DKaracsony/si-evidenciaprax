@@ -4,7 +4,7 @@
    Landing Page — Header (lp-nav)
    Purpose:
    - Sticky top bar with centered logo on ≥ $bp-md.
-   - Below $bp-md the logo shifts left, button stays at the right.
+   - Below $bp_md the logo shifts left, right group (Úvod + Prihlásenie) stays at the right.
    Notes:
    - Relies on container CSS vars (--gutter, --container) defined globally.
    ========================================================================== */
@@ -22,10 +22,11 @@
 }
 
 /* Layout grid
-   Default (tablet/desktop): 1fr | auto | 1fr keeps the logo perfectly centered. */
+   Default (tablet/desktop): 1fr | auto | 1fr keeps the logo perfectly centered.
+   The rightmost column now hosts a small inline group (.lp-nav__right). */
 .lp-nav__wrap {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;  /* spacer | logo | spacer */
+    grid-template-columns: 1fr auto 1fr;  /* spacer | logo | right group */
     align-items: center;
     height: 88px;
 
@@ -36,10 +37,10 @@
    < $bp-md:
    - Remove the left spacer
    - Shift the logo to the start so it aligns with container padding
-   - Keep the button aligned to the right end */
+   - Keep the right group aligned to the right end */
 @media (max-width: $bp-md) {
     .lp-nav__wrap {
-        grid-template-columns: auto 1fr auto; /* logo | flexible space | button */
+        grid-template-columns: auto 1fr auto; /* logo | flexible space | right group */
     }
     .lp-nav__wrap > :first-child {
         display: none; /* spacer not needed once the logo is left-aligned */
@@ -64,12 +65,32 @@
     }
 }
 
+/* Right-side group (Úvod link + button) */
+.lp-nav__right {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+
+    @include up($bp-md) { gap: 18px; }
+}
+
+/* Simple white text link; hover to primary-900 (#0A2C5C) */
+.lp-nav__link {
+    color: var(--text-inverse);
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1;
+
+    &:hover { color: var(--color-primary-900); } /* #0A2C5C from palette */
+    &:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 8px; }
+}
+
 /* Primary CTA button (right column)
    - Slightly thicker border and pronounced shadow per design
    - Clamp-based negative margin subtly pulls it toward the edge on wide screens
      without overflowing on narrow screens. Uses global --gutter/--container vars. */
 .lp-nav__btn {
-    justify-self: end;
     border: 3px solid var(--focus-ring); /* e.g., #A9C9FF */
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
     text-decoration: none;
@@ -114,13 +135,16 @@
 
 /* Tighten spacing on small phones */
 @media (max-width: $bp-sm) {
+    .lp-nav__right { gap: 12px; }
     .lp-nav__btn { padding: 12px 24px; }
+    .lp-nav__link { font-size: 15px; }
 }
 
 /* Ultra-narrow phones: keep logo legible and button compact */
 @media (max-width: 360px) {
     .lp-nav__logo img { height: 40px; }
     .lp-nav__btn { padding: 10px 20px; font-size: 15px; }
+    .lp-nav__link { font-size: 14px; }
 }
 
 /* A11y: high-visibility focus ring */
