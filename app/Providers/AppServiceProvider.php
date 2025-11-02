@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\CountryService;
 use App\Services\RoleService;
 use App\Services\FacultyService;
 use Illuminate\Support\Facades\Cache;
@@ -20,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(RoleService $roles, FacultyService $faculties): void
+    public function boot(RoleService $roles, FacultyService $faculties, CountryService $countries): void
     {
         if (!Cache::has(RoleService::CACHE_KEY)) {
             $roles->warm();
@@ -28,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
 
         if (!Cache::has(FacultyService::CACHE_KEY)) {
             $faculties->warm();
+        }
+
+        if (!Cache::has(CountryService::CACHE_KEY)) {
+            $countries->warm();
         }
     }
 }
