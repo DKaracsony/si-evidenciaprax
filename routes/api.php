@@ -11,4 +11,3 @@ Route::get('/faculties', [FacultyController::class, 'index']);
 Route::post('/register', [RegistrationController::class, 'handleRegister']);
 Route::get('/company/activate', [CompanyActivationController::class, 'activate']);
 
-

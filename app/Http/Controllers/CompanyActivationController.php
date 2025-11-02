@@ -2,66 +2,71 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CompanyActivation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+use App\Mail\CompanyTempPasswordMail;
 
 class CompanyActivationController extends Controller
 {
-    public function activate(Request $request)
+    public function activate(Request $request): JsonResponse
     {
-        $tokenPlain = $request->query('token');
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email',
+        ]);
 
-        if (!$tokenPlain) {
-            return response()->json(['message' => 'Token chýba.'], 400);
+        $tokenHash = hash('sha256', $request->query('token'));
+        $email = $request->query('email');
+
+        $rec = DB::table('company_activations')
+            ->where('hash', $tokenHash)
+            ->where('sent_to_mail', $email)
+            ->first();
+
+        if (!$rec) {
+            return response()->json(['message' => 'Aktivačný odkaz je neplatný.'], 410);
         }
 
-        $activation = DB::transaction(function () use ($tokenPlain) {
-
-            $candidates = CompanyActivation::whereNull('revoked_at')
-                ->where('expires_at', '>', now())
-                ->lockForUpdate()
-                ->get();
-
-            return $candidates->first(fn($t) => Hash::check($tokenPlain, $t->hash));
-        });
-
-        if (!$activation) {
-            return response()->json(['message' => 'Neplatný alebo expirovaný token.'], 410);
+        $expiresAt = Carbon::parse($rec->created_at)->addHours(48);
+        if (now()->greaterThan($expiresAt)) {
+            return response()->json(['message' => 'Platnosť aktivačného odkazu vypršala. Požiadajte o nový odkaz na prihlasovacej stránke.'], 410);
         }
 
-        if ($activation->consumed_at !== null) {
-            return response()->json(['message' => 'Účet už bol aktivovaný.'], 200);
+        if (!is_null($rec->consumed_at)) {
+            return response()->json(['message' => 'Tento aktivačný odkaz už bol použitý. Prihláste sa alebo požiadajte o nový odkaz.'], 410);
         }
 
-        $ownerProfile = $activation->ownerProfile;
-
-        if (!$ownerProfile) {
-            return response()->json(['message' => 'Nenájdený profil firmy pre tento token.'], 404);
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return response()->json(['message' => 'Používateľ s danou e-mailovou adresou neexistuje.'], 410);
         }
 
-        $company = $ownerProfile->company;
-        $user = $ownerProfile->user;
+        $temporaryPassword = Str::password(14);
 
-        if ($company) {
-            $company->update(['active' => true]);
-        }
+        $user->password_hash = Hash::make($temporaryPassword);
+        $user->active = true;
+        $user->save();
 
-        if ($user) {
-            $user->update(['active' => true]);
-        }
+        DB::table('company_activations')->where('id', $rec->id)->update([
+            'consumed_at' => now(),
+        ]);
 
-        $ownerProfile->update(['is_active' => true]);
+        Mail::to($user->email)->send(new CompanyTempPasswordMail(
+            kontaktMeno: $user->first_name,
+            docasneHeslo: $temporaryPassword,
+            prihlasenieUrl: config('app.front_login_url')
+        ));
 
-        $activation->update(['consumed_at' => now()]);
-
-        CompanyActivation::where('company_id', $activation->company_id)
-            ->where('id', '!=', $activation->id)
-            ->update([
-                'revoked_at' => now(),
-            ]);
-
-        return response()->json(['message' => 'Účet bol úspešne aktivovaný.'], 200);
+        return response()->json([
+            'message' => 'Účet bol úspešne aktivovaný. Teraz sa môžete prihlásiť.',
+            'temporary_password' => $temporaryPassword,
+            'login_url' => config('app.front_login_url'),
+        ]);
     }
 }

@@ -2,7 +2,8 @@
 
 namespace App\Mail;
 
-use App\Models\CompanyActivation;
+use App\Models\User;
+use App\Models\Company;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -12,21 +13,21 @@ class CompanyActivationMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public CompanyActivation $activation,
-        public string $plainToken
+        public User $user,
+        public Company $company,
+        public string $activationLink,
+        public string $tokenExpiration
     ) {}
 
     public function build()
     {
-        $activationLink = url("/activate?token=" . urlencode($this->plainToken));
-        $tokenExpiration = $this->activation->expires_at->format('d.m.Y H:i');
-
         return $this
             ->subject('Aktivujte svoj firemný účet')
             ->markdown('emails.company_activation', [
-                'activation' => $this->activation,
-                'activationLink' => $activationLink,
-                'tokenExpiration' => $tokenExpiration,
+                'user'             => $this->user,
+                'company'          => $this->company,
+                'activationLink'   => $this->activationLink,
+                'tokenExpiration'  => $this->tokenExpiration,
             ]);
     }
 }

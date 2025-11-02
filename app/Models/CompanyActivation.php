@@ -3,35 +3,34 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CompanyActivation extends Model
 {
+    protected $table = 'company_activations';
+    public $timestamps = false;
+
     protected $fillable = [
-        'company_id',
         'hash',
         'sent_to_mail',
-        'expires_at',
+        'created_at',
         'consumed_at',
-        'revoked_at'
     ];
 
     protected $casts = [
-        'expires_at'  => 'datetime',
-        'consumed_at' => 'datetime',
-        'revoked_at'  => 'datetime',
         'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
+        'consumed_at' => 'datetime',
     ];
 
-    public function ownerProfile()
+    public function ownerProfile(): HasOne
     {
         return $this->hasOne(\App\Models\CompanyOwnerProfile::class, 'company_activation_id');
     }
+
     public function scopeActive($query)
     {
         return $query
             ->whereNull('consumed_at')
-            ->whereNull('revoked_at')
-            ->where('expires_at', '>', now());
+            ->where('created_at', '>', now()->subHours(48));
     }
 }

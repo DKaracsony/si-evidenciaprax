@@ -23,4 +23,9 @@ class Address extends Model
     public function studentProfile(){
         return $this->hasOne(StudentProfile::class, 'address_id');
     }
+
+    public function companyOwnerProfile()
+    {
+        return $this->hasOne(\App\Models\CompanyOwnerProfile::class, 'company_user_id');
+    }
 }
