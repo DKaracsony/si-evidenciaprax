@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Services\CountryService;
 
 class CountrySeeder extends Seeder
 {
@@ -25,5 +26,8 @@ class CountrySeeder extends Seeder
         }
 
         DB::table('countries')->insert($countries);
+
+        // ✅ Warm up the cache immediately after seeding
+        (new CountryService())->warm();
     }
 }

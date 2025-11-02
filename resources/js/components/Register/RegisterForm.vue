@@ -29,7 +29,7 @@
             </button>
         </div>
 
-        <!-- BODY (two upper sections + divider + footer CTA) -->
+        <!-- BODY: Student -->
         <section
             id="reg-panel-student"
             role="tabpanel"
@@ -38,7 +38,6 @@
             class="register-panel"
         >
             <div class="register-body">
-                <!-- UPPER: left + right, centered both ways -->
                 <div class="register-sides">
                     <div class="register-left">
                         <form ref="studentForm" class="register-form register-form--bare" @submit.prevent>
@@ -59,10 +58,9 @@
                                             autocomplete="honorific-prefix"
                                             placeholder="Titul"
                                         />
-                                        <!-- not required, so no error -->
                                     </div>
 
-                                    <!-- Meno (required, non-empty) -->
+                                    <!-- Meno -->
                                     <div class="field">
                                         <label for="meno" class="label label--required">Meno</label>
                                         <input
@@ -73,12 +71,14 @@
                                             autocomplete="given-name"
                                             placeholder="Meno"
                                             required
-                                            :aria-invalid="!!errors.meno"
+                                            :aria-invalid="studentTouched.meno && !!errors.meno"
+                                            @focus="onSTouch('meno')"
+                                            @blur="onSTouch('meno', true)"
                                         />
-                                        <p v-if="errors.meno" class="error">{{ errors.meno }}</p>
+                                        <p v-if="studentTouched.meno && errors.meno" class="error">{{ errors.meno }}</p>
                                     </div>
 
-                                    <!-- Priezvisko (required, non-empty) -->
+                                    <!-- Priezvisko -->
                                     <div class="field">
                                         <label for="priezvisko" class="label label--required">Priezvisko</label>
                                         <input
@@ -89,14 +89,16 @@
                                             autocomplete="family-name"
                                             placeholder="Priezvisko"
                                             required
-                                            :aria-invalid="!!errors.priezvisko"
+                                            :aria-invalid="studentTouched.priezvisko && !!errors.priezvisko"
+                                            @focus="onSTouch('priezvisko')"
+                                            @blur="onSTouch('priezvisko', true)"
                                         />
-                                        <p v-if="errors.priezvisko" class="error">{{ errors.priezvisko }}</p>
+                                        <p v-if="studentTouched.priezvisko && errors.priezvisko" class="error">{{ errors.priezvisko }}</p>
                                     </div>
                                 </div>
 
                                 <div class="form-grid form-grid--2">
-                                    <!-- Tel. č. (numbers only OR starts with +421 and then numbers) -->
+                                    <!-- Tel. č. -->
                                     <div class="field">
                                         <label for="tel" class="label label--required">Tel. č.</label>
                                         <input
@@ -108,12 +110,14 @@
                                             autocomplete="tel"
                                             placeholder="Tel. č."
                                             required
-                                            :aria-invalid="!!errors.tel"
+                                            :aria-invalid="studentTouched.tel && !!errors.tel"
+                                            @focus="onSTouch('tel')"
+                                            @blur="onSTouch('tel', true)"
                                         />
-                                        <p v-if="errors.tel" class="error">{{ errors.tel }}</p>
+                                        <p v-if="studentTouched.tel && errors.tel" class="error">{{ errors.tel }}</p>
                                     </div>
 
-                                    <!-- Osobný email (must include @) -->
+                                    <!-- Osobný email -->
                                     <div class="field">
                                         <label for="osobnyEmail" class="label label--required">Osobný email</label>
                                         <input
@@ -124,9 +128,12 @@
                                             autocomplete="email"
                                             placeholder="Osobný email"
                                             required
-                                            :aria-invalid="!!errors.osobnyEmail"
+                                            :aria-invalid="studentTouched.osobnyEmail && !!errors.osobnyEmail"
+                                            @focus="onSTouch('osobnyEmail')"
+                                            @blur="onSTouch('osobnyEmail', true)"
                                         />
-                                        <p v-if="errors.osobnyEmail" class="error">{{ errors.osobnyEmail }}</p>
+                                        <p v-if="studentTouched.osobnyEmail && errors.osobnyEmail" class="error">{{ errors.osobnyEmail }}</p>
+                                        <p v-if="backendErrors.email" class="error">{{ backendErrors.email }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -137,7 +144,7 @@
                                 <div class="form-section__divider" aria-hidden="true"></div>
 
                                 <div class="form-grid form-grid--2">
-                                    <!-- Študentský mail (must end with @student.ukf.sk) -->
+                                    <!-- Študentský mail -->
                                     <div class="field">
                                         <label for="skolskyEmail" class="label label--required">Študentský mail</label>
                                         <input
@@ -147,12 +154,15 @@
                                             type="email"
                                             placeholder="Študentský mail"
                                             required
-                                            :aria-invalid="!!errors.skolskyEmail"
+                                            :aria-invalid="studentTouched.skolskyEmail && !!errors.skolskyEmail"
+                                            @focus="onSTouch('skolskyEmail')"
+                                            @blur="onSTouch('skolskyEmail', true)"
                                         />
-                                        <p v-if="errors.skolskyEmail" class="error">{{ errors.skolskyEmail }}</p>
+                                        <p v-if="studentTouched.skolskyEmail && errors.skolskyEmail" class="error">{{ errors.skolskyEmail }}</p>
+                                        <p v-if="backendErrors.student_email" class="error">{{ backendErrors.student_email }}</p>
                                     </div>
 
-                                    <!-- Študijný odbor (must choose non-placeholder) -->
+                                    <!-- Študijný odbor -->
                                     <div class="field">
                                         <label for="odbor" class="label label--required">Študijný odbor</label>
                                         <select
@@ -160,26 +170,38 @@
                                             v-model="student.odborId"
                                             class="input"
                                             required
-                                            :aria-invalid="!!errors.odborId"
+                                            :aria-invalid="studentTouched.odborId && !!errors.odborId"
+                                            @focus="onSTouch('odborId')"
+                                            @blur="onSTouch('odborId', true)"
+                                            @change="onSTouch('odborId', true)"
                                         >
                                             <option value="" disabled>
-                                                {{ facultiesLoading ? 'Načítavam…' : (facultiesError ? 'Nedostupné' : 'Študijný odbor') }}
+                                                {{ facultiesLoading ? 'Načítavam…' : (facultiesError ? 'Nedostupné' : 'Vyberte odbor') }}
                                             </option>
                                             <option
                                                 v-for="f in faculties"
                                                 :key="f.id"
-                                                :value="String(f.id)"
+                                                :value="f.id"
                                             >
                                                 {{ f.name }}
                                             </option>
                                         </select>
-                                        <p v-if="errors.odborId" class="error">{{ errors.odborId }}</p>
 
                                         <p v-if="facultiesError" class="error" style="margin-top:6px;">
                                             {{ facultiesError }}
-                                            <button type="button" @click="loadFaculties()" style="all:unset; text-decoration:underline; cursor:pointer;">Skúsiť znova</button>
+                                            <button
+                                                type="button"
+                                                @click="loadFaculties()"
+                                                style="all:unset; text-decoration:underline; cursor:pointer;"
+                                            >
+                                                Skúsiť znova
+                                            </button>
                                         </p>
+
+                                        <p v-if="studentTouched.odborId && errors.odborId" class="error">{{ errors.odborId }}</p>
+                                        <p v-if="backendErrors.faculty" class="error">{{ backendErrors.faculty }}</p>
                                     </div>
+
                                 </div>
                             </div>
 
@@ -189,7 +211,7 @@
                                 <div class="form-section__divider" aria-hidden="true"></div>
 
                                 <div class="form-grid form-grid--2">
-                                    <!-- Mesto (required, non-empty) -->
+                                    <!-- Mesto -->
                                     <div class="field">
                                         <label for="mesto" class="label label--required">Mesto</label>
                                         <input
@@ -199,12 +221,14 @@
                                             type="text"
                                             placeholder="Mesto"
                                             required
-                                            :aria-invalid="!!errors.mesto"
+                                            :aria-invalid="studentTouched.mesto && !!errors.mesto"
+                                            @focus="onSTouch('mesto')"
+                                            @blur="onSTouch('mesto', true)"
                                         />
-                                        <p v-if="errors.mesto" class="error">{{ errors.mesto }}</p>
+                                        <p v-if="studentTouched.mesto && errors.mesto" class="error">{{ errors.mesto }}</p>
                                     </div>
 
-                                    <!-- PSČ (only numbers) -->
+                                    <!-- PSČ -->
                                     <div class="field">
                                         <label for="psc" class="label label--required">PSČ</label>
                                         <input
@@ -215,14 +239,16 @@
                                             inputmode="numeric"
                                             placeholder="PSČ"
                                             required
-                                            :aria-invalid="!!errors.psc"
+                                            :aria-invalid="studentTouched.psc && !!errors.psc"
+                                            @focus="onSTouch('psc')"
+                                            @blur="onSTouch('psc', true)"
                                         />
-                                        <p v-if="errors.psc" class="error">{{ errors.psc }}</p>
+                                        <p v-if="studentTouched.psc && errors.psc" class="error">{{ errors.psc }}</p>
                                     </div>
                                 </div>
 
                                 <div class="form-grid form-grid--2">
-                                    <!-- Ulica (required, non-empty) -->
+                                    <!-- Ulica -->
                                     <div class="field">
                                         <label for="ulica" class="label label--required">Ulica</label>
                                         <input
@@ -232,12 +258,14 @@
                                             type="text"
                                             placeholder="Ulica"
                                             required
-                                            :aria-invalid="!!errors.ulica"
+                                            :aria-invalid="studentTouched.ulica && !!errors.ulica"
+                                            @focus="onSTouch('ulica')"
+                                            @blur="onSTouch('ulica', true)"
                                         />
-                                        <p v-if="errors.ulica" class="error">{{ errors.ulica }}</p>
+                                        <p v-if="studentTouched.ulica && errors.ulica" class="error">{{ errors.ulica }}</p>
                                     </div>
 
-                                    <!-- č. domu (only numbers) -->
+                                    <!-- č. domu -->
                                     <div class="field">
                                         <label for="cisloDomu" class="label label--required">č. domu</label>
                                         <input
@@ -248,14 +276,16 @@
                                             inputmode="numeric"
                                             placeholder="č. domu"
                                             required
-                                            :aria-invalid="!!errors.cisloDomu"
+                                            :aria-invalid="studentTouched.cisloDomu && !!errors.cisloDomu"
+                                            @focus="onSTouch('cisloDomu')"
+                                            @blur="onSTouch('cisloDomu', true)"
                                         />
-                                        <p v-if="errors.cisloDomu" class="error">{{ errors.cisloDomu }}</p>
+                                        <p v-if="studentTouched.cisloDomu && errors.cisloDomu" class="error">{{ errors.cisloDomu }}</p>
                                     </div>
                                 </div>
 
                                 <div class="form-grid form-grid--1">
-                                    <!-- Krajina (must choose non-placeholder) -->
+                                    <!-- Krajina -->
                                     <div class="field">
                                         <label for="krajina" class="label label--required">Krajina</label>
                                         <select
@@ -263,18 +293,36 @@
                                             v-model="student.krajina"
                                             class="input"
                                             required
-                                            :aria-invalid="!!errors.krajina"
+                                            :aria-invalid="studentTouched.krajina && !!errors.krajina"
+                                            @focus="onSTouch('krajina')"
+                                            @blur="onSTouch('krajina', true)"
+                                            @change="onSTouch('krajina', true)"
                                         >
-                                            <option value="" disabled>Krajina</option>
+                                            <option value="" disabled>
+                                                {{ countriesLoading ? 'Načítavam…' : (countriesError ? 'Nedostupné' : 'Krajina') }}
+                                            </option>
                                             <option
-                                                v-for="c in COUNTRIES_STATIC"
-                                                :key="c.code"
-                                                :value="c.code"
+                                                v-for="c in countries"
+                                                :key="c.id"
+                                                :value="c.id"
                                             >
-                                                {{ c.label }}
+                                                {{ c.icon ? c.icon + ' ' : '' }}{{ c.name }}
                                             </option>
                                         </select>
-                                        <p v-if="errors.krajina" class="error">{{ errors.krajina }}</p>
+
+                                        <p v-if="countriesError" class="error" style="margin-top:6px;">
+                                            {{ countriesError }}
+                                            <button
+                                                type="button"
+                                                @click="loadCountries()"
+                                                style="all:unset; text-decoration:underline; cursor:pointer;"
+                                            >
+                                                Skúsiť znova
+                                            </button>
+                                        </p>
+
+                                        <p v-if="studentTouched.krajina && errors.krajina" class="error">{{ errors.krajina }}</p>
+                                        <p v-if="backendErrors.country" class="error">{{ backendErrors.country }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -299,14 +347,15 @@
                     </div>
                 </div>
 
-                <!-- LOWER: CTA + helper text spanning full width -->
+                <!-- LOWER: CTA -->
                 <div class="register-footer">
                     <button
                         type="button"
                         class="btn btn--primary"
-                        :disabled="!isFormValid"
+                        :disabled="!isFormValid || isSubmittingStudent"
+                        @click="submitStudent"
                     >
-                        Registrácia
+                        {{ isSubmittingStudent ? 'Odosielam…' : 'Registrácia' }}
                     </button>
                     <p class="hint footer-hint">
                         Už máte účet? <a href="/login">Prihláste sa!</a>
@@ -315,7 +364,7 @@
             </div>
         </section>
 
-        <!-- Company panel stays as placeholder for now -->
+        <!-- BODY: Company (reversed) -->
         <section
             id="reg-panel-company"
             role="tabpanel"
@@ -325,7 +374,7 @@
         >
             <div class="register-body">
                 <div class="register-sides">
-                    <!-- LEFT: headline + divider + image (reversed) -->
+                    <!-- LEFT: text + divider + image -->
                     <div class="register-right">
                         <h2 class="register-panel__title">Ste z&nbsp;firmy? Zaregistrujte sa.</h2>
                         <div class="right-section__divider" aria-hidden="true"></div>
@@ -359,6 +408,8 @@
                                             type="text"
                                             autocomplete="honorific-prefix"
                                             placeholder="Titul"
+                                            @focus="onCTouch('titul')"
+                                            @blur="onCTouch('titul', true)"
                                         />
                                     </div>
 
@@ -373,7 +424,11 @@
                                             autocomplete="given-name"
                                             placeholder="Meno"
                                             required
+                                            :aria-invalid="companyTouched.meno && !!companyErrors.meno"
+                                            @focus="onCTouch('meno')"
+                                            @blur="onCTouch('meno', true)"
                                         />
+                                        <p v-if="companyTouched.meno && companyErrors.meno" class="error">{{ companyErrors.meno }}</p>
                                     </div>
 
                                     <!-- Priezvisko -->
@@ -387,7 +442,11 @@
                                             autocomplete="family-name"
                                             placeholder="Priezvisko"
                                             required
+                                            :aria-invalid="companyTouched.priezvisko && !!companyErrors.priezvisko"
+                                            @focus="onCTouch('priezvisko')"
+                                            @blur="onCTouch('priezvisko', true)"
                                         />
+                                        <p v-if="companyTouched.priezvisko && companyErrors.priezvisko" class="error">{{ companyErrors.priezvisko }}</p>
                                     </div>
                                 </div>
 
@@ -404,7 +463,11 @@
                                             autocomplete="tel"
                                             placeholder="Tel. č."
                                             required
+                                            :aria-invalid="companyTouched.tel && !!companyErrors.tel"
+                                            @focus="onCTouch('tel')"
+                                            @blur="onCTouch('tel', true)"
                                         />
+                                        <p v-if="companyTouched.tel && companyErrors.tel" class="error">{{ companyErrors.tel }}</p>
                                     </div>
 
                                     <!-- Osobný email -->
@@ -418,7 +481,12 @@
                                             autocomplete="email"
                                             placeholder="Osobný email"
                                             required
+                                            :aria-invalid="companyTouched.osobnyEmail && !!companyErrors.osobnyEmail"
+                                            @focus="onCTouch('osobnyEmail')"
+                                            @blur="onCTouch('osobnyEmail', true)"
                                         />
+                                        <p v-if="companyTouched.osobnyEmail && companyErrors.osobnyEmail" class="error">{{ companyErrors.osobnyEmail }}</p>
+                                        <p v-if="companyBackendErrors.email" class="error">{{ companyBackendErrors.email }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -439,7 +507,12 @@
                                             type="text"
                                             placeholder="Názov firmy"
                                             required
+                                            :aria-invalid="companyTouched.nazovFirmy && !!companyErrors.nazovFirmy"
+                                            @focus="onCTouch('nazovFirmy')"
+                                            @blur="onCTouch('nazovFirmy', true)"
                                         />
+                                        <p v-if="companyTouched.nazovFirmy && companyErrors.nazovFirmy" class="error">{{ companyErrors.nazovFirmy }}</p>
+                                        <p v-if="companyBackendErrors.company_name" class="error">{{ companyBackendErrors.company_name }}</p>
                                     </div>
 
                                     <!-- Rola vo firme -->
@@ -452,11 +525,15 @@
                                             type="text"
                                             placeholder="Rola vo firme"
                                             required
+                                            :aria-invalid="companyTouched.rolaVoFirme && !!companyErrors.rolaVoFirme"
+                                            @focus="onCTouch('rolaVoFirme')"
+                                            @blur="onCTouch('rolaVoFirme', true)"
                                         />
+                                        <p v-if="companyTouched.rolaVoFirme && companyErrors.rolaVoFirme" class="error">{{ companyErrors.rolaVoFirme }}</p>
                                     </div>
                                 </div>
 
-                                <!-- Popis (full width row) -->
+                                <!-- Popis -->
                                 <div class="form-grid form-grid--1" style="margin-top: 12px;">
                                     <div class="field">
                                         <label for="c_popis" class="label">Popis</label>
@@ -466,11 +543,13 @@
                                             class="input"
                                             placeholder="Stručný popis firmy, čomu sa venujete…"
                                             rows="4"
+                                            @focus="onCTouch('popis')"
+                                            @blur="onCTouch('popis', true)"
                                         ></textarea>
                                     </div>
                                 </div>
 
-                                <!-- Web (full width row) -->
+                                <!-- Web -->
                                 <div class="form-grid form-grid--1">
                                     <div class="field">
                                         <label for="c_web" class="label">Web</label>
@@ -481,7 +560,11 @@
                                             type="url"
                                             inputmode="url"
                                             placeholder="https://www.priklad.sk"
+                                            :aria-invalid="companyTouched.web && !!companyErrors.web"
+                                            @focus="onCTouch('web')"
+                                            @blur="onCTouch('web', true)"
                                         />
+                                        <p v-if="companyTouched.web && companyErrors.web" class="error">{{ companyErrors.web }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -502,7 +585,11 @@
                                             type="text"
                                             placeholder="Mesto"
                                             required
+                                            :aria-invalid="companyTouched.mesto && !!companyErrors.mesto"
+                                            @focus="onCTouch('mesto')"
+                                            @blur="onCTouch('mesto', true)"
                                         />
+                                        <p v-if="companyTouched.mesto && companyErrors.mesto" class="error">{{ companyErrors.mesto }}</p>
                                     </div>
 
                                     <!-- PSČ -->
@@ -516,7 +603,11 @@
                                             inputmode="numeric"
                                             placeholder="PSČ"
                                             required
+                                            :aria-invalid="companyTouched.psc && !!companyErrors.psc"
+                                            @focus="onCTouch('psc')"
+                                            @blur="onCTouch('psc', true)"
                                         />
+                                        <p v-if="companyTouched.psc && companyErrors.psc" class="error">{{ companyErrors.psc }}</p>
                                     </div>
                                 </div>
 
@@ -531,7 +622,11 @@
                                             type="text"
                                             placeholder="Ulica"
                                             required
+                                            :aria-invalid="companyTouched.ulica && !!companyErrors.ulica"
+                                            @focus="onCTouch('ulica')"
+                                            @blur="onCTouch('ulica', true)"
                                         />
+                                        <p v-if="companyTouched.ulica && companyErrors.ulica" class="error">{{ companyErrors.ulica }}</p>
                                     </div>
 
                                     <!-- č. domu -->
@@ -545,7 +640,11 @@
                                             inputmode="numeric"
                                             placeholder="č. domu"
                                             required
+                                            :aria-invalid="companyTouched.cisloDomu && !!companyErrors.cisloDomu"
+                                            @focus="onCTouch('cisloDomu')"
+                                            @blur="onCTouch('cisloDomu', true)"
                                         />
+                                        <p v-if="companyTouched.cisloDomu && companyErrors.cisloDomu" class="error">{{ companyErrors.cisloDomu }}</p>
                                     </div>
                                 </div>
 
@@ -553,16 +652,41 @@
                                     <!-- Krajina -->
                                     <div class="field">
                                         <label for="c_krajina" class="label label--required">Krajina</label>
-                                        <select id="c_krajina" v-model="company.krajina" class="input" required>
-                                            <option value="" disabled>Krajina</option>
+                                        <select
+                                            id="c_krajina"
+                                            v-model="company.krajina"
+                                            class="input"
+                                            required
+                                            :aria-invalid="companyTouched.krajina && !!companyErrors.krajina"
+                                            @focus="onCTouch('krajina')"
+                                            @blur="onCTouch('krajina', true)"
+                                            @change="onCTouch('krajina', true)"
+                                        >
+                                            <option value="" disabled>
+                                                {{ countriesLoading ? 'Načítavam…' : (countriesError ? 'Nedostupné' : 'Krajina') }}
+                                            </option>
                                             <option
-                                                v-for="c in COUNTRIES_STATIC"
-                                                :key="c.code"
-                                                :value="c.code"
+                                                v-for="c in countries"
+                                                :key="c.id"
+                                                :value="c.id"
                                             >
-                                                {{ c.label }}
+                                                {{ c.icon ? c.icon + ' ' : '' }}{{ c.name }}
                                             </option>
                                         </select>
+
+                                        <p v-if="countriesError" class="error" style="margin-top:6px;">
+                                            {{ countriesError }}
+                                            <button
+                                                type="button"
+                                                @click="loadCountries()"
+                                                style="all:unset; text-decoration:underline; cursor:pointer;"
+                                            >
+                                                Skúsiť znova
+                                            </button>
+                                        </p>
+
+                                        <p v-if="companyTouched.krajina && companyErrors.krajina" class="error">{{ companyErrors.krajina }}</p>
+                                        <p v-if="companyBackendErrors.country" class="error">{{ companyBackendErrors.country }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -570,32 +694,32 @@
                     </div>
                 </div>
 
-                <!-- LOWER: CTA + helper text -->
+                <!-- LOWER: CTA -->
                 <div class="register-footer">
-                    <button type="button" class="btn btn--primary" disabled>
-                        Registrácia
+                    <button
+                        type="button"
+                        class="btn btn--primary"
+                        :disabled="!companyIsFormValid || isSubmittingCompany"
+                        @click="submitCompany"
+                    >
+                        {{ isSubmittingCompany ? 'Odosielam…' : 'Registrácia' }}
                     </button>
                     <p class="hint footer-hint">Už máte účet? <a href="/login">Prihláste sa!</a></p>
                 </div>
             </div>
         </section>
-
     </article>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
+
+const router = useRouter()
 
 const logoUrl = '/storage/registerform-student2.png'
 const logoUrl2 = '/storage/registerformcompany.png'
-
-/* --- No magic strings: countries defined once here --- */
-type CountryOption = { code: 'SK' | 'CZ'; label: string }
-const COUNTRIES_STATIC: CountryOption[] = [
-    { code: 'SK', label: 'Slovenská republika' },
-    { code: 'CZ', label: 'Česká republika' },
-]
 
 /* Tabs */
 const activeTab = ref<'student' | 'company'>('student')
@@ -608,22 +732,22 @@ const tabStyle = computed(() => ({ width: equalBtnWidth.value }))
 let raf = 0
 const smallMQL = window.matchMedia('(max-width: 520px)')
 
-async function setEqualBtnWidth () {
+async function setEqualBtnWidth() {
     if (!btn1.value || !btn2.value) return
     equalBtnWidth.value = 'auto'
     await nextTick()
     const max = Math.max(btn1.value?.offsetWidth ?? 0, btn2.value?.offsetWidth ?? 0)
     equalBtnWidth.value = `${max}px`
 }
-async function applyEqualize () {
+async function applyEqualize() {
     if (smallMQL.matches) equalBtnWidth.value = 'auto'
     else await setEqualBtnWidth()
 }
-function onResize () {
+function onResize() {
     cancelAnimationFrame(raf)
     raf = requestAnimationFrame(() => { void applyEqualize() })
 }
-function onMQChange () { void applyEqualize() }
+function onMQChange() { void applyEqualize() }
 
 /* Faculties (Študijný odbor) */
 type Faculty = { id: number; name: string; active: number }
@@ -631,7 +755,7 @@ const faculties = ref<Faculty[]>([])
 const facultiesLoading = ref(true)
 const facultiesError = ref('')
 
-async function loadFaculties () {
+async function loadFaculties() {
     facultiesLoading.value = true
     facultiesError.value = ''
     try {
@@ -646,7 +770,26 @@ async function loadFaculties () {
     }
 }
 
-/* Student model */
+/* Countries (Krajiny) */
+type Country = { id: number; name: string; icon?: string }
+const countries = ref<Country[]>([])
+const countriesLoading = ref(true)
+const countriesError = ref('')
+
+async function loadCountries() {
+    countriesLoading.value = true
+    countriesError.value = ''
+    try {
+        const { data } = await axios.get('/api/countries')
+        countries.value = Array.isArray(data) ? data : []
+    } catch (e) {
+        countriesError.value = 'Nepodarilo sa načítať krajiny.'
+    } finally {
+        countriesLoading.value = false
+    }
+}
+
+/* ---------------- Student model + validation ---------------- */
 const student = reactive({
     titul: '',
     meno: '',
@@ -654,275 +797,286 @@ const student = reactive({
     tel: '',
     osobnyEmail: '',
     skolskyEmail: '',
-    odborId: '',   // selected faculty ID (string for v-model)
+    odborId: '' as any, // will hold number after select
     mesto: '',
     psc: '',
     ulica: '',
     cisloDomu: '',
-    krajina: ''    // 'SK' | 'CZ'
+    krajina: '' as any // will hold number after select
 })
 
-/* ---- Validation rules (live, no submit) ---- */
+type StudentKeys =
+    | 'meno' | 'priezvisko' | 'tel' | 'osobnyEmail' | 'skolskyEmail'
+    | 'odborId' | 'mesto' | 'psc' | 'ulica' | 'cisloDomu' | 'krajina'
+
+const studentTouched = reactive<Record<StudentKeys, boolean>>({
+    meno: false,
+    priezvisko: false,
+    tel: false,
+    osobnyEmail: false,
+    skolskyEmail: false,
+    odborId: false,
+    mesto: false,
+    psc: false,
+    ulica: false,
+    cisloDomu: false,
+    krajina: false
+})
+
+function onSTouch<K extends StudentKeys>(key: K, blured = false) {
+    if (!studentTouched[key]) studentTouched[key] = !!blured || studentTouched[key]
+    if (blured) studentTouched[key] = true
+}
+
 const errors = computed(() => {
     const e: Record<string, string> = {}
 
-    // Meno & Priezvisko
     if (!student.meno.trim()) e.meno = 'Zadajte meno.'
     if (!student.priezvisko.trim()) e.priezvisko = 'Zadajte priezvisko.'
 
-    // Tel: only numbers OR +421 then numbers
     const tel = student.tel.trim()
     const telOk = /^[0-9]+$/.test(tel) || /^\+421[0-9]+$/.test(tel)
     if (!telOk) e.tel = 'Zadajte len čísla alebo tvar +421…'
 
-    // Osobný email: must include '@'
     if (!student.osobnyEmail.trim().includes('@')) e.osobnyEmail = 'E-mail musí obsahovať @'
 
-    // Študentský mail: local@student.ukf.sk
     const se = student.skolskyEmail.trim()
     const studentMailOk = /^[^@\s]+@student\.ukf\.sk$/i.test(se)
     if (!studentMailOk) e.skolskyEmail = 'E-mail musí končiť @student.ukf.sk'
 
-    // Odbor: not placeholder
-    if (!String(student.odborId || '').trim()) e.odborId = 'Vyberte študijný odbor.'
+    if (student.odborId === '' || student.odborId === null || student.odborId === undefined) e.odborId = 'Vyberte študijný odbor.'
 
-    // Adresa
     if (!student.mesto.trim()) e.mesto = 'Zadajte mesto.'
     if (!/^\d+$/.test(student.psc.trim())) e.psc = 'PSČ môže obsahovať len čísla.'
     if (!student.ulica.trim()) e.ulica = 'Zadajte ulicu.'
     if (!/^\d+$/.test(student.cisloDomu.trim())) e.cisloDomu = 'Číslo domu môže obsahovať len čísla.'
 
-    // Krajina: not placeholder
-    if (!student.krajina) e.krajina = 'Vyberte krajinu.'
+    if (student.krajina === '' || student.krajina === null || student.krajina === undefined) e.krajina = 'Vyberte krajinu.'
+
+    return e
+})
+const isFormValid = computed(() => Object.keys(errors.value).length === 0)
+
+/* ---------------- Company model + blur-based validation ---------------- */
+const company = reactive({
+    titul: '',
+    meno: '',
+    priezvisko: '',
+    tel: '',
+    osobnyEmail: '',
+    nazovFirmy: '',
+    rolaVoFirme: '',
+    popis: '',
+    web: '',
+    mesto: '',
+    psc: '',
+    ulica: '',
+    cisloDomu: '',
+    krajina: '' as any // number after select
+})
+
+type CompanyKeys =
+    | 'titul' | 'meno' | 'priezvisko' | 'tel' | 'osobnyEmail'
+    | 'nazovFirmy' | 'rolaVoFirme' | 'popis' | 'web'
+    | 'mesto' | 'psc' | 'ulica' | 'cisloDomu' | 'krajina'
+
+const companyTouched = reactive<Record<CompanyKeys, boolean>>({
+    titul: false,
+    meno: false,
+    priezvisko: false,
+    tel: false,
+    osobnyEmail: false,
+    nazovFirmy: false,
+    rolaVoFirme: false,
+    popis: false,
+    web: false,
+    mesto: false,
+    psc: false,
+    ulica: false,
+    cisloDomu: false,
+    krajina: false
+})
+
+function onCTouch<K extends CompanyKeys>(key: K, blured = false) {
+    if (!companyTouched[key]) companyTouched[key] = !!blured || companyTouched[key]
+    if (blured) companyTouched[key] = true
+}
+
+const companyErrors = computed(() => {
+    const e: Partial<Record<CompanyKeys, string>> = {}
+
+    if (!company.meno.trim()) e.meno = 'Zadajte meno.'
+    if (!company.priezvisko.trim()) e.priezvisko = 'Zadajte priezvisko.'
+
+    const tel = company.tel.trim()
+    const telOk = /^[0-9]+$/.test(tel) || /^\+421[0-9]+$/.test(tel)
+    if (!telOk) e.tel = 'Zadajte len čísla alebo tvar +421…'
+
+    if (!company.osobnyEmail.trim().includes('@')) e.osobnyEmail = 'E-mail musí obsahovať @'
+
+    if (!company.nazovFirmy.trim()) e.nazovFirmy = 'Zadajte názov firmy.'
+    if (!company.rolaVoFirme.trim()) e.rolaVoFirme = 'Zadajte rolu vo firme.'
+
+    if (company.web.trim() && !/www\./i.test(company.web.trim())) e.web = 'Adresa webu musí obsahovať "www".'
+
+    if (!company.mesto.trim()) e.mesto = 'Zadajte mesto.'
+    if (!/^\d+$/.test(company.psc.trim())) e.psc = 'PSČ môže obsahovať len čísla.'
+    if (!company.ulica.trim()) e.ulica = 'Zadajte ulicu.'
+    if (!/^\d+$/.test(company.cisloDomu.trim())) e.cisloDomu = 'Číslo domu môže obsahovať len čísla.'
+
+    if (company.krajina === '' || company.krajina === null || company.krajina === undefined) e.krajina = 'Vyberte krajinu.'
 
     return e
 })
 
-const isFormValid = computed(() => Object.keys(errors.value).length === 0)
+const companyIsFormValid = computed(() => Object.keys(companyErrors.value).length === 0)
 
+/* -------- Backend error holders & submission state -------- */
+const backendErrors = reactive<{ [key: string]: string }>({})
+const companyBackendErrors = reactive<{ [key: string]: string }>({})
+
+const isSubmittingStudent = ref(false)
+const isSubmittingCompany = ref(false)
+
+/* ---------------- Student registration ---------------- */
+async function submitStudent() {
+    Object.keys(backendErrors).forEach(k => delete backendErrors[k])
+    if (!isFormValid.value) return
+
+    isSubmittingStudent.value = true
+    try {
+        const payload = {
+            form_type: 'student_form',
+            first_name: student.meno,
+            last_name: student.priezvisko,
+            title_before: student.titul || null,
+            email: student.osobnyEmail,
+            phone_number: student.tel,
+            city: student.mesto,
+            street: student.ulica,
+            house_number: Number(student.cisloDomu),
+            postal_code: student.psc,
+            country: Number(student.krajina),
+            student_email: student.skolskyEmail,
+            faculty: Number(student.odborId)
+        }
+
+        const res = await axios.post('/api/register', payload)
+        if (res.status === 201) {
+            await router.push({ path: '/register/sent', query: { type: 'student' } })
+        }
+    } catch (err: any) {
+        if (err.response?.status === 422 && err.response.data.errors) {
+            Object.entries(err.response.data.errors).forEach(([key, messages]) => {
+                backendErrors[key] = (messages as string[])[0]
+            })
+        }
+    } finally {
+        isSubmittingStudent.value = false
+    }
+}
+
+/* ---------------- Company registration ---------------- */
+async function submitCompany() {
+    Object.keys(companyBackendErrors).forEach(k => delete companyBackendErrors[k])
+    if (!companyIsFormValid.value) return
+
+    isSubmittingCompany.value = true
+    try {
+        const payload = {
+            form_type: 'company_form',
+            first_name: company.meno,
+            last_name: company.priezvisko,
+            title_before: company.titul || null,
+            title_after: null,
+            email: company.osobnyEmail,
+            phone_number: company.tel,
+            city: company.mesto,
+            street: company.ulica,
+            house_number: Number(company.cisloDomu),
+            postal_code: company.psc,
+            country: Number(company.krajina),
+            company_name: company.nazovFirmy,
+            role_at_company: company.rolaVoFirme || null,
+            description: company.popis || null,
+            website: company.web || null
+        }
+
+        const res = await axios.post('/api/register', payload)
+        if (res.status === 201) {
+            await router.push({ path: '/register/sent', query: { type: 'company' } })
+        }
+    } catch (err: any) {
+        if (err.response?.status === 422 && err.response.data.errors) {
+            Object.entries(err.response.data.errors).forEach(([key, messages]) => {
+                companyBackendErrors[key] = (messages as string[])[0]
+            })
+        }
+    } finally {
+        isSubmittingCompany.value = false
+    }
+}
+
+/* Lifecycle */
 onMounted(async () => {
     await nextTick()
     await applyEqualize()
     window.addEventListener('resize', onResize)
     smallMQL.addEventListener('change', onMQChange)
 
-    await loadFaculties()
+    await Promise.all([loadFaculties(), loadCountries()])
 })
 onBeforeUnmount(() => {
     window.removeEventListener('resize', onResize)
     smallMQL.removeEventListener('change', onMQChange)
 })
-
-const company = reactive({
-    // Kontaktná osoba
-    titul: '',
-    meno: '',
-    priezvisko: '',
-    tel: '',
-    osobnyEmail: '',
-    // Firemné informácie
-    nazovFirmy: '',
-    rolaVoFirme: '',
-    popis: '',
-    web: '',
-    // Adresa
-    mesto: '',
-    psc: '',
-    ulica: '',
-    cisloDomu: '',
-    krajina: '' // 'SK' | 'CZ'
-})
-
 </script>
 
 <style scoped>
-/* -------- layout scaffolding for the new structure -------- */
-
-/* Space below tabs */
 .register-panel {padding-top: clamp(64px, 7vw, 96px);}
+.register-body { position: relative; display: grid; grid-template-rows: auto auto; row-gap: clamp(18px, 2.4vw, 28px); }
+.register-sides { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px, 2.4vw, 28px); align-items: center; justify-items: center; min-height: clamp(330px, 33vw, 520px); }
+.register-sides::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; background: #155cc4; transform: translateX(-1.5px); pointer-events: none; opacity: 0.95; }
+.right-section__divider { height: 2px; width: 100%; background: #155cc4; margin: 8px 0 14px; border-radius: 2px; }
 
-/* Container for: divider + sides + footer */
-.register-body {
-    position: relative;
-    display: grid;
-    grid-template-rows: auto auto; /* sides + footer */
-    row-gap: clamp(18px, 2.4vw, 28px);
-}
+.register-left, .register-right { width: 100%; max-width: 560px; display: grid; justify-items: stretch; }
+.register-right { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; transform: translateY(-12px); }
 
-/* Two upper sections; centered both ways */
-.register-sides {
-    position: relative; /* needed for the pseudo divider */
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(16px, 2.4vw, 28px);
-    align-items: center;
-    justify-items: center;
-    min-height: clamp(330px, 33vw, 520px); /* was 290px, 29vw, 440px */
-}
+.register-form--bare { background: transparent !important; border: 0 !important; padding: 0 !important; }
 
-/* Centered vertical divider ONLY through .register-sides */
-.register-sides::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;          /* only spans upper halves */
-    left: 50%;
-    width: 3px;         /* thicker */
-    background: #155cc4;/* blue */
-    transform: translateX(-1.5px);
-    pointer-events: none;
-    opacity: 0.95;
-}
-
-/* ===== Right-side title divider (matches section dividers) ===== */
-.right-section__divider {
-    height: 2px;
-    width: 100%;
-    background: #155cc4;
-    margin: 8px 0 14px; /* sits between title and image */
-    border-radius: 2px;
-}
-
-
-/* Left = form area */
-.register-left,
-.register-right {
-    width: 100%;
-    max-width: 560px;
-    display: grid;
-    justify-items: stretch;
-}
-
-/* Right side: center content, and nudge it UP slightly to align with left divider */
-.register-right {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    text-align: center;
-    transform: translateY(-12px);
-}
-
-/* Remove white box around the form for this screen */
-.register-form--bare {
-    background: transparent !important;
-    border: 0 !important;
-    padding: 0 !important;
-}
-
-/* Mobile/tablet */
 @media (max-width: 900px) {
     .register-right { transform: none; }
-    .register-illustration-img {
-        width: 100%;
-        max-width: 500px;  /* slight bump here too */
-        margin-inline: auto;
-    }
+    .register-illustration-img { width: 100%; max-width: 500px; margin-inline: auto; }
     .register-sides { min-height: unset; }
 }
 
-/* Title spacing tuned for the centered layout */
-.register-panel__title {
-    font-size: clamp(20px, 2.6vw, 28px);
-    margin: 0 0 14px;  /* slightly tighter under the heading before image */
-}
+.register-panel__title { font-size: clamp(20px, 2.6vw, 28px); margin: 0 0 14px; }
+.register-illustration-img { width: clamp(300px, 30vw, 560px); height: auto; object-fit: contain; display: block; }
 
-
-/* Image sizing – fills the right column nicely without stretching */
-.register-illustration-img {
-    width: clamp(300px, 30vw, 560px);
-    height: auto;
-    object-fit: contain;
-    display: block;
-}
-/* Footer with CTA */
-.register-footer {
-    display: grid;
-    justify-items: center;
-    row-gap: 8px;
-    padding-top: 0; /* not needed now */
-    margin-top: clamp(16px, 3.6vw, 36px); /* nudged up from previous value */
-    padding-bottom: 0;
-}
+.register-footer { display: grid; justify-items: center; row-gap: 8px; margin-top: clamp(16px, 3.6vw, 36px); }
 .footer-hint { margin: 4px 0 0; }
 
-/* Button: keep blue, add nicer hover/focus */
-.btn.btn--primary{
-    display:inline-flex; align-items:center; justify-content:center;
-    min-width:220px; height:44px; padding:0 16px;
-    border-radius:10px;
-    border:2px solid #1454B2;           /* crisper blue border */
-    background:#2a75ea;
-    color:#fff; font-weight:600;
-    box-shadow:0 2px 0 #155cc4;
-    transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
-}
-.btn.btn--primary:hover {
-    background: #1f66e0;                  /* subtle darker blue */
-    transform: translateY(-1px);
-    box-shadow:0 3px 0 #155cc4;
-}
-.btn.btn--primary:focus-visible{
-    outline: 2px solid #1454B2;
-    outline-offset: 2px;
-}
+.btn.btn--primary{ display:inline-flex; align-items:center; justify-content:center; min-width:220px; height:44px; padding:0 16px; border-radius:10px; border:2px solid #1454B2; background:#2a75ea; color:#fff; font-weight:600; box-shadow:0 2px 0 #155cc4; transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease; }
+.btn.btn--primary:hover { background: #1f66e0; transform: translateY(-1px); box-shadow:0 3px 0 #155cc4; }
+.btn.btn--primary:focus-visible{ outline: 2px solid #1454B2; outline-offset: 2px; }
 .btn[disabled]{ opacity:.6; cursor:not-allowed; }
 
-/* Section headings slightly bigger than labels */
 .form-section + .form-section { margin-top: clamp(12px, 2vw, 20px); }
+.form-section__title { font-size: clamp(1.05rem, 1.6vw, 1.2rem); font-weight: 700; margin: 0 0 6px; color: #0e3e8a; }
+.form-section__divider { height: 2px; background: #155cc4; margin: 0 0 12px; border-radius: 2px; }
 
-.form-section__title {
-    font-size: clamp(1.05rem, 1.6vw, 1.2rem);
-    font-weight: 700;
-    margin: 0 0 6px;
-    color: #0e3e8a; /* darker variant of your primary */
-}
-
-.form-section__divider {
-    height: 2px;
-    background: #155cc4; /* your darker blue */
-    margin: 0 0 12px;
-    border-radius: 2px;
-}
-
-/* Grid helpers for rows */
-.form-grid {
-    column-gap: 16px;
-    row-gap: 28px;
-}
+.form-grid { column-gap: 16px; row-gap: 28px; }
 .form-grid--3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
 .form-grid--2 { display: grid; grid-template-columns: 1fr 1fr; }
 .form-grid--1 { display: grid; grid-template-columns: 1fr; }
 
-@media (max-width: 900px) {
-    .form-grid--3,
-    .form-grid--2 { grid-template-columns: 1fr; }
-    .register-right { transform: none; }
-}
+@media (max-width: 900px) { .form-grid--3, .form-grid--2 { grid-template-columns: 1fr; } .register-right { transform: none; } }
 
-/* Labels with tiny red star for required */
-.label {
-    font-weight: 600;
-    margin-bottom: 9px;
-}
-.label--required::after {
-    content: " *";
-    color: #DC2626;
-    font-weight: 700;
-    margin-left: 2px;
-}
+.label { font-weight: 600; margin-bottom: 9px; }
+.label--required::after { content: " *"; color: #DC2626; font-weight: 700; margin-left: 2px; }
 
-/* Inputs */
 .input { width: 100%; }
+.input[aria-invalid="true"], select.input[aria-invalid="true"] { border-color: #DC2626; }
 
-.input[aria-invalid="true"], select.input[aria-invalid="true"] {
-    border-color: #DC2626;
-}
-
-/* Tiny red error text */
-.error {
-    color: #DC2626;
-    font-size: 0.85rem;
-    margin-top: 6px;
-}
+.error { color: #DC2626; font-size: 0.85rem; margin-top: 6px; }
 </style>
