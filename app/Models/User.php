@@ -70,4 +70,10 @@ class User extends Authenticatable
     public function studentProfile(){
         return $this->hasOne(StudentProfile::class, 'student_user_id');
     }
+
+    public function companyOwnerProfile()
+    {
+        return $this->hasOne(\App\Models\CompanyOwnerProfile::class, 'company_user_id');
+    }
+
 }
