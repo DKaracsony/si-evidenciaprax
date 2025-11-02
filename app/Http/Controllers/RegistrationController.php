@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Address;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Models\CompanyActivation;
 use App\Services\RoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+use App\Mail\CompanyActivationMail;
 
 class RegistrationController extends Controller
 {
@@ -44,27 +49,28 @@ class RegistrationController extends Controller
             'last_name'     => ['required','string','min:2','max:50'],
             'title_before'  => ['nullable','string','max:30'],
             'email'         => ['required','email','max:255','unique:users,email'],
-            'phone_number'  => ['required','string','min:8', 'max:20'],
-            'city'          => ['required','string','min:2', 'max:100'],
-            'street'        => ['required','string','min:2', 'max:100'],
-            'house_number'  => ['required', 'integer', 'min:1', 'digits_between:1,10'],
-            'postal_code'   => ['required','string','min:3', 'max:10'],
+            'phone_number'  => ['required','string','min:8','max:20'],
+            'city'          => ['required','string','min:2','max:100'],
+            'street'        => ['required','string','min:2','max:100'],
+            'house_number'  => ['required','integer','min:1','digits_between:1,10'],
+            'postal_code'   => ['required','string','min:3','max:10'],
             'country'       => ['required','integer','exists:countries,id'],
         ];
 
         $rules = $this->register_type === $this->form_types[0]
-            //STUDENT
             ? array_merge($common, [
-                'student_email' => ['required', 'string', 'max:255', 'email',
-                    // aspoň 1 bodka - najviac 2, len písmená/čísla v segmentoch pred @ a doména musí byť student.ukf.sk
+                'student_email' => ['required','string','max:255','email',
                     'regex:/^[a-z0-9]+(?:\.[a-z0-9]+){1,2}@student\.ukf\.sk$/i',
                     'unique:student_profiles,student_email',
                 ],
                 'faculty'       => ['required','integer','exists:faculties,id'],
             ])
-            //COMPANY
             : array_merge($common, [
-                //TODO: implement Atus other validations for company
+                'title_after'     => ['nullable','string','max:30'],
+                'company_name'    => ['required','string','min:2','max:150'],
+                'role_at_company' => ['nullable','string','max:50'],
+                'description'     => ['nullable','string','max:800'],
+                'website'         => ['nullable','string','max:255'],
             ]);
 
         $validator = Validator::make($this->data, $rules);
@@ -121,6 +127,73 @@ class RegistrationController extends Controller
 
     public function registerCompany()
     {
-        //TODO: implement Atus - without password, password will be set later if activation was successful
+        $role_id = $this->roles->all()->firstWhere('name', 'firma')?->id;
+        if (!$role_id) {
+            return [__('registration.ROLE_COMPANY_NOT_FOUND'), null, 422];
+        }
+
+        $user = User::create([
+            'first_name'    => $this->data['first_name'],
+            'last_name'     => $this->data['last_name'],
+            'title_before'  => $this->data['title_before'] ?? null,
+            'title_after'   => $this->data['title_after'] ?? null,
+            'email'         => $this->data['email'],
+            'password_hash' => null,
+            'phone_number'  => $this->data['phone_number'],
+            'role_id'       => $role_id,
+            'active'        => false,
+        ]);
+
+        $address = Address::create([
+            'city'         => $this->data['city'],
+            'street'       => $this->data['street'],
+            'house_number' => $this->data['house_number'],
+            'postal_code'  => $this->data['postal_code'],
+            'country_id'   => $this->data['country'],
+        ]);
+
+        $company = \App\Models\Company::create([
+            'name'        => $this->data['company_name'],
+            'description' => $this->data['description'] ?? null,
+            'website'     => $this->data['website'] ?? null,
+            'address_id'  => $address->id,
+        ]);
+
+        \App\Models\CompanyOwnerProfile::create([
+            'is_active'             => false,
+            'company_id'            => $company->id,
+            'company_user_id'       => $user->id,
+            'company_activation_id' => null,
+            'role_at_company'       => $this->data['role_at_company'] ?? null,
+        ]);
+
+        $plainToken = Str::random(64);
+
+        $activation = CompanyActivation::create([
+            'hash'         => hash('sha256', $plainToken),
+            'sent_to_mail' => $user->email,
+            'created_at'   => now(),
+            'consumed_at'  => null,
+        ]);
+
+        $activationUrl = rtrim(config('app.front_company_activation_url'), '/')
+            . '?token=' . urlencode($plainToken)
+            . '&email=' . urlencode($user->email);
+
+        $expiresText = Carbon::parse($activation->created_at)
+            ->addHours(48)
+            ->timezone('Europe/Bratislava')
+            ->isoFormat('D.M.Y HH:mm');
+
+        Mail::to($user->email)->send(new CompanyActivationMail(
+            user: $user,
+            company: $company,
+            activationLink: $activationUrl,
+            tokenExpiration: $expiresText
+        ));
+
+        $user->load(['companyOwnerProfile.company.address']);
+
+        return [__('registration.COMPANY_REGISTERED_PENDING_ACTIVATION'), $user, 201];
     }
 }

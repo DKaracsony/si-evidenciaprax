@@ -15,7 +15,7 @@ class Company extends Model
 
     public function ownerProfiles()
     {
-        return $this->hasOne(CompanyOwnerProfile::class);
+        return $this->hasOne(CompanyOwnerProfile::class, 'company_id');
     }
 }
 
