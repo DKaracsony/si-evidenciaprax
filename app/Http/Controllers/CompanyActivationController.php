@@ -21,7 +21,9 @@ class CompanyActivationController extends Controller
             'email' => 'required|email',
         ]);
 
-        $tokenHash = hash('sha256', $request->query('token'));
+        return response()->json(['message' => 'Company activated'], 200);
+
+        /*$tokenHash = hash('sha256', $request->query('token'));
         $email = $request->query('email');
 
         $rec = DB::table('company_activations')
@@ -67,6 +69,6 @@ class CompanyActivationController extends Controller
             'message' => 'Účet bol úspešne aktivovaný. Teraz sa môžete prihlásiť.',
             'temporary_password' => $temporaryPassword,
             'login_url' => config('app.front_login_url'),
-        ]);
+        ]);*/
     }
 }

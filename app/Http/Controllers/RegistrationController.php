@@ -176,9 +176,11 @@ class RegistrationController extends Controller
             'consumed_at'  => null,
         ]);
 
-        $activationUrl = rtrim(config('app.front_company_activation_url'), '/')
-            . '?token=' . urlencode($plainToken)
-            . '&email=' . urlencode($user->email);
+        $baseUrl = rtrim(url('/'), '/');
+        $activationUrl = $baseUrl . '/activation/company/' . http_build_query([
+                'token' => $plainToken,
+                'email' => $user->email,
+            ]);
 
         $expiresText = Carbon::parse($activation->created_at)
             ->addHours(48)
