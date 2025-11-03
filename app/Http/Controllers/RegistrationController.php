@@ -6,6 +6,7 @@ use App\Models\Address;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Models\CompanyActivation;
+use App\Services\MailSender;
 use App\Services\RoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -117,6 +118,18 @@ class RegistrationController extends Controller
             'student_user_id'   => $user->id,
         ]);
 
+        $mailSender = new MailSender(
+            'student_registration',
+            [$this->data['student_email']],
+            [
+                'user'             => $user,
+                'temporaryPassword'=> $random_password,
+                'loginURL'         => rtrim(url('/login'), '/'),
+            ]
+        );
+
+        $mailSender->send();
+
         $user->load([
             'studentProfile.address.country',
             'studentProfile.faculty',
@@ -167,6 +180,15 @@ class RegistrationController extends Controller
             'role_at_company'       => $this->data['role_at_company'] ?? null,
         ]);
 
+        $this->sendActivationMail($user, $company);
+
+        $user->load(['companyOwnerProfile.company.address']);
+
+        return [__('registration.COMPANY_REGISTERED_PENDING_ACTIVATION'), $user, 201];
+    }
+
+    private function sendActivationMail($user, $company)
+    {
         $plainToken = Str::random(64);
 
         $activation = CompanyActivation::create([
@@ -180,22 +202,24 @@ class RegistrationController extends Controller
         $activationUrl = $baseUrl . '/activation/company/' . http_build_query([
                 'token' => $plainToken,
                 'email' => $user->email,
-            ]);
+                ]);
 
         $expiresText = Carbon::parse($activation->created_at)
             ->addHours(48)
             ->timezone('Europe/Bratislava')
             ->isoFormat('D.M.Y HH:mm');
 
-        Mail::to($user->email)->send(new CompanyActivationMail(
-            user: $user,
-            company: $company,
-            activationLink: $activationUrl,
-            tokenExpiration: $expiresText
-        ));
+        $mailSender = new MailSender(
+            'company_activation',
+            [$user->email],
+            [
+                'user'             => $user,
+                'company'          => $company,
+                'activationLink'   => $activationUrl,
+                'tokenExpiration'  => $expiresText,
+            ]
+        );
 
-        $user->load(['companyOwnerProfile.company.address']);
-
-        return [__('registration.COMPANY_REGISTERED_PENDING_ACTIVATION'), $user, 201];
+        $mailSender->send();
     }
 }
