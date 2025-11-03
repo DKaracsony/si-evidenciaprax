@@ -21,7 +21,12 @@ class CompanyActivationController extends Controller
             'email' => 'required|email',
         ]);
 
-        $tokenHash = hash('sha256', $request->query('token'));
+        return response()->json(['message' => 'Company activated'], 200);
+        //TODO: ATUS - this is just a test response because yesterday this method threw error, so you can outcomment the code below and implement it correctly
+        //TODO: ATUS - please do not create new email template controller, because we have already MailSender service for sending emails with templates + we have config file where we can configure mails
+        //TODO: ATUS - so you can check for example how I updated the RegistrationController (company activation link template), where you also created new email class, it would be redundant
+
+        /*$tokenHash = hash('sha256', $request->query('token'));
         $email = $request->query('email');
 
         $rec = DB::table('company_activations')
@@ -67,6 +72,6 @@ class CompanyActivationController extends Controller
             'message' => 'Účet bol úspešne aktivovaný. Teraz sa môžete prihlásiť.',
             'temporary_password' => $temporaryPassword,
             'login_url' => config('app.front_login_url'),
-        ]);
+        ]);*/
     }
 }
