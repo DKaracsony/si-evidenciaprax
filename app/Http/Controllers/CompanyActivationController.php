@@ -72,14 +72,14 @@ class CompanyActivationController extends Controller
             [
                 'user'              => $user,
                 'temporaryPassword' => $temporaryPassword,
-                'loginUrl'          => config('app.front_login_url'),
+                'loginUrl'          => rtrim(url('/login'), '/'),
             ]
         ))->send();
 
 
         $payload = [
             'message'   => 'Účet bol úspešne aktivovaný. Teraz sa môžete prihlásiť.',
-            'login_url' => config('app.front_login_url'),
+            'login_url' => rtrim(url('/login'), '/'),
         ];
         if (config('app.debug')) {
             $payload['temporary_password'] = $temporaryPassword;
