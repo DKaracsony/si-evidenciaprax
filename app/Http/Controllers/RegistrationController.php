@@ -11,10 +11,8 @@ use App\Services\RoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
-use App\Mail\CompanyActivationMail;
 
 class RegistrationController extends Controller
 {
@@ -199,10 +197,10 @@ class RegistrationController extends Controller
         ]);
 
         $baseUrl = rtrim(url('/'), '/');
-        $activationUrl = $baseUrl . '/activation/company/' . http_build_query([
+        $activationUrl = $baseUrl . '/company/activate?' . http_build_query([
                 'token' => $plainToken,
                 'email' => $user->email,
-                ]);
+            ]);
 
         $expiresText = Carbon::parse($activation->created_at)
             ->addHours(48)

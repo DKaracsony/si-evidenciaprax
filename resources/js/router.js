@@ -13,9 +13,8 @@ export const router = createRouter({
         { path: '/', component: LandingPage, name: 'LandingPage' },
         { path: '/register', component: RegisterPage, name: 'RegisterPage' },
         { path: '/register/sent', component: RegisterConfirmationPage, name: 'RegisterConfirmationPage' },
-        { path: '/activation/company/:token', component: CompanyActivationPage, name: 'CompanyActivationPage' },
-        //testing, delete later!
         { path: '/register/sent-preview', component: RegisterSentPage, name: 'RegisterSentPage' },
+        { path: '/company/activate', component: CompanyActivationPage, name: 'CompanyActivationPage' },
         { path: '/:pathMatch(.*)*', redirect: '/' },
 
 
