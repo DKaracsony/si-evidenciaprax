@@ -1,9 +1,8 @@
 /* =============================================================================
-   Register — form & card (register-form)
-   Visual styles for the card and the inner form grid.
+   Register — card, two-column layout, form grid, and CTA
+   Everything is namespaced under .register-card to avoid global leakage.
    ========================================================================== */
 
-/* --- Card container (same look as landing .lp-second__card) --- */
 .register-card {
     position: relative;
     margin-inline: auto;
@@ -11,47 +10,208 @@
     /* visual shell */
     padding: clamp(22px, 3.6vw, 36px) clamp(20px, 3.6vw, 36px) clamp(30px, 3.8vw, 44px);
     background: var(--color-primary-400);      /* #7CADFA */
-    border: 7px solid var(--color-primary-300);/* matches landing card border */
-    border-radius: 16px;
-    box-shadow: none;                          /* keep consistent with landing */
-    overflow: hidden;                          /* for any hanging elements */
-}
-
-/* --- Inner form block --- */
-.register-form {
-    /* shell */
-    max-width: 980px;
-    margin-inline: auto;
-    padding: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-card);
-    border-radius: var(--radius);
-
-    &__grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-
-        @media (max-width: 820px) {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .field { display: flex; flex-direction: column; }
-    .input:focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-    .input.invalid { border-color: #DC2626; }
-    .error { color: #DC2626; font-size: .85rem; margin-top: 4px; }
-    .hint { color: #6b7280; font-size: .8rem; margin-top: 2px; }
-}
-
-/* --- Card container --- */
-.register-card {
-    position: relative;
-    margin-inline: auto;
-    padding: clamp(22px, 3.6vw, 36px) clamp(20px, 3.6vw, 36px) clamp(30px, 3.8vw, 44px);
-    background: var(--color-primary-400);
     border: 7px solid var(--color-primary-300);
     border-radius: 16px;
     box-shadow: none;
     overflow: hidden;
+
+    /* ------------------------------------------------------------
+       Panels / main layout
+       ------------------------------------------------------------ */
+    .register-panel {
+        padding-top: clamp(64px, 7vw, 96px);
+    }
+
+    .register-body {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto auto;
+        row-gap: clamp(18px, 2.4vw, 28px);
+    }
+
+    .register-sides {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: clamp(16px, 2.4vw, 28px);
+        align-items: center;
+        justify-items: center;
+        min-height: clamp(330px, 33vw, 520px);
+
+        &::after {
+            content: "";
+            position: absolute;
+            top: 0; bottom: 0; left: 50%;
+            width: 3px;
+            background: #155cc4;
+            transform: translateX(-1.5px);
+            pointer-events: none;
+            opacity: 0.95;
+        }
+    }
+
+    .register-left,
+    .register-right {
+        width: 100%;
+        max-width: 560px;
+        display: grid;
+        justify-items: stretch;
+    }
+
+    .register-right {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: center;
+        transform: translateY(-12px);
+    }
+
+    @media (max-width: 900px) {
+        .register-right { transform: none; }
+        .register-illustration-img { width: 100%; max-width: 500px; margin-inline: auto; }
+        .register-sides { min-height: unset; }
+    }
+
+    /* Title + divider + illustration */
+    .register-panel__title {
+        font-size: clamp(20px, 2.6vw, 28px);
+        margin: 0 0 14px;
+    }
+
+    .right-section__divider {
+        height: 2px;
+        width: 100%;
+        background: #155cc4;
+        margin: 8px 0 14px;
+        border-radius: 2px;
+    }
+
+    .register-illustration-img {
+        width: clamp(300px, 30vw, 560px);
+        height: auto;
+        object-fit: contain;
+        display: block;
+    }
+
+    /* ------------------------------------------------------------
+       Footer / primary CTA
+       ------------------------------------------------------------ */
+    .register-footer {
+        display: grid;
+        justify-items: center;
+        row-gap: 8px;
+        margin-top: clamp(16px, 3.6vw, 36px);
+    }
+
+    .footer-hint { margin: 4px 0 0; }
+
+    /* remove hover underline on "Prihláste sa!" */
+    .footer-hint a {
+        text-decoration: none;
+    }
+    .footer-hint a:hover,
+    .footer-hint a:focus-visible {
+        text-decoration: none;
+    }
+
+    .btn.btn--primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 220px;
+        height: 44px;
+        padding: 0 16px;
+        border-radius: 10px;
+        border: 2px solid #1454B2;
+        background: #2a75ea;
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 2px 0 #155cc4;
+        transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+
+        &:hover { background: #1f66e0; transform: translateY(-1px); box-shadow: 0 3px 0 #155cc4; }
+        &:focus-visible { outline: 2px solid #1454B2; outline-offset: 2px; }
+        &[disabled] { opacity: .6; cursor: not-allowed; }
+    }
+
+    /* ------------------------------------------------------------
+       Form shells
+       ------------------------------------------------------------ */
+    .register-form {
+        max-width: 980px;
+        margin-inline: auto;
+        padding: 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius);
+
+        &--bare {
+            background: transparent !important;
+            border: 0 !important;
+            padding: 0 !important;
+        }
+
+        .field { display: flex; flex-direction: column; }
+    }
+
+    /* ------------------------------------------------------------
+       Sections, grids, inputs, errors
+       ------------------------------------------------------------ */
+    .form-section + .form-section { margin-top: clamp(12px, 2vw, 20px); }
+
+    .form-section__title {
+        font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+        font-weight: 700;
+        margin: 0 0 6px;
+        color: #0e3e8a;
+    }
+
+    .form-section__divider {
+        height: 2px;
+        background: #155cc4;
+        margin: 0 0 12px;
+        border-radius: 2px;
+    }
+
+    .form-grid { column-gap: 16px; row-gap: 28px; }
+    .form-grid--3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+    .form-grid--2 { display: grid; grid-template-columns: 1fr 1fr; }
+    .form-grid--1 { display: grid; grid-template-columns: 1fr; }
+
+    @media (max-width: 900px) {
+        .form-grid--3,
+        .form-grid--2 { grid-template-columns: 1fr; }
+    }
+
+    .label { font-weight: 600; margin-bottom: 9px; }
+    .label--required::after { content: " *"; color: #DC2626; font-weight: 700; margin-left: 2px; }
+
+    .input {
+        width: 100%;
+
+        &:focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+        &.invalid { border-color: #DC2626; }
+        &[aria-invalid="true"] { border-color: #DC2626; }
+    }
+
+    select.input[aria-invalid="true"] { border-color: #DC2626; }
+
+    .error {
+        color: #DC2626;
+        font-size: 0.85rem;
+        margin-top: 6px;
+
+        /* styles for the inline "Skúsiť znova" button if you remove inline styles later */
+        > button {
+            all: unset;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    }
+
+    .hint { color: #6b7280; font-size: .8rem; margin-top: 2px; }
 }
+
+/* If you ever mount .register-tabs elsewhere, keep active-state consistent */
+.register-tabs .register-tab.is-active { /* visuals live in lp-second */ }
