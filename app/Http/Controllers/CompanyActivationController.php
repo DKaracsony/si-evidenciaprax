@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\MailSender;
+use App\Models\CompanyActivation;
 
 class CompanyActivationController extends Controller
 {
@@ -87,5 +88,63 @@ class CompanyActivationController extends Controller
 
         return response()->json($payload, 200);
 
+    }
+    public function resend(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $email = $request->input('email');
+        $generic = ['message' => 'Ak účet existuje a nie je aktivovaný, poslali sme nový aktivačný email.'];
+
+        /** @var User|null $user */
+        $user = User::where('email', $email)->first();
+
+        if (!$user || (bool) $user->active) {
+            return response()->json($generic, 200);
+        }
+
+        $company = method_exists($user, 'companyOwnerProfile') && $user->companyOwnerProfile
+            ? ($user->companyOwnerProfile->company ?? null)
+            : null;
+
+        DB::transaction(function () use ($user, $company) {
+            CompanyActivation::where('sent_to_mail', $user->email)
+                ->whereNull('consumed_at')
+                ->delete();
+
+            $plainToken = Str::random(64);
+            $activation = CompanyActivation::create([
+                'hash'         => hash('sha256', $plainToken),
+                'sent_to_mail' => $user->email,
+                'created_at'   => now(),
+                'consumed_at'  => null,
+            ]);
+
+            $baseUrl = rtrim(url('/'), '/');
+            $activationUrl = $baseUrl . '/company/activate?' . http_build_query([
+                    'token' => $plainToken,
+                    'email' => $user->email,
+                ]);
+
+            $expiresText = Carbon::parse($activation->created_at)
+                ->addHours(48)
+                ->timezone('Europe/Bratislava')
+                ->isoFormat('D.M.Y HH:mm');
+
+            (new MailSender(
+                'company_activation',
+                [$user->email],
+                [
+                    'user'            => $user,
+                    'company'         => $company,
+                    'activationLink'  => $activationUrl,
+                    'tokenExpiration' => $expiresText,
+                ]
+            ))->send();
+        });
+
+        return response()->json($generic, 200);
     }
 }
