@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\MailSender;
 use App\Models\CompanyActivation;
+use App\Models\CompanyOwnerProfile; // ⬅️ added
 
 class CompanyActivationController extends Controller
 {
@@ -32,40 +33,46 @@ class CompanyActivationController extends Controller
             ->first();
 
         if (!$rec) {
-            return response()->json(['code'    => 'TOKEN_INVALID', 'message' => 'Aktivačný odkaz je neplatný.'], 422);
+            return response()->json(['code' => 'TOKEN_INVALID', 'message' => 'Aktivačný odkaz je neplatný.'], 422);
         }
-
 
         $expiresAt = Carbon::parse($rec->created_at)->addHours(48);
         if (now()->greaterThan($expiresAt)) {
-            return response()->json(['code'    => 'TOKEN_EXPIRED', 'message' => 'Platnosť aktivačného odkazu vypršala.'], 422);
+            return response()->json(['code' => 'TOKEN_EXPIRED', 'message' => 'Platnosť aktivačného odkazu vypršala.'], 422);
         }
-
 
         if (!is_null($rec->consumed_at)) {
-            return response()->json(['code'    => 'ALREADY_ACTIVATED', 'message' => 'Účet už bol aktivovaný.'], 422);
+            return response()->json(['code' => 'ALREADY_ACTIVATED', 'message' => 'Účet už bol aktivovaný.'], 422);
         }
-
 
         $user = User::where('email', $email)->first();
         if (!$user) {
             return response()->json(['message' => 'Používateľ s danou e-mailovou adresou neexistuje.'], 422);
         }
 
-
         $temporaryPassword = Str::password(14);
 
         DB::transaction(function () use ($user, $temporaryPassword, $rec) {
+            // 1) Activate the user and set temp password
             $user->password_hash = Hash::make($temporaryPassword);
             $user->active = true;
             $user->password_reset_needed = true;
             $user->save();
 
+            // 2) Mark the activation token as consumed
             DB::table('company_activations')
                 ->where('id', $rec->id)
                 ->update(['consumed_at' => now()]);
-        });
 
+            // 3) Flip the company owner profile to active + link the activation id
+            //    (update all profiles for safety; schema suggests hasOne in practice)
+            CompanyOwnerProfile::where('company_user_id', $user->id)
+                ->update([
+                    'is_active'             => true,
+                    'company_activation_id' => $rec->id,
+                    'updated_at'            => now(), // ensure timestamps are consistent
+                ]);
+        });
 
         (new MailSender(
             'company_temp_password',
@@ -77,7 +84,6 @@ class CompanyActivationController extends Controller
             ]
         ))->send();
 
-
         $payload = [
             'message'   => 'Účet bol úspešne aktivovaný. Teraz sa môžete prihlásiť.',
             'login_url' => rtrim(url('/login'), '/'),
@@ -87,8 +93,8 @@ class CompanyActivationController extends Controller
         }
 
         return response()->json($payload, 200);
-
     }
+
     public function resend(Request $request): JsonResponse
     {
         $request->validate([
@@ -110,10 +116,12 @@ class CompanyActivationController extends Controller
             : null;
 
         DB::transaction(function () use ($user, $company) {
+            // Remove any stale, unconsumed activations
             CompanyActivation::where('sent_to_mail', $user->email)
                 ->whereNull('consumed_at')
                 ->delete();
 
+            // Create a fresh activation token
             $plainToken = Str::random(64);
             $activation = CompanyActivation::create([
                 'hash'         => hash('sha256', $plainToken),
@@ -121,6 +129,13 @@ class CompanyActivationController extends Controller
                 'created_at'   => now(),
                 'consumed_at'  => null,
             ]);
+
+            // Link the owner profile to the new activation record
+            CompanyOwnerProfile::where('company_user_id', $user->id)
+                ->update([
+                    'company_activation_id' => $activation->id,
+                    'updated_at'            => now(),
+                ]);
 
             $baseUrl = rtrim(url('/'), '/');
             $activationUrl = $baseUrl . '/company/activate?' . http_build_query([

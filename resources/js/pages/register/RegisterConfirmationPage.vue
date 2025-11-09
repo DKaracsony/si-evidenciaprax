@@ -25,15 +25,6 @@
 
                 <div class="sent__actions" role="group" aria-label="Akcie po registrácii">
                     <RouterLink to="/login" class="sent__btn-primary">Prihlásenie</RouterLink>
-
-                    <!-- identical style, clickable, no logic -->
-                    <button
-                        v-if="resolvedType === 'company'"
-                        class="sent__btn-primary"
-                        type="button"
-                    >
-                        Poslať email znova
-                    </button>
                 </div>
             </article>
         </div>
@@ -156,7 +147,7 @@ const resolvedType = computed<'student' | 'company'>(() => {
 /* Unified primary button (no underline on hover) */
 .sent__btn-primary {
     --btn-h: 54px;
-    --btn-w: 280px;                 /* same width for both buttons */
+    --btn-w: 280px;                /* fixed width for the single CTA */
     min-width: var(--btn-w);
 
     display: inline-flex;

@@ -41,6 +41,12 @@
                 <div class="register-sides">
                     <div class="register-left">
                         <form ref="studentForm" class="register-form register-form--bare" @submit.prevent>
+
+                            <!-- MOBILE-ONLY heading for student -->
+                            <h2 class="register-panel__title register-panel__title--mobile">
+                                Ste našim študentom?<br />Zaregistrujte teraz!
+                            </h2>
+
                             <!-- ========= Sekcia: Študent ========= -->
                             <div class="form-section">
                                 <h3 class="form-section__title">Študent</h3>

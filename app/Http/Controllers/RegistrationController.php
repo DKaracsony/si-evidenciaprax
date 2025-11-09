@@ -6,6 +6,7 @@ use App\Models\Address;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Models\CompanyActivation;
+use App\Models\CompanyOwnerProfile; // ⬅️ added
 use App\Services\MailSender;
 use App\Services\RoleService;
 use Illuminate\Http\JsonResponse;
@@ -195,6 +196,13 @@ class RegistrationController extends Controller
             'created_at'   => now(),
             'consumed_at'  => null,
         ]);
+
+        // ⬇️ NEW: link the owner profile with the activation we just created
+        CompanyOwnerProfile::where('company_user_id', $user->id)
+            ->update([
+                'company_activation_id' => $activation->id,
+                'updated_at'            => now(),
+            ]);
 
         $baseUrl = rtrim(url('/'), '/');
         $activationUrl = $baseUrl . '/company/activate?' . http_build_query([
