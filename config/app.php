@@ -53,7 +53,6 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
-    'front_company_activation_url' => env('FRONT_COMPANY_ACTIVATION_URL', 'https://frontend.example.com/activate/company'),
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

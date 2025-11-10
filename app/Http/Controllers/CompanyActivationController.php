@@ -3,70 +3,130 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\CompanyActivationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
-use App\Mail\CompanyTempPasswordMail;
+use App\Services\MailSender;
+use App\Models\CompanyActivation;
+use App\Models\CompanyOwnerProfile;
 
 class CompanyActivationController extends Controller
 {
+    public function __construct(private CompanyActivationService $activationService) {}
+
     public function activate(Request $request): JsonResponse
     {
         $request->validate([
-            'token' => 'required|string',
-            'email' => 'required|email',
+            'token' => ['required','string'],
+            'email' => ['required','email'],
         ]);
 
-        $tokenHash = hash('sha256', $request->query('token'));
+        $token = $request->query('token');
         $email = $request->query('email');
+        $tokenHash = hash('sha256', $token);
 
         $rec = DB::table('company_activations')
             ->where('hash', $tokenHash)
             ->where('sent_to_mail', $email)
+            ->orderByDesc('id')
             ->first();
 
         if (!$rec) {
-            return response()->json(['message' => 'Aktivačný odkaz je neplatný.'], 410);
+            return response()->json(['code' => 'TOKEN_INVALID', 'message' => 'Aktivačný odkaz je neplatný.'], 422);
         }
 
         $expiresAt = Carbon::parse($rec->created_at)->addHours(48);
         if (now()->greaterThan($expiresAt)) {
-            return response()->json(['message' => 'Platnosť aktivačného odkazu vypršala. Požiadajte o nový odkaz na prihlasovacej stránke.'], 410);
+            return response()->json(['code' => 'TOKEN_EXPIRED', 'message' => 'Platnosť aktivačného odkazu vypršala.'], 422);
         }
 
         if (!is_null($rec->consumed_at)) {
-            return response()->json(['message' => 'Tento aktivačný odkaz už bol použitý. Prihláste sa alebo požiadajte o nový odkaz.'], 410);
+            return response()->json(['code' => 'ALREADY_ACTIVATED', 'message' => 'Účet už bol aktivovaný.'], 422);
         }
 
         $user = User::where('email', $email)->first();
         if (!$user) {
-            return response()->json(['message' => 'Používateľ s danou e-mailovou adresou neexistuje.'], 410);
+            return response()->json(['message' => 'Používateľ s danou e-mailovou adresou neexistuje.'], 422);
         }
 
         $temporaryPassword = Str::password(14);
 
-        $user->password_hash = Hash::make($temporaryPassword);
-        $user->active = true;
-        $user->save();
+        DB::transaction(function () use ($user, $temporaryPassword, $rec) {
+            // 1) Activate the user and set temp password
+            $user->password_hash = Hash::make($temporaryPassword);
+            $user->active = true;
+            $user->password_reset_needed = true;
+            $user->save();
 
-        DB::table('company_activations')->where('id', $rec->id)->update([
-            'consumed_at' => now(),
+            // 2) Mark the activation token as consumed
+            DB::table('company_activations')
+                ->where('id', $rec->id)
+                ->update(['consumed_at' => now()]);
+
+            // 3) Flip the company owner profile to active + link the activation id
+            //    (update all profiles for safety; schema suggests hasOne in practice)
+            CompanyOwnerProfile::where('company_user_id', $user->id)
+                ->update([
+                    'is_active'             => true,
+                    'company_activation_id' => $rec->id,
+                    'updated_at'            => now(), // ensure timestamps are consistent
+                ]);
+        });
+
+        (new MailSender(
+            'company_temp_password',
+            [$user->email],
+            [
+                'user'              => $user,
+                'temporaryPassword' => $temporaryPassword,
+                'loginUrl'          => rtrim(url('/login'), '/'),
+            ]
+        ))->send();
+
+        $payload = [
+            'message'   => 'Účet bol úspešne aktivovaný. Teraz sa môžete prihlásiť.',
+            'login_url' => rtrim(url('/login'), '/'),
+        ];
+        if (config('app.debug')) {
+            $payload['temporary_password'] = $temporaryPassword;
+        }
+
+        return response()->json($payload, 200);
+    }
+
+    public function resend(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
         ]);
 
-        Mail::to($user->email)->send(new CompanyTempPasswordMail(
-            kontaktMeno: $user->first_name,
-            docasneHeslo: $temporaryPassword,
-            prihlasenieUrl: config('app.front_login_url')
-        ));
+        $email = $request->input('email');
+        $generic = ['message' => 'Ak účet existuje a nie je aktivovaný, poslali sme nový aktivačný email.'];
 
-        return response()->json([
-            'message' => 'Účet bol úspešne aktivovaný. Teraz sa môžete prihlásiť.',
-            'temporary_password' => $temporaryPassword,
-            'login_url' => config('app.front_login_url'),
-        ]);
+        /** @var User|null $user */
+        $user = User::where('email', $email)->first();
+
+        if (!$user || (bool) $user->active) {
+            return response()->json($generic, 200);
+        }
+
+        $company = method_exists($user, 'companyOwnerProfile') && $user->companyOwnerProfile
+            ? ($user->companyOwnerProfile->company ?? null)
+            : null;
+
+        DB::transaction(function () use ($user, $company) {
+            // Remove any stale, unconsumed activations
+            CompanyActivation::where('sent_to_mail', $user->email)
+                ->whereNull('consumed_at')
+                ->delete();
+
+            $this->activationService->createAndSendActivation($user, $company);
+        });
+
+        return response()->json($generic, 200);
     }
 }

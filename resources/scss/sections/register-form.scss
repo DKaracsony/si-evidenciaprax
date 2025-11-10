@@ -1,0 +1,305 @@
+@use '../settings/breakpoints' as *;
+
+/* =============================================================================
+   Register — desktop-first responsive layout
+   Mirrors the look/feel/behavior of LandingFirst (lp-first)
+   ========================================================================== */
+
+.register-card {
+    /* visual shell */
+    position: relative;
+    margin-inline: auto;
+    padding: clamp(22px, 3.6vw, 36px) clamp(20px, 3.6vw, 36px) clamp(30px, 3.8vw, 44px);
+    background: var(--color-primary-400);
+    border: 7px solid var(--color-primary-300);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.10);
+
+    /* match landing's fixed CTA height */
+    --btn-h: 50px;
+
+    /* button height scales like lp-first */
+    @include up($bp-md) { --btn-h: 48px; }
+    @include up($bp-xl) { --btn-h: 64px; }
+
+    /* =========================
+       PANELS / BODY
+       ========================= */
+    .register-panel {
+        padding-top: clamp(64px, 7vw, 96px);
+    }
+
+    .register-body {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto auto;
+        row-gap: clamp(18px, 2.4vw, 28px);
+    }
+
+    /* Desktop: two columns with a vertical divider (like lp-first card split) */
+    .register-sides {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: clamp(16px, 2.4vw, 28px);
+        align-items: center;
+        justify-items: center;
+        min-height: clamp(330px, 33vw, 520px);
+
+        &::after {
+            content: "";
+            position: absolute;
+            top: 0; bottom: 0; left: 50%;
+            width: 3px;
+            background: #155cc4;
+            transform: translateX(-1.5px);
+            pointer-events: none;
+            opacity: 0.95;
+        }
+
+        /* Tablet & down: single column stack, remove divider */
+        @media (max-width: $bp-md) {
+            grid-template-columns: 1fr;
+            min-height: unset;
+            justify-items: stretch; /* let children span full width */
+
+            &::after { display: none; }
+        }
+    }
+
+    /* Two sides */
+    .register-left,
+    .register-right {
+        width: 100%;
+        max-width: 560px;
+        display: grid;
+        justify-items: stretch;
+    }
+
+    /* Right: title + divider + illustration */
+    .register-right {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transform: translateY(-12px);
+
+        @media (max-width: $bp-lg) {
+            transform: none;
+        }
+    }
+
+    /* === Stack order on phones ===
+       We always want the FORM first on small screens,
+       even for the company panel (which is reversed in DOM on desktop). */
+    @media (max-width: $bp-md) {
+        .register-left  { order: 1; max-width: none; width: 100%; } /* form first and stretched */
+        .register-right { order: 2; max-width: none; width: 100%; } /* illustration second */
+    }
+
+    .register-panel__title {
+        font-size: clamp(20px, 2.6vw, 28px);
+        margin: 0 0 14px;
+        color: #000;
+    }
+    .right-section__divider {
+        height: 2px;
+        width: 100%;
+        background: #155cc4;
+        margin: 8px 0 14px;
+        border-radius: 2px;
+    }
+    .register-illustration-img {
+        width: clamp(300px, 30vw, 560px);
+        height: auto;
+        object-fit: contain;
+        display: block;
+
+        @media (max-width: $bp-md) {
+            width: 100%;
+            max-width: 520px;
+            margin-inline: auto;
+        }
+    }
+
+    /* =========================
+       SPECIAL RULES PER PANEL
+       ========================= */
+
+    /* STUDENT: ensure any accidental heading/divider placed in the LEFT/form side is hidden.
+       (Keep the heading/divider visible on the RIGHT side for desktop; both hide together on mobile.) */
+    #reg-panel-student .register-left .register-panel__title,
+    #reg-panel-student .register-left .right-section__divider {
+        display: none !important;
+    }
+
+    /* At tablet-and-down:
+       - hide the entire right side (image + heading + divider) for BOTH student & company
+       (so headings & image are visible on desktop, disappear together on small screens) */
+    @media (max-width: $bp-md) {
+        #reg-panel-student .register-right,
+        #reg-panel-company .register-right {
+            display: none !important;
+        }
+    }
+
+    /* =========================
+       FOOTER / CTA (parity with lp-first)
+       ========================= */
+    .register-footer {
+        display: grid;
+        justify-items: center;
+        row-gap: 8px;
+        margin-top: clamp(16px, 3.6vw, 36px);
+    }
+    .footer-hint { margin: 4px 0 0; }
+    .footer-hint a { text-decoration: none; }
+    .footer-hint a:hover,
+    .footer-hint a:focus-visible { text-decoration: none; }
+
+    .btn.btn--primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+
+        border: 4px solid #a9c9ff;
+        background: #1868DB !important;
+        color: var(--text-inverse) !important;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+        text-decoration: none;
+
+        min-width: 220px;
+        padding: 0 40px;
+        line-height: 1;
+        height: var(--btn-h);
+        min-height: var(--btn-h);
+        max-height: var(--btn-h);
+
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: calc(var(--radius, 16px) - 2px);
+
+        will-change: transform;
+        backface-visibility: hidden;
+        transition:
+            background-color 200ms ease,
+            border-color 200ms ease,
+            box-shadow 200ms ease,
+            transform 120ms ease;
+
+        &:hover {
+            background: #155CC4 !important;
+            color: var(--text-inverse) !important;
+            border-color: var(--color-primary-700);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+        }
+        &:active { background: #134FAA !important; transform: translateY(0.5px); }
+        &:focus-visible { outline: 3px solid #a9c9ff; outline-offset: 2px; }
+
+        &[disabled], &:disabled {
+            opacity: .6; cursor: not-allowed; transform: none;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+        }
+    }
+
+    /* Hover polish only on hover-capable devices (parity with landing) */
+    @media (hover: hover) and (pointer: fine) {
+        .btn.btn--primary:hover { transform: scale(1.03); }
+    }
+
+    /* =========================
+       FORM SHELLS / GRIDS / INPUTS
+       ========================= */
+    .register-form {
+        max-width: 980px;
+        width: 100%;               /* ensure full stretch on small screens */
+        margin-inline: auto;
+        padding: 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius, 16px);
+
+        &--bare {
+            background: transparent !important;
+            border: 0 !important;
+            padding: 0 !important;
+        }
+
+        .field { display: flex; flex-direction: column; }
+    }
+
+    .form-section + .form-section { margin-top: clamp(12px, 2vw, 20px); }
+
+    .form-section__title {
+        font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+        font-weight: 700;
+        margin: 0 0 6px;
+        color: #0e3e8a;
+    }
+    .form-section__divider {
+        height: 2px;
+        background: #155cc4;
+        margin: 0 0 12px;
+        border-radius: 2px;
+    }
+
+    .form-grid { column-gap: 16px; row-gap: 28px; }
+    .form-grid--3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+    .form-grid--2 { display: grid; grid-template-columns: 1fr 1fr; }
+    .form-grid--1 { display: grid; grid-template-columns: 1fr; }
+
+    /* Collapse to single column at tablet and below (align with landing) */
+    @media (max-width: $bp-md) {
+        .form-grid--3,
+        .form-grid--2 { grid-template-columns: 1fr; }
+    }
+
+    .label { font-weight: 600; margin-bottom: 9px; }
+    .label--required::after { content: " *"; color: #DC2626; font-weight: 700; margin-left: 2px; }
+
+    .input {
+        width: 100%;
+        &:focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+        &.invalid { border-color: #DC2626; }
+        &[aria-invalid="true"] { border-color: #DC2626; }
+    }
+    select.input[aria-invalid="true"] { border-color: #DC2626; }
+
+    /* --- Popis (textarea) : fixed size (no manual resize), still optional --- */
+    .register-form textarea,
+    .register-form textarea.input {
+        resize: none;          /* user can't drag to resize */
+        height: auto;          /* respect rows attribute for height */
+        min-height: 6.5rem;    /* matches rows="4" nicely */
+        max-height: 16rem;     /* avoid runaway growth in some UAs */
+    }
+
+    .error {
+        color: #DC2626;
+        font-size: 0.85rem;
+        margin-top: 6px;
+
+        > button {
+            all: unset;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    }
+
+    .hint { color: #6b7280; font-size: .8rem; margin-top: 2px; }
+
+    /* =========================
+       NARROW SCREENS POLISH
+       ========================= */
+    @media (max-width: 360px) {
+        border-width: 5px;
+        padding: 16px;
+
+        .register-panel { padding-top: 44px; }
+    }
+}
+
+/* Keep tab visuals consistent with lp-second if mounted elsewhere */
+.register-tabs .register-tab.is-active { /* style lives in lp-second */ }

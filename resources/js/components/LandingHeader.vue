@@ -10,13 +10,16 @@
             <!-- Left spacer column (balances the centered logo in the grid). -->
             <div aria-hidden="true"></div>
 
-            <!-- Logo: uses a runtime URL so Vite does NOT try to import it. -->
-            <a href="/" class="lp-nav__logo" aria-label="Domov">
+            <!-- Logo links home -->
+            <RouterLink to="/" class="lp-nav__logo" aria-label="Domov">
                 <img :src="logoUrl" alt="PraxSI logo" />
-            </a>
+            </RouterLink>
 
-            <!-- Primary action: authentication entry point. -->
-            <a href="/login" class="btn-primary lp-nav__btn">Prihlásenie</a>
+            <!-- Right-side group: Úvod (link) + Prihlásenie (button) -->
+            <div class="lp-nav__right">
+                <RouterLink to="/" class="lp-nav__link">Úvod</RouterLink>
+                <a href="/login" class="btn-primary lp-nav__btn">Prihlásenie</a>
+            </div>
         </div>
     </header>
 </template>
