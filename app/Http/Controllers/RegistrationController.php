@@ -3,17 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Address;
+use App\Models\Company;
 use App\Models\StudentProfile;
 use App\Models\User;
-use App\Models\CompanyActivation;
-use App\Models\CompanyOwnerProfile; // ⬅️ added
+use App\Models\CompanyOwnerProfile;
+use App\Services\CompanyActivationService;
 use App\Services\MailSender;
 use App\Services\RoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class RegistrationController extends Controller
 {
@@ -21,7 +20,7 @@ class RegistrationController extends Controller
     protected $data;
     protected $form_types = ['student_form', 'company_form'];
 
-    public function __construct(private RoleService $roles) {}
+    public function __construct(private RoleService $roles, private CompanyActivationService $activationService) {}
 
     public function handleRegister(Request $request)
     {
@@ -164,14 +163,14 @@ class RegistrationController extends Controller
             'country_id'   => $this->data['country'],
         ]);
 
-        $company = \App\Models\Company::create([
+        $company = Company::create([
             'name'        => $this->data['company_name'],
             'description' => $this->data['description'] ?? null,
             'website'     => $this->data['website'] ?? null,
             'address_id'  => $address->id,
         ]);
 
-        \App\Models\CompanyOwnerProfile::create([
+        CompanyOwnerProfile::create([
             'is_active'             => false,
             'company_id'            => $company->id,
             'company_user_id'       => $user->id,
@@ -179,53 +178,10 @@ class RegistrationController extends Controller
             'role_at_company'       => $this->data['role_at_company'] ?? null,
         ]);
 
-        $this->sendActivationMail($user, $company);
+        $this->activationService->createAndSendActivation($user, $company);
 
         $user->load(['companyOwnerProfile.company.address']);
 
         return [__('registration.COMPANY_REGISTERED_PENDING_ACTIVATION'), $user, 201];
-    }
-
-    private function sendActivationMail($user, $company)
-    {
-        $plainToken = Str::random(64);
-
-        $activation = CompanyActivation::create([
-            'hash'         => hash('sha256', $plainToken),
-            'sent_to_mail' => $user->email,
-            'created_at'   => now(),
-            'consumed_at'  => null,
-        ]);
-
-        // ⬇️ NEW: link the owner profile with the activation we just created
-        CompanyOwnerProfile::where('company_user_id', $user->id)
-            ->update([
-                'company_activation_id' => $activation->id,
-                'updated_at'            => now(),
-            ]);
-
-        $baseUrl = rtrim(url('/'), '/');
-        $activationUrl = $baseUrl . '/company/activate?' . http_build_query([
-                'token' => $plainToken,
-                'email' => $user->email,
-            ]);
-
-        $expiresText = Carbon::parse($activation->created_at)
-            ->addHours(48)
-            ->timezone('Europe/Bratislava')
-            ->isoFormat('D.M.Y HH:mm');
-
-        $mailSender = new MailSender(
-            'company_activation',
-            [$user->email],
-            [
-                'user'             => $user,
-                'company'          => $company,
-                'activationLink'   => $activationUrl,
-                'tokenExpiration'  => $expiresText,
-            ]
-        );
-
-        $mailSender->send();
     }
 }

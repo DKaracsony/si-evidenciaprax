@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\CompanyActivationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -11,10 +12,12 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\MailSender;
 use App\Models\CompanyActivation;
-use App\Models\CompanyOwnerProfile; // ⬅️ added
+use App\Models\CompanyOwnerProfile;
 
 class CompanyActivationController extends Controller
 {
+    public function __construct(private CompanyActivationService $activationService) {}
+
     public function activate(Request $request): JsonResponse
     {
         $request->validate([
@@ -121,43 +124,7 @@ class CompanyActivationController extends Controller
                 ->whereNull('consumed_at')
                 ->delete();
 
-            // Create a fresh activation token
-            $plainToken = Str::random(64);
-            $activation = CompanyActivation::create([
-                'hash'         => hash('sha256', $plainToken),
-                'sent_to_mail' => $user->email,
-                'created_at'   => now(),
-                'consumed_at'  => null,
-            ]);
-
-            // Link the owner profile to the new activation record
-            CompanyOwnerProfile::where('company_user_id', $user->id)
-                ->update([
-                    'company_activation_id' => $activation->id,
-                    'updated_at'            => now(),
-                ]);
-
-            $baseUrl = rtrim(url('/'), '/');
-            $activationUrl = $baseUrl . '/company/activate?' . http_build_query([
-                    'token' => $plainToken,
-                    'email' => $user->email,
-                ]);
-
-            $expiresText = Carbon::parse($activation->created_at)
-                ->addHours(48)
-                ->timezone('Europe/Bratislava')
-                ->isoFormat('D.M.Y HH:mm');
-
-            (new MailSender(
-                'company_activation',
-                [$user->email],
-                [
-                    'user'            => $user,
-                    'company'         => $company,
-                    'activationLink'  => $activationUrl,
-                    'tokenExpiration' => $expiresText,
-                ]
-            ))->send();
+            $this->activationService->createAndSendActivation($user, $company);
         });
 
         return response()->json($generic, 200);
