@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,3 +14,9 @@ Route::post('/register', [RegistrationController::class, 'handleRegister']);
 Route::get('/company/activate', [CompanyActivationController::class, 'activate']);
 Route::get('/countries', [CountryController::class, 'index']);
 Route::post('/company/activate/resend', [CompanyActivationController::class, 'resend']);
+
+//AUTHENTICATED ENDPOINTS
+Route::middleware('auth:api')->group(function () {
+    Route::get('/user', [AuthController::class, 'userDetails']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
