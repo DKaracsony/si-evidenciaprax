@@ -86,6 +86,16 @@ return [
         ],
 
         // ==== FIRMA ====
+
+
+        // ==== HESLO / PASSWORD ====
+        'password' => [
+            'required'  => 'Pole heslo je povinné.',
+            'string'    => 'Heslo musí byť text.',
+            'min'       => 'Heslo musí mať aspoň 8 znakov.',
+            'confirmed' => 'Potvrdenie hesla sa nezhoduje.',
+        ],
+
     ],
 
 
