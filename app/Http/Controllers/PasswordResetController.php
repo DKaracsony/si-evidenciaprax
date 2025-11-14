@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Services\PasswordResetService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class PasswordResetController extends Controller
 {
@@ -34,6 +36,37 @@ class PasswordResetController extends Controller
 
         return response()->json([
             'message' => 'Ak je token platný, heslo bolo zmenené.'
+        ]);
+    }
+
+    public function changePassword(Request $r)
+    {
+        $user = $r->user();
+
+        $validator = Validator::make($r->all(), [
+            'current_password'      => 'required|string',
+            'new_password'          => 'required|string|min:8|confirmed',
+            //v requeste musi byt new_password_confirmation
+        ]);
+
+        if ($validator->fails())
+            return response()->json([
+                'message' => 'Neplatné vstupy.',
+                'errors'  => $validator->errors()->toArray(),
+            ], 422);
+
+
+        if (!Hash::check($r->input('current_password'), $user->password_hash))
+            return response()->json([
+                'message' => 'Aktuálne heslo je nesprávne.',
+            ], 422);
+
+
+        $user->password_hash = Hash::make($r->input('new_password'));
+        $user->save();
+
+        return response()->json([
+            'message' => 'Heslo bolo úspešne zmenené.'
         ]);
     }
 }
