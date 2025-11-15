@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Role extends Model
 {
+    const GARANT = 'garant';
+    const STUDENT = 'študent';
+    const COMPANY = 'firma';
+
     protected $table = 'roles';
 
     protected $fillable = [
