@@ -13,4 +13,8 @@ return [
         'view'    => 'emails.student_registration',
         'subject' => 'Dočasné heslo do systému Evidencia praxí',
     ],
+    'password_reset' => [
+        'view'    => 'emails.password_reset',
+        'subject' => 'Obnovenie hesla – Evidencia praxe',
+    ],
 ];
