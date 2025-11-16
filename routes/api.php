@@ -15,6 +15,8 @@ Route::post('/register', [RegistrationController::class, 'handleRegister']);
 Route::get('/company/activate', [CompanyActivationController::class, 'activate']);
 Route::get('/countries', [CountryController::class, 'index']);
 Route::post('/company/activate/resend', [CompanyActivationController::class, 'resend']);
+
+// PASSWORD RESET ENDPOINTS
 Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
 Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 
