@@ -63,6 +63,7 @@ class PasswordResetController extends Controller
 
 
         $user->password_hash = Hash::make($r->input('new_password'));
+        $user->password_reset_needed = false;
         $user->save();
 
         return response()->json([
