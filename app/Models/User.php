@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
     protected $table = 'users';
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -74,6 +75,20 @@ class User extends Authenticatable
     public function companyOwnerProfile()
     {
         return $this->hasOne(\App\Models\CompanyOwnerProfile::class, 'company_user_id');
+    }
+
+    public function getAuthPassword() // override to use password_hash
+    {
+        return $this->password_hash;
+    }
+
+    protected function userAddress() : Attribute// dynamic attribute to get address from either studentProfile or companyOwnerProfile
+    {
+        return Attribute::make(
+            get: fn() => $this->studentProfile?->address
+                ?? $this->companyOwnerProfile?->company?->address
+                ?? null
+        );
     }
 
 }
