@@ -96,6 +96,18 @@ return [
             'confirmed' => 'Potvrdenie hesla sa nezhoduje.',
         ],
 
+        'current_password' => [
+            'required' => 'Pole aktuálne heslo je povinné.',
+            'string'   => 'Aktuálne heslo musí byť text.',
+        ],
+
+        'new_password' => [
+            'required'  => 'Pole nové heslo je povinné.',
+            'string'    => 'Nové heslo musí byť text.',
+            'min'       => 'Nové heslo musí mať aspoň 8 znakov.',
+            'confirmed' => 'Potvrdenie nového hesla sa nezhoduje.',
+        ]
+
     ],
 
 
