@@ -106,6 +106,11 @@ return [
             'string'    => 'Nové heslo musí byť text.',
             'min'       => 'Nové heslo musí mať aspoň 8 znakov.',
             'confirmed' => 'Potvrdenie nového hesla sa nezhoduje.',
+        ],
+
+        'token' => [
+            'required' => 'Token je povinný.',
+            'string'   => 'Token musí byť text.',
         ]
 
     ],

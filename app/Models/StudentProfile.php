@@ -9,7 +9,7 @@ class StudentProfile extends Model
     protected $table = 'student_profiles';
 
     protected $fillable = [
-      'student_email',
+      'personal_email',
       'faculty_id',
       'address_id',
       'student_user_id',

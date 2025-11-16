@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Address;
 use App\Models\Company;
+use App\Models\Role;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Models\CompanyOwnerProfile;
@@ -47,7 +48,6 @@ class RegistrationController extends Controller
             'first_name'    => ['required','string','min:2','max:50'],
             'last_name'     => ['required','string','min:2','max:50'],
             'title_before'  => ['nullable','string','max:30'],
-            'email'         => ['required','email','max:255','unique:users,email'],
             'phone_number'  => ['required','string','min:8','max:20'],
             'city'          => ['required','string','min:2','max:100'],
             'street'        => ['required','string','min:2','max:100'],
@@ -60,9 +60,10 @@ class RegistrationController extends Controller
             ? array_merge($common, [
                 'student_email' => ['required','string','max:255','email',
                     'regex:/^[a-z0-9]+(?:\.[a-z0-9]+){1,2}@student\.ukf\.sk$/i',
-                    'unique:student_profiles,student_email',
+                    'unique:users,email',
                 ],
                 'faculty'       => ['required','integer','exists:faculties,id'],
+                'email'         => ['required','email','max:255','unique:student_profiles,personal_email'],
             ])
             : array_merge($common, [
                 'title_after'     => ['nullable','string','max:30'],
@@ -70,6 +71,7 @@ class RegistrationController extends Controller
                 'role_at_company' => ['nullable','string','max:50'],
                 'description'     => ['nullable','string','max:800'],
                 'website'         => ['nullable','string','max:255'],
+                'email'           => ['required','email','max:255','unique:users,email'],
             ]);
 
         $validator = Validator::make($this->data, $rules);
@@ -88,14 +90,14 @@ class RegistrationController extends Controller
     {
         $random_password = bin2hex(random_bytes(4));
 
-        $role_id = $this->roles->all()->firstWhere('name', 'študent')?->id;
+        $role_id = $this->roles->all()->firstWhere('name', Role::STUDENT)?->id;
         if (!$role_id) return [__('registration.ROLE_STUDENT_NOT_FOUND'), null, 422];
 
         $user = User::create([
             'first_name'    => $this->data['first_name'],
             'last_name'     => $this->data['last_name'],
             'title_before'  => $this->data['title_before'] ?? null,
-            'email'         => $this->data['email'],
+            'email'         => $this->data['student_email'],
             'password_hash' => bcrypt($random_password),
             'phone_number'  => $this->data['phone_number'],
             'role_id'       => $role_id,
@@ -110,7 +112,7 @@ class RegistrationController extends Controller
         ]);
 
         StudentProfile::create([
-            'student_email'     => $this->data['student_email'],
+            'personal_email'     => $this->data['email'],
             'faculty_id'        => $this->data['faculty'],
             'address_id'        => $address->id,
             'student_user_id'   => $user->id,
@@ -138,7 +140,7 @@ class RegistrationController extends Controller
 
     public function registerCompany()
     {
-        $role_id = $this->roles->all()->firstWhere('name', 'firma')?->id;
+        $role_id = $this->roles->all()->firstWhere('name', Role::COMPANY)?->id;
         if (!$role_id) {
             return [__('registration.ROLE_COMPANY_NOT_FOUND'), null, 422];
         }

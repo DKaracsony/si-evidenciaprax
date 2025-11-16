@@ -14,7 +14,7 @@ class PasswordResetController extends Controller
     public function forgot(Request $r)
     {
         $data = $r->validate(['email' => 'required|email:rfc,strict']);
-        $this->service->issueTokenAndSendMail($data['email'], $r->ip(), $r->userAgent());
+        $this->service->issueTokenAndSendMail($data['email']);
         return response()->json([
             'message' => 'Ak existuje účet, poslali sme e-mail s ďalším postupom.'
         ]);
