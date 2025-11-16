@@ -11,15 +11,13 @@ use App\Services\MailSender;
 
 class PasswordResetService
 {
-    public function issueTokenAndSendMail(string $rawEmail, ?string $ip = null, ?string $ua = null): void
+    public function issueTokenAndSendMail(string $rawEmail): void
     {
         $inputEmail = mb_strtolower(trim($rawEmail));
+        $user = User::whereRaw('LOWER(email) = ?', [$inputEmail])->first();
 
-        // 1) Decision: which user and which address should the email go to?
-        [$user, $deliverTo] = $this->resolveUserAndRecipientEmail($inputEmail);
-
-        // anti-enumeration + only active users receive resets
-        if (!$user || !($user->active ?? false) || $deliverTo === '') {
+        // 1) only active users receive resets
+        if (!$user || !($user->active ?? false)) {
             return;
         }
 
@@ -28,7 +26,7 @@ class PasswordResetService
         $hash       = Hash::make($plainToken);
         $expiresAt  = Carbon::now()->addHours(2);
 
-        DB::transaction(function () use ($user, $hash, $expiresAt, $deliverTo) {
+        DB::transaction(function () use ($user, $hash, $expiresAt) {
             DB::table('password_resets')
                 ->where('user_id', $user->id)
                 ->whereNull('consumed_at')
@@ -40,64 +38,23 @@ class PasswordResetService
                 'expires_at'   => $expiresAt,
                 'created_at'   => now(),
                 'consumed_at'  => null,
-                'sent_to_mail' => $deliverTo,
+                'sent_to_mail' => $user->email,
             ]);
         });
 
         // 3) Reset URL + e-mail
-        $resetUrl = $this->makeResetUrl($plainToken, $deliverTo);
+        $resetUrl = $this->makeResetUrl($plainToken, $user->email);
 
         (new MailSender(
             'password_reset',
-            [$deliverTo],
-            ['email' => $deliverTo, 'reset_url' => $resetUrl]
+            [$user->email],
+            ['email' => $user->email, 'reset_url' => $resetUrl]
         ))->send();
-    }
-
-    private function resolveUserAndRecipientEmail(string $inputEmail): array
-    {
-        // 1 Student: student_profiles.student_email
-        $studentProfile = DB::table('student_profiles')
-            ->whereRaw('LOWER(student_email) = ?', [$inputEmail])
-            ->first();
-
-        if ($studentProfile && $studentProfile->student_user_id) {
-            $user = User::find($studentProfile->student_user_id);
-
-            if ($user) {
-                $deliverTo = mb_strtolower((string) $studentProfile->student_email);
-
-                // optional domain check
-                if ($deliverTo !== '' && $this->domainOf($deliverTo) === 'student.ukf.sk') {
-                    return [$user, $deliverTo];
-                }
-            }
-        }
-
-        // 2 Not student / fallback: users.email
-        $user = User::whereRaw('LOWER(email) = ?', [$inputEmail])->first();
-
-        if ($user && !empty($user->email)) {
-            return [$user, mb_strtolower($user->email)];
-        }
-
-        return [null, ''];
-    }
-
-    private function domainOf(string $email): string
-    {
-        $at = strrchr($email, '@');
-        return $at ? mb_strtolower(ltrim($at, '@')) : '';
     }
 
     private function makeResetUrl(string $plainToken, string $email): string
     {
-        // Backend APP_URL
-        $base = rtrim(
-            (string) (config('app.url') ?? env('APP_URL') ?? 'http://127.0.0.1:8000'),
-            '/'
-        );
-
+        $base = rtrim(url('/'), '/');
         $query = http_build_query([
             'token' => $plainToken,
             'email' => $email,

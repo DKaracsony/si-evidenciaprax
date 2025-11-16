@@ -11,9 +11,6 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        if (!$user)
-            return response()->json(['message' => __('global_error.UNAUTHORIZED')], 401);
-
         $userData = [
             'id' => $user->id,
             'first_name' => $user->first_name,
@@ -31,7 +28,7 @@ class AuthController extends Controller
         if ($user->studentProfile)
             $userData['student_profile'] = [
                 'student_profile_id' => $user->studentProfile->id,
-                'student_mail' => $user->studentProfile->student_email,
+                'personal_email' => $user->studentProfile->personal_email,
                 'faculty_id' => $user->studentProfile->faculty?->id,
                 'faculty_name' => $user->studentProfile->faculty?->name,
             ];
@@ -49,12 +46,6 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json(['message' => __('global_error.UNAUTHORIZED')], 401);
-        }
-
         $request->user()->token()->revoke();
 
         return response()->json(['message' => __('info_messages.LOGOUT_SUCCESS')]);
