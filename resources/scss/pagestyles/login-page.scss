@@ -1,0 +1,30 @@
+// resources/scss/pagestyles/login-page.scss
+@use '../settings/breakpoints' as *;
+@use '../settings/colors' as *;
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-primary-200);
+
+    &__main {
+        background: var(--color-primary-200);
+        flex: 1;
+        display: flex;
+        align-items: center;          // vertical centering
+        padding-block: 60px;
+    }
+
+    &__content {
+        width: 100%;
+        display: flex;
+        justify-content: center;      // horizontal centering
+    }
+}
+
+@include up($bp-md) {
+    .login-page__main {
+        padding-block: 100px;
+    }
+}

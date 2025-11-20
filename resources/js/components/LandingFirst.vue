@@ -4,7 +4,7 @@
       Purpose:
       - Present the value prop and a quick visual of the product.
       - Three short bullet-style points.
-      - Primary CTA to registration.
+      - Primary CTA to registration (only for neprihlásených používateľov).
       Notes:
       - The image is placed inside the left column so that on phones it naturally
         stacks beneath the title divider (see SCSS layout grid).
@@ -38,9 +38,16 @@
                         </p>
                     </div>
 
-                    <!-- Primary CTA -->
+                    <!-- Primary CTA: only visible when NOT authenticated -->
                     <div class="lp-first__actions">
-                        <a href="/register" class="btn-primary lp-first__btn-register" @click.prevent="$router.push('/register')">Registrovať</a>
+                        <a
+                            v-if="!isAuthenticated"
+                            href="/register"
+                            class="btn-primary lp-first__btn-register"
+                            @click.prevent="$router.push('/register')"
+                        >
+                            Registrovať
+                        </a>
                     </div>
                 </div>
             </article>
@@ -49,8 +56,14 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useAuthStore } from '../stores/auth'; // adjust path if LandingFirst is elsewhere
+
 // Static assets served from public/storage.
 // Keeping plain string URLs avoids Vite import handling.
-const imgUrl  = '/storage/lp-first-1.png'
-const iconUrl = '/storage/icons/tick-box-icon.png'
+const imgUrl  = '/storage/lp-first-1.png';
+const iconUrl = '/storage/icons/tick-box-icon.png';
+
+const authStore = useAuthStore();
+const isAuthenticated = computed(() => authStore.isAuthenticated);
 </script>
