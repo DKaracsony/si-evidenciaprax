@@ -91,4 +91,9 @@ class User extends Authenticatable
         );
     }
 
+    public function internshipStatusHistories()
+    {
+        return $this->hasMany(InternshipStatusHistory::class, 'changed_by_user_id');
+    }
+
 }

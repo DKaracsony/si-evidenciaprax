@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Internship extends Model
+{
+    protected $table = 'internships';
+    protected $fillable = ['student_profile_id', 'company_id', 'academic_year_id', 'date_from', 'date_to', 'description', 'is_draft', 'submitted_at'];
+
+    public function studentProfile()
+    {
+        return $this->belongsTo(StudentProfile::class, 'student_profile_id', 'id');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id', 'id');
+    }
+
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id', 'id');
+    }
+
+    public function internshipStatusHistories()
+    {
+        return $this->hasMany(InternshipStatusHistory::class, 'internship_id', 'id');
+    }
+}

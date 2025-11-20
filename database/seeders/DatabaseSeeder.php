@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        //NOTE: consult the team leader before seeding to avoid data conflicts
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
@@ -20,6 +21,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             RolePermissionSeeder::class,
             CountrySeeder::class,
+            InternshipStatusSeeder::class,
         ]);
     }
 }
