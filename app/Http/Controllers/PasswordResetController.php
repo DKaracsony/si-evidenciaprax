@@ -43,31 +43,40 @@ class PasswordResetController extends Controller
     {
         $user = $r->user();
 
-        $validator = Validator::make($r->all(), [
-            'current_password'      => 'required|string',
-            'new_password'          => 'required|string|min:8|confirmed',
-            //v requeste musi byt new_password_confirmation
-        ]);
+        // základné pravidlá – nové heslo
+        $rules = [
+            'new_password' => 'required|string|min:8|confirmed',
+            // v requeste musí byť new_password_confirmation
+        ];
 
-        if ($validator->fails())
+        // ak nejde o povinnú prvú zmenu hesla, vyžadujeme current_password
+        if (!$user->password_reset_needed) {
+            $rules['current_password'] = 'required|string';
+        }
+
+        $validator = Validator::make($r->all(), $rules);
+
+        if ($validator->fails()) {
             return response()->json([
                 'message' => 'Neplatné vstupy.',
                 'errors'  => $validator->errors()->toArray(),
             ], 422);
+        }
 
-
-        if (!Hash::check($r->input('current_password'), $user->password_hash))
+        // Kontrola aktuálneho hesla len v "bežnom" prípade
+        if (!$user->password_reset_needed && !Hash::check($r->input('current_password'), $user->password_hash))
             return response()->json([
                 'message' => 'Aktuálne heslo je nesprávne.',
             ], 422);
 
-
+        // Samotná zmena hesla (v oboch prípadoch rovnaká)
         $user->password_hash = Hash::make($r->input('new_password'));
         $user->password_reset_needed = false;
         $user->save();
 
         return response()->json([
-            'message' => 'Heslo bolo úspešne zmenené.'
+            'message' => 'Heslo bolo úspešne zmenené.',
         ]);
     }
+
 }
