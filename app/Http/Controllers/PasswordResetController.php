@@ -64,13 +64,10 @@ class PasswordResetController extends Controller
         }
 
         // Kontrola aktuálneho hesla len v "bežnom" prípade
-        if (!$user->password_reset_needed) {
-            if (!Hash::check($r->input('current_password'), $user->password_hash)) {
-                return response()->json([
-                    'message' => 'Aktuálne heslo je nesprávne.',
-                ], 422);
-            }
-        }
+        if (!$user->password_reset_needed && !Hash::check($r->input('current_password'), $user->password_hash))
+            return response()->json([
+                'message' => 'Aktuálne heslo je nesprávne.',
+            ], 422);
 
         // Samotná zmena hesla (v oboch prípadoch rovnaká)
         $user->password_hash = Hash::make($r->input('new_password'));
