@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Address;
 use App\Models\Company;
+use App\Models\CompanyOwnerProfile;
 use App\Models\Role;
 use App\Models\StudentProfile;
 use App\Models\User;
-use App\Models\CompanyOwnerProfile;
+use App\Services\Cache\RoleService;
 use App\Services\CompanyActivationService;
 use App\Services\MailSender;
-use App\Services\RoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

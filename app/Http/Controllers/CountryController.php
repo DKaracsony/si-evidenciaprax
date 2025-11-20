@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\CountryService;
+use App\Services\Cache\CountryService;
 use Illuminate\Http\JsonResponse;
 
 class CountryController extends Controller
