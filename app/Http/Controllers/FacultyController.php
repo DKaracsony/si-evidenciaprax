@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\FacultyService;
+use App\Services\Cache\FacultyService;
 use Illuminate\Http\JsonResponse;
 
 class FacultyController extends Controller

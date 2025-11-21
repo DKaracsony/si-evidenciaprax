@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Services\Cache\CountryService;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use App\Services\CountryService;
 
 class CountrySeeder extends Seeder
 {

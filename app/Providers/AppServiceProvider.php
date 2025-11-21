@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
-use App\Services\CountryService;
-use App\Services\RoleService;
-use App\Services\FacultyService;
+use App\Services\Cache\CountryService;
+use App\Services\Cache\FacultyService;
+use App\Services\Cache\RoleService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
@@ -25,19 +25,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(RoleService $roles, FacultyService $faculties, CountryService $countries): void
     {
-        //CACHE VRSTVA
-        if (!Cache::has(RoleService::CACHE_KEY)) {
-            $roles->warm();
-        }
-
-        if (!Cache::has(FacultyService::CACHE_KEY)) {
-            $faculties->warm();
-        }
-
-        if (!Cache::has(CountryService::CACHE_KEY)) {
-            $countries->warm();
-        }
-
         //PASSPORT NASTAVENIA
         Passport::enablePasswordGrant();
         Passport::tokensExpireIn(Carbon::now()->addHours(1));
