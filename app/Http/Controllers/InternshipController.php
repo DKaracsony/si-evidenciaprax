@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Internship;
+use App\Models\InternshipStatusHistory;
+use App\Models\Status;
+use App\Services\Cache\InternshipStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -87,10 +90,23 @@ class InternshipController extends Controller
                 'company_id' => $request->input('company_id'),
                 'academic_year_id' => $request->input('academic_year_id'),
                 'submitted_at' => $request->input('is_draft') ? null : now(),
-            ]);}
+            ]);
+
+            if($internship && !$request->input('is_draft')){
+                $statusService = new InternshipStatusService();
+                $statusId = $statusService->all()->where('name', Status::CREATED)->pluck('id')->first();
+
+                InternshipStatusHistory::create([
+                    'internship_id' => $internship->id,
+                    'status_id' => $statusId,
+                    'status_changed_at' => now(),
+                    'changed_by_user_id' => $user->id,
+                ]);
+            }
+        }
         catch (\Exception $e){
             return response()->json([
-                'message' => __('global_error.SERVER_ERROR')
+                'message' => __('global_error.SERVER_ERROR'),
             ], 500);
         }
 
