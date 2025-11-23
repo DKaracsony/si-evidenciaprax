@@ -29,7 +29,7 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('/account/password', [PasswordResetController::class, 'changePassword']);
     Route::get('/academic-years', [AcademicYearController::class, 'index']);
     Route::get('/student/internships', [InternshipController::class, 'index']);
-    //make a group which starts with /student
+    
     Route::prefix('student')->group(function () {
         Route::get('/internships', [InternshipController::class, 'index']);
         Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);
