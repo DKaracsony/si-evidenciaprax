@@ -8,6 +8,8 @@ use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\CompanyActivationController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\AcademicYearController;
+use App\Http\Controllers\InternshipController;
 
 //REGISTRATION FORM ENDPOINTS
 Route::get('/faculties', [FacultyController::class, 'index']);
@@ -25,4 +27,12 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user', [AuthController::class, 'userDetails']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::patch('/account/password', [PasswordResetController::class, 'changePassword']);
+    Route::get('/academic-years', [AcademicYearController::class, 'index']);
+    Route::get('/student/internships', [InternshipController::class, 'index']);
+
+    Route::prefix('student')->group(function () {
+        Route::get('/internships', [InternshipController::class, 'index']);
+        Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);
+    });
+
 });
