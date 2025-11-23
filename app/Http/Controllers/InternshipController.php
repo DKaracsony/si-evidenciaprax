@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Internship;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class InternshipController extends Controller
 {
@@ -50,5 +51,49 @@ class InternshipController extends Controller
             ->get();
 
         return response()->json($internships);
+    }
+
+    public function store(Request $request)
+    {
+        $user = $request->user();
+        $studentProfileId = $user->studentProfile->id;
+        $request = $request->merge(['student_profile_id' => $studentProfileId]);
+
+        $rules = [
+            'start_date' => 'required|date',
+            'date_to' => 'required|date|after_or_equal:start_date',
+            'description' => 'required|string',
+            'is_draft' => 'required|boolean',
+            'company_id' => 'required|integer|exists:companies,id',
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
+            'student_profile_id' => 'required|integer|exists:student_profiles,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails())
+            return response()->json([
+                'message' => __('internship.INTERNSHIP_CREATE_FAILED'),
+                'errors'  => $validator->errors()->toArray(),
+            ], 422);
+
+        try{
+            $internship = Internship::create([
+                'student_profile_id' => $studentProfileId,
+                'start_date' => $request->input('start_date'),
+                'date_to' => $request->input('date_to'),
+                'description' => $request->input('description'),
+                'is_draft' => $request->input('is_draft') ?? false,
+                'company_id' => $request->input('company_id'),
+                'academic_year_id' => $request->input('academic_year_id'),
+                'submitted_at' => $request->input('is_draft') ? null : now(),
+            ]);}
+        catch (\Exception $e){
+            return response()->json([
+                'message' => __('global_error.SERVER_ERROR')
+            ], 500);
+        }
+
+        return response()->json($internship, 201);
     }
 }

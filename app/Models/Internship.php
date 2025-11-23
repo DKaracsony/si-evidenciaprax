@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Internship extends Model
 {
     protected $table = 'internships';
-    protected $fillable = ['student_profile_id', 'company_id', 'academic_year_id', 'date_from', 'date_to', 'description', 'is_draft', 'submitted_at'];
+    protected $fillable = ['student_profile_id', 'company_id', 'academic_year_id', 'start_date', 'date_to', 'description', 'is_draft', 'submitted_at'];
 
     public function studentProfile()
     {
