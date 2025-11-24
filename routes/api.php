@@ -28,7 +28,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::patch('/account/password', [PasswordResetController::class, 'changePassword']);
     Route::get('/academic-years', [AcademicYearController::class, 'index']);
-    Route::get('/student/internships', [InternshipController::class, 'index']);
 
     Route::prefix('student')->group(function () {
         Route::get('/internships', [InternshipController::class, 'index']);
