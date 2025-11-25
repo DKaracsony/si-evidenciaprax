@@ -281,6 +281,9 @@ class InternshipController extends Controller
 
         $isUpdate = $request->filled('internship_id');
 
+        $pdfBase64 = null;
+        $pdfFileName = null;
+
         try {
             DB::beginTransaction();
 
@@ -316,6 +319,10 @@ class InternshipController extends Controller
                 'changed_by_user_id' => $user->id,
             ]);
 
+            $pdfBinary = $this->pdfService->generateFor($internship);
+            $pdfBase64 = base64_encode($pdfBinary);
+            $pdfFileName = 'dohoda-o-praxi-' . $internship->id . '.pdf';
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -327,9 +334,16 @@ class InternshipController extends Controller
 
         $statusCode = $isUpdate ? 200 : 201;
 
-        return response()->json([
-            'message'     => __('internship.INTERNSHIP_SUBMITTED_SUCCESSFULLY'),
-            'internship'  => $internship,
-        ], $statusCode);
+        $responseData = [
+            'message'    => __('internship.INTERNSHIP_SUBMITTED_SUCCESSFULLY'),
+            'internship' => $internship,
+        ];
+
+        if ($pdfBase64 !== null) {
+            $responseData['agreement_pdf_base64'] = $pdfBase64;
+            $responseData['agreement_file_name']  = $pdfFileName;
+        }
+
+        return response()->json($responseData, $statusCode);
     }
 }
