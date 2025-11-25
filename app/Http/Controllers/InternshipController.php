@@ -9,6 +9,7 @@ use App\Models\Status;
 use App\Models\User;
 use App\Services\Cache\InternshipStatusService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class InternshipController extends Controller
@@ -50,60 +51,16 @@ class InternshipController extends Controller
 
     public function store(Request $request)
     {
-        //TODO: is_draft handling - update or save
         $user = $request->user();
-        $studentProfileId = $user->studentProfile->id;
-        $request = $request->merge(['student_profile_id' => $studentProfileId]);
+        $request = $request->merge(['student_profile_id' => $user->studentProfile->id]);
 
-        $rules = [
-            'start_date' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:start_date',
-            'description' => 'required|string',
-            'is_draft' => 'required|boolean',
-            'company_id' => 'required|integer|exists:companies,id',
-            'academic_year_id' => 'required|integer|exists:academic_years,id',
-            'student_profile_id' => 'required|integer|exists:student_profiles,id',
-        ];
+        //predbezna validacia kde skontrolujeme iba is_draft a podla toho vieme ako postupovat dalej
+        $validationData = $this->isValidatedCreationRequest($request);
 
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails())
-            return response()->json([
-                'message' => __('internship.INTERNSHIP_CREATE_FAILED'),
-                'errors'  => $validator->errors()->toArray(),
-            ], 422);
-
-        try{
-            $internship = Internship::create([
-                'student_profile_id' => $studentProfileId,
-                'start_date' => $request->input('start_date'),
-                'date_to' => $request->input('date_to'),
-                'description' => $request->input('description'),
-                'is_draft' => $request->input('is_draft') ?? false,
-                'company_id' => $request->input('company_id'),
-                'academic_year_id' => $request->input('academic_year_id'),
-                'submitted_at' => $request->input('is_draft') ? null : now(),
-            ]);
-
-            if($internship && !$request->input('is_draft')){
-                $statusService = new InternshipStatusService();
-                $statusId = $statusService->all()->where('name', Status::CREATED)->pluck('id')->first();
-
-                InternshipStatusHistory::create([
-                    'internship_id' => $internship->id,
-                    'status_id' => $statusId,
-                    'status_changed_at' => now(),
-                    'changed_by_user_id' => $user->id,
-                ]);
-            }
-        }
-        catch (\Exception $e){
-            return response()->json([
-                'message' => __('global_error.SERVER_ERROR'),
-            ], 500);
-        }
-
-        return response()->json($internship, 201);
+        if($request->input('is_draft'))
+            return $this->handleDraft($request, $user, $validationData);
+        else
+            return $this->handleSubmit($request, $user, $validationData);
     }
 
     public function show(Request $request, $id)
@@ -171,5 +128,168 @@ class InternshipController extends Controller
         ];
 
         return response()->json($data);
+    }
+
+    private function isValidatedCreationRequest($request){
+        $draftRules = [
+            'is_draft' => 'required|boolean',
+        ];
+
+        $validator = Validator::make($request->all(), $draftRules);
+        if ($validator->fails()) {
+            return [false, $validator->errors()];
+        }
+
+        //ak draft, tak uz viac netreba validovat
+        if($request->input('is_draft')){
+            return [true, null];
+        }
+
+        $rules = [
+            'start_date' => 'required|date',
+            'date_to' => 'required|date|after_or_equal:start_date',
+            'description' => 'required|string',
+            'company_id' => 'required|integer|exists:companies,id',
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
+            'student_profile_id' => 'required|integer|exists:student_profiles,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) return [false, $validator->errors()];
+
+        return [true, null];
+    }
+
+    private function handleDraft(Request $request, $user, $validationData)
+    {
+        if(!$validationData[0])
+            return response()->json(['message' => __('internship.MISSING_DRAFT_REQUIRED_FIELD'),], 422);
+
+        $data = [
+            'start_date'       => $request->input('start_date'),
+            'date_to'          => $request->input('date_to'),
+            'description'      => $request->input('description'),
+            'is_draft'         => $request->boolean('is_draft', true),
+            'company_id'       => $request->input('company_id'),
+            'academic_year_id' => $request->input('academic_year_id'),
+        ];
+
+        // najprv zistime ci request obsahuje internship_id, ak ano, tak sa jedna o update existujuceho draftu
+        if ($request->filled('internship_id')) {
+            $internship = Internship::where('id', $request->input('internship_id'))
+                ->where('student_profile_id', $user->studentProfile->id)
+                ->first();
+
+            if (!$internship) { // OSOBNY NAZOR - PETO: TOTO JE NAJHORSI MOZNY PRIPAD
+                return response()->json([
+                    'message' => __('internship.INTERNSHIP_NOT_FOUND_FOR_UPDATE'),
+                ], 404);
+            }
+
+            //AK NAJDEME, TAK UROBIME UPDATE
+            try {
+                $internship->update($data);
+            } catch (\Exception $_) {
+                return response()->json([
+                    'message' => __('global_error.SERVER_ERROR'),
+                ], 500);
+            }
+
+            return response()->json([
+                'message'    => __('internship.INTERNSHIP_UPDATED_SUCCESSFULLY'),
+                'internship' => $internship,
+            ]);
+        }
+        // opacny pripad, vytvorime novy draft
+        else {
+            try {
+                $internship = Internship::create(array_merge($data, [
+                    'student_profile_id' => $user->studentProfile->id,
+                ]));
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => __('global_error.SERVER_ERROR'),
+                ], 500);
+            }
+
+            return response()->json([
+                'message'    => __('internship.DRAFT_SAVED'),
+                'internship' => $internship,
+            ], 201);
+        }
+    }
+
+    private function handleSubmit(Request $request, $user, $validationData)
+    {
+        //VSETKY VALIDACIE PREBEHLI USPEŠNE?
+        if (!$validationData[0]) {
+            return response()->json([
+                'message' => __('internship.INVALID_INTERNSHIP_DATA'),
+                'errors'  => $validationData[1],
+            ], 422);
+        }
+
+        $data = [
+            'start_date'       => $request->input('start_date'),
+            'date_to'          => $request->input('date_to'),
+            'description'      => $request->input('description'),
+            'is_draft'         => false,
+            'company_id'       => $request->input('company_id'),
+            'academic_year_id' => $request->input('academic_year_id'),
+            'submitted_at'     => now(),
+        ];
+
+        $isUpdate = $request->filled('internship_id');
+
+        try {
+            DB::beginTransaction();
+
+            //SKONTROLUJEME CI NEEXISTUJE UZ PRACTICE -- > AK ANO, TAK UPDATE + SUBMITTED_AT a STATUS CREATED
+            //TEDA Z FRONTENDU MUSI PRIST internship_id
+            if ($isUpdate) {
+                $internship = Internship::where('id', $request->input('internship_id'))
+                    ->where('student_profile_id', $user->studentProfile->id)
+                    ->first();
+
+                if (!$internship) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'message' => __('internship.INTERNSHIP_NOT_FOUND_FOR_UPDATE'),
+                    ], 404);
+                }
+
+                $internship->update($data);
+            } else
+                $internship = Internship::create(array_merge($data, ['student_profile_id' => $user->studentProfile->id,]));
+
+            $statusService = new InternshipStatusService();
+            $statusId = $statusService->all()
+                ->where('name', Status::CREATED)
+                ->pluck('id')
+                ->first();
+
+            InternshipStatusHistory::create([
+                'internship_id'      => $internship->id,
+                'status_id'          => $statusId,
+                'status_changed_at'  => now(),
+                'changed_by_user_id' => $user->id,
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => __('global_error.SERVER_ERROR'),
+            ], 500);
+        }
+
+        $statusCode = $isUpdate ? 200 : 201;
+
+        return response()->json([
+            'message'     => __('internship.INTERNSHIP_SUBMITTED_SUCCESSFULLY'),
+            'internship'  => $internship,
+        ], $statusCode);
     }
 }

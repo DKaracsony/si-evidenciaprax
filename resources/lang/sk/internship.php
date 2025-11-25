@@ -2,5 +2,11 @@
 
 return [
     'INTERNSHIP_CREATE_FAILED' => 'Vytvorenie praxe zlyhalo. Skontrolujte zadané údaje.',
-    'INTERNSHIP_NOT_FOUND' => 'Praxe nebola nájdená.',
+    'INTERNSHIP_NOT_FOUND' => 'Praxe nebola nájdená alebo k nej nemáte prístup.',
+    'INVALID_INTERNSHIP_DATA' => 'Neplatné údaje o praxi.',
+    'INTERNSHIP_NOT_FOUND_FOR_UPDATE' => 'Prax na aktualizáciu nebola nájdená.',
+    'INTERNSHIP_UPDATED_SUCCESSFULLY' => 'Prax bola úspešne aktualizovaná.',
+    'DRAFT_SAVED' => 'Koncept bol úspešne uložený.',
+    'MISSING_DRAFT_REQUIRED_FIELD' => 'Chýbajúci povinný údaj - koncept',
+    'INTERNSHIP_SUBMITTED_SUCCESSFULLY' => 'Prax bola úspešne zaznamenaná.',
 ];
