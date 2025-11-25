@@ -4,6 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read \App\Models\StudentProfile $studentProfile
+ * @property-read \App\Models\Company $company
+ * @property-read \App\Models\AcademicYear $academicYear
+ */
+
 class Internship extends Model
 {
     protected $table = 'internships';
@@ -28,4 +34,15 @@ class Internship extends Model
     {
         return $this->hasMany(InternshipStatusHistory::class, 'internship_id', 'id');
     }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class, 'internship_id', 'id');
+    }
+
+    public function agreementDocument()
+    {
+        return $this->hasOne(Document::class, 'internship_id', 'id')->where('type', 'agreement');
+    }
+
 }

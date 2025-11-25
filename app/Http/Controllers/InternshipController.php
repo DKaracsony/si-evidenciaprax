@@ -11,40 +11,80 @@ use App\Services\Cache\InternshipStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Services\InternshipAgreementPdfService;
 
 class InternshipController extends Controller
 {
+    public function __construct(
+        private readonly InternshipAgreementPdfService $pdfService,
+    ) {}
+
     public function index(Request $request)
     {
-        //TODO: Atus - doplnit firmu, dokumenty, semester, status z tabulky internship_status_history a filtraciu NEpotrebujeme
-        //na frontende v zozname potrebujem vypisat status, firmu, semester
+        // Na frontende v zozname potrebujeme vypísať status, firmu, semester
         $user = $request->user();
 
-        $query = Internship::query()
-            ->where('student_profile_id', $user->studentProfile->id);
-
-        // Filtrovanie podľa statusu: ?status=approved
-        if ($request->filled('status')) {
-            $query->where('status', $request->get('status'));
-        }
-
-        // Filtrovanie podľa akademického roka: ?academic_year_id=3
-        if ($request->filled('academic_year_id')) {
-            $query->where('academic_year_id', (int) $request->get('academic_year_id'));
-        }
-
-        // Dátumové filtrovanie:
-        if ($request->filled('from')) {
-            $query->whereDate('date_from', '>=', $request->get('from'));
-        }
-
-        if ($request->filled('to')) {
-            $query->whereDate('date_to', '<=', $request->get('to'));
-        }
-
-        $internships = $query
+        $internships = Internship::query()
+            ->where('student_profile_id', $user->studentProfile->id)
+            ->with([
+                'company.address.country',
+                'academicYear',
+                'internshipStatusHistories.status',
+                'documents.status',
+            ])
             ->orderByDesc('created_at')
-            ->get();
+            ->get()
+            ->map(function (Internship $internship) {
+                $latestStatusHistory = $internship->internshipStatusHistories
+                    ? $internship->internshipStatusHistories
+                        ->sortByDesc('status_changed_at')
+                        ->first()
+                    : null;
+
+                return [
+                    'id'           => $internship->id,
+                    'start_date'   => $internship->start_date,
+                    'date_to'      => $internship->date_to,
+                    'description'  => $internship->description,
+                    'is_draft'     => $internship->is_draft,
+                    'submitted_at' => $internship->submitted_at,
+
+                    // firma
+                    'company' => $internship->company ? [
+                        'id'          => $internship->company->id,
+                        'name'        => $internship->company->name,
+                        'description' => $internship->company->description,
+                        'website'     => $internship->company->website,
+                        'address'     => $internship->company->address,
+                    ] : null,
+
+                    // semester
+                    'semester' => $internship->academicYear ? [
+                        'id'         => $internship->academicYear->id,
+                        'season'     => $internship->academicYear->season,
+                        'start_date' => $internship->academicYear->start_date,
+                        'end_date'   => $internship->academicYear->end_date,
+                    ] : null,
+
+                    // posledný status z internship_status_histories
+                    'status' => $latestStatusHistory ? [
+                        'name'       => $latestStatusHistory->status?->name,
+                        'changed_at' => $latestStatusHistory->status_changed_at,
+                    ] : null,
+
+                    // dokumenty
+                    'documents' => $internship->documents
+                        ? $internship->documents->map(function ($doc) {
+                            return [
+                                'id'        => $doc->id,
+                                'file_name' => $doc->file_name,
+                                'type'      => $doc->type,
+                                'status'    => $doc->status?->decision,
+                            ];
+                        })->values()
+                        : [],
+                ];
+            });
 
         return response()->json($internships);
     }
