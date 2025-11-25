@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompanyOwnerProfile;
 use App\Models\Internship;
 use App\Models\InternshipStatusHistory;
 use App\Models\Status;
+use App\Models\User;
 use App\Services\Cache\InternshipStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,6 +15,8 @@ class InternshipController extends Controller
 {
     public function index(Request $request)
     {
+        //TODO: Atus - doplnit firmu, dokumenty, semester, status z tabulky internship_status_history a filtraciu NEpotrebujeme
+        //na frontende v zozname potrebujem vypisat status, firmu, semester
         $user = $request->user();
 
         $query = Internship::query()
@@ -46,6 +50,7 @@ class InternshipController extends Controller
 
     public function store(Request $request)
     {
+        //TODO: is_draft handling - update or save
         $user = $request->user();
         $studentProfileId = $user->studentProfile->id;
         $request = $request->merge(['student_profile_id' => $studentProfileId]);
@@ -99,5 +104,72 @@ class InternshipController extends Controller
         }
 
         return response()->json($internship, 201);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $user = $request->user();
+        $internship = Internship::where('id', $id)
+            ->where('student_profile_id', $user->studentProfile->id)
+            ->with(['company', 'academicYear', 'internshipStatusHistories.status'])
+            ->first();
+
+        if (!$internship)
+            return response()->json([
+                'message' => __('internship.INTERNSHIP_NOT_FOUND'),
+            ], 404);
+
+        $company_profile = null;
+        if ($internship->company && $internship->company->id)
+            $company_profile = CompanyOwnerProfile::where('id', $internship->company->id)->with('user')->first();
+
+        $data = [
+            'id' => $internship->id,
+            'start_date' => $internship->start_date,
+            'date_to' => $internship->date_to,
+            'description' => $internship->description,
+            'is_draft' => $internship->is_draft,
+            'submitted_at' => $internship->submitted_at,
+            'company' => $internship->company ? [
+                'id' => $internship->company->id,
+                'name' => $internship->company->name,
+                'description' => $internship->company->description,
+                'website' => $internship->company->website,
+                'address' => $internship->company->address->with('country')->first(),
+                'contact_person' => [
+                    'id' => $company_profile->user->id,
+                    'first_name' => $company_profile->user->first_name,
+                    'last_name' => $company_profile->user->last_name,
+                    'title_before' => $company_profile->user->title_before,
+                    'title_after' => $company_profile->user->title_after,
+                    'email' => $company_profile->user->email,
+                ]
+            ] : null,
+            'semester' => $internship->acedemicYear ? [
+                'id' => $internship->academicYear->id,
+                'season' => $internship->academicYear->season,
+                'start_date' => $internship->academicYear->start_date,
+                'end_date' => $internship->academicYear->end_date,
+            ] : null,
+            'status_history' => $internship->internshipStatusHistories ? [
+                $internship->internshipStatusHistories->sortByDesc('status_changed_at')->map(function ($history) {
+                    return [
+                        'status' => $history->status->name,
+                        'explanation' => $history->explanation,
+                        'status_changed_at' => $history->status_changed_at,
+                        'changed_by_user => ' => [
+                            'id' => $history->changedByUser->id,
+                            'first_name' => $history->changedByUser->first_name,
+                            'last_name' => $history->changedByUser->last_name,
+                            'title_before' => $history->changedByUser->title_before,
+                            'title_after' => $history->changedByUser->title_after,
+                            'email' => $history->changedByUser->email,
+                        ],
+                    ];
+                }),
+            ] : null
+        ];
+
+        return response()->json($data);
     }
 }
