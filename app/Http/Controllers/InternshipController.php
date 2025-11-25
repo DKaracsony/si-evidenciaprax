@@ -102,12 +102,12 @@ class InternshipController extends Controller
                     'email' => $company_profile->user->email,
                 ]
             ] : null,
-            'semester' => $internship->acedemicYear ? [
+            'semester' => [
                 'id' => $internship->academicYear->id,
                 'season' => $internship->academicYear->season,
                 'start_date' => $internship->academicYear->start_date,
                 'end_date' => $internship->academicYear->end_date,
-            ] : null,
+            ],
             'status_history' => $internship->internshipStatusHistories ? [
                 $internship->internshipStatusHistories->sortByDesc('status_changed_at')->map(function ($history) {
                     return [
