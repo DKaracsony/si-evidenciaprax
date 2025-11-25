@@ -31,10 +31,10 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/academic-years', [AcademicYearController::class, 'index']);
 
     Route::prefix('student')->group(function () {
-        Route::get('/internships', [InternshipController::class, 'index']);
+        Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
         Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);
+        Route::get('/internship-detail/{id}', [InternshipController::class, 'show'])->middleware(['permission:practice.view_detail_own']);
     });
 
-    Route::get('/companies/search', [CompanyController::class, 'searchByName']);
-
+    Route::get('/companies/search', [CompanyController::class, 'searchByName'])->middleware(['permission:company.search']);
 });
