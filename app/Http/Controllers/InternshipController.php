@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Services\InternshipAgreementPdfService;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
 class InternshipController extends Controller
 {
@@ -168,6 +170,51 @@ class InternshipController extends Controller
         ];
 
         return response()->json($data);
+    }
+    public function downloadAgreementPdf(Request $request, Internship $internship)
+    {
+        $user = $request->user();
+
+        if (!$user->studentProfile) {
+            return response()->json([
+                'message' => 'Tento obsah nie je dostupný pre váš účet.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        if ($internship->student_profile_id !== $user->studentProfile->id) {
+            return response()->json([
+                'message' => 'Tento obsah nie je dostupný pre váš účet.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $pdfContent = $this->pdfService->generateFor($internship);
+        } catch (\RuntimeException $e) {
+            Log::warning(
+                'PDF generation failed for internship '.$internship->id.': '.$e->getMessage(),
+                ['internship_id' => $internship->id]
+            );
+
+            return response()->json([
+                'message' => 'PDF dohody nie je momentálne dostupné.',
+            ], Response::HTTP_CONFLICT);
+        } catch (\Throwable $e) {
+            Log::error(
+                'Unexpected error during PDF generation for internship '.$internship->id.': '.$e->getMessage(),
+                ['internship_id' => $internship->id]
+            );
+
+            return response()->json([
+                'message' => 'Pri generovaní PDF došlo k chybe.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $fileName = sprintf('dohoda-praxe-%d.pdf', $internship->id);
+
+        return response($pdfContent, Response::HTTP_OK, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 
     private function isValidatedCreationRequest($request){
