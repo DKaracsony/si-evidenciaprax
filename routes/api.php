@@ -34,6 +34,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
         Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);
         Route::get('/internship-detail/{id}', [InternshipController::class, 'show'])->middleware(['permission:practice.view_detail_own']);
+        Route::get('/internship-detail/{internship}/agreement-pdf', [InternshipController::class, 'downloadAgreementPdf'])->middleware(['permission:practice.view_detail_own']);
     });
 
     Route::get('/companies/search', [CompanyController::class, 'searchByName'])->middleware(['permission:company.search']);
