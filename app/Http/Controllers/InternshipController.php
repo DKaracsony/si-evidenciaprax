@@ -393,4 +393,77 @@ class InternshipController extends Controller
 
         return response()->json($responseData, $statusCode);
     }
+
+    public function changeStatus(Request $request, $to)
+    {
+        $rules = [
+            'is_positive'   => 'required|boolean',
+            'note'          => 'nullable|string',
+            'internship_id' => 'required|integer|exists:internships,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+            return response()->json([
+                'message' => __('internship.INVALID_STATUS_CHANGE_DATA'),
+                'errors'  => $validator->errors(),
+            ], 422);
+
+
+        $isPositive = $request->boolean('is_positive');
+
+        switch($to){
+            case 'acceptance':
+                $statusChangeTo = $isPositive ? Status::ACCEPTED : Status::REJECTED;
+                break;
+            default:
+                return response()->json([
+                    'message' => __('global_error.SERVER_ERROR'),
+                ], 500);
+        }
+
+        $statusService = new InternshipStatusService();
+        $statusId = $statusService->all()
+            ->where('name', $statusChangeTo)
+            ->pluck('id')
+            ->first();
+
+        if(!$statusId){
+            return response()->json([
+                'message' => __('global_error.SERVER_ERROR'),
+            ], 500);
+        }
+
+        //TRANSITION IS ALLOWED?
+        $internship = Internship::where('id', $request->input('internship_id'))->with('internshipStatusHistories')->first();
+        $lastStatusId = $internship->internshipStatusHistories->sortByDesc('status_changed_at')->first()->status->id;
+        if($lastStatusId && $lastStatusId === $statusId){
+            return response()->json([
+                'message' => __('internship.ALREADY_IN_DESIRED_STATUS'),
+            ], 400);
+        }
+
+        if($lastStatusId){
+            $lastStatus = $statusService->all()->where('id', $lastStatusId)->first();
+            $newStatus = $statusService->all()->where('id', $statusId)->first();
+
+            if($newStatus->order_index < $lastStatus->order_index)
+                return response()->json([
+                    'message' => __('internship.STATUS_CHANGE_NOT_ALLOWED'),
+                ], 422);
+        }
+
+        InternshipStatusHistory::create([
+            'internship_id'      => $request->input('internship_id'),
+            'status_id'          => $statusId,
+            'status_changed_at'  => now(),
+            'explanation'        => $request->input('note'),
+            'changed_by_user_id' => $request->user()->id,
+        ]);
+
+        return response()->json([
+            'message' => __('internship.INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY'),
+        ], 200);
+    }
+
 }
