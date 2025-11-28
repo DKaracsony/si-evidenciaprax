@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\InternshipStatusHistory;
+use App\Observers\InternshipStatusHistoryObserver;
 use App\Services\Cache\CountryService;
 use App\Services\Cache\FacultyService;
 use App\Services\Cache\RoleService;
@@ -30,5 +32,8 @@ class AppServiceProvider extends ServiceProvider
         Passport::tokensExpireIn(Carbon::now()->addHours(1));
         Passport::refreshTokensExpireIn(Carbon::now()->addDays(7));
         Passport::personalAccessTokensExpireIn(Carbon::now()->addMonths(6));
+
+        //OBSERVERI
+        InternshipStatusHistory::observe(InternshipStatusHistoryObserver::class);
     }
 }
