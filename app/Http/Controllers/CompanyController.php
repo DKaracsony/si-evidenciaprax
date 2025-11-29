@@ -21,6 +21,9 @@ class CompanyController extends Controller
 
         $companies = Company::query()
             ->where('name', 'LIKE', $pattern)
+            ->whereHas('ownerProfiles', function ($query) {
+                $query->where('is_active', 1);
+            })
             ->orderBy('name')
             ->limit(20)
             ->get(['id', 'name']);

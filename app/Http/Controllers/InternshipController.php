@@ -368,10 +368,9 @@ class InternshipController extends Controller
                 'changed_by_user_id' => $user->id,
             ]);
 
-            // TODO: Re-enable PDF generation once figured out why it is not working
-            //$pdfBinary = $this->pdfService->generateFor($internship);
-            //$pdfBase64 = base64_encode($pdfBinary);
-            //$pdfFileName = 'dohoda-o-praxi-' . $internship->id . '.pdf';
+            $pdfBinary = $this->pdfService->generateFor($internship);
+            $pdfBase64 = base64_encode($pdfBinary);
+            $pdfFileName = 'dohoda-o-praxi-' . $internship->id . '.pdf';
 
             DB::commit();
         } catch (\Exception $e) {
@@ -379,6 +378,7 @@ class InternshipController extends Controller
 
             return response()->json([
                 'message' => __('global_error.SERVER_ERROR'),
+                'error'   => $e->getMessage(),
             ], 500);
         }
 
