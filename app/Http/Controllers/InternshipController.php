@@ -51,6 +51,8 @@ class InternshipController extends Controller
                     'is_draft'     => $internship->is_draft,
                     'submitted_at' => $internship->submitted_at,
 
+                    'created_at'   => $internship->created_at,
+
                     // firma
                     'company' => $internship->company ? [
                         'id'          => $internship->company->id,
@@ -366,9 +368,10 @@ class InternshipController extends Controller
                 'changed_by_user_id' => $user->id,
             ]);
 
-            $pdfBinary = $this->pdfService->generateFor($internship);
-            $pdfBase64 = base64_encode($pdfBinary);
-            $pdfFileName = 'dohoda-o-praxi-' . $internship->id . '.pdf';
+            // TODO: Re-enable PDF generation once figured out why it is not working
+            //$pdfBinary = $this->pdfService->generateFor($internship);
+            //$pdfBase64 = base64_encode($pdfBinary);
+            //$pdfFileName = 'dohoda-o-praxi-' . $internship->id . '.pdf';
 
             DB::commit();
         } catch (\Exception $e) {

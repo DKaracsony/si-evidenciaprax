@@ -38,4 +38,5 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::get('/companies/search', [CompanyController::class, 'searchByName'])->middleware(['permission:company.search']);
+    Route::get('/companies/{company}', [CompanyController::class, 'show'])->middleware(['permission:company.search']);
 });
