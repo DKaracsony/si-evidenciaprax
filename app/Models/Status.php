@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Status extends Model
 {
+    public const CREATED = "Vytvorená";
+
     protected $table = 'statuses';
     protected $fillable = ['name', 'order_index'];
 

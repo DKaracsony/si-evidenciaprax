@@ -1,0 +1,67 @@
+@use '../../settings/breakpoints' as *;
+@use '../../settings/colors' as *;
+
+.new-prax-success {
+    max-width: 720px;
+    margin-inline: auto;
+    padding-block: clamp(32px, 5vw, 48px);
+}
+
+.new-prax-success__header {
+    margin-bottom: clamp(40px, 6vw, 56px);
+}
+
+.new-prax-success__title {
+    font-size: clamp(24px, 3vw, 28px);
+    font-weight: 700;
+    color: var(--color-neutral-900);
+    text-align: left;
+    margin: 0 0 16px 0;
+}
+
+.new-prax-success__divider {
+    max-width: 100%;
+}
+
+.new-prax-success__divider--bottom {
+    margin-top: clamp(48px, 8vw, 72px);
+}
+
+.new-prax-success__content {
+    text-align: center;
+    padding-inline: clamp(16px, 6vw, 80px);
+}
+
+.new-prax-success__text {
+    font-size: clamp(16px, 2vw, 18px);
+    line-height: 1.6;
+    color: var(--color-neutral-900);
+    margin-bottom: clamp(32px, 5vw, 40px);
+}
+
+/* Button v strede, podobný ako primary v zozname praxí */
+.new-prax-success__button {
+    padding: 10px 32px;
+    border-radius: 999px;
+    border: 2px solid var(--color-primary-700);
+    background: var(--color-primary-600);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    transition: background 0.15s ease, transform 0.1s ease,
+    box-shadow 0.1s ease;
+    display: inline-block;
+
+    &:hover {
+        background: var(--color-primary-700);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    &:active {
+        transform: translateY(0);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
+}

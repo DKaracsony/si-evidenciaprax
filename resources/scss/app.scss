@@ -11,6 +11,12 @@
 @use 'sections/forgot-password-first';
 @use 'sections/forgot-password-second';
 @use 'sections/first-login-form';
+@use 'sections/dashboard/internship-status-badge';
+@use 'sections/dashboard/student-prax-list';
+@use 'sections/dashboard/new-prax-form';
+@use 'sections/dashboard/company-auto-complete';
+@use 'sections/dashboard/new-prax-success';
+@use 'sections/dashboard/student-prax-detail';
 
 @use 'pagestyles/first-login-page';
 @use 'pagestyles/register-page';
@@ -19,6 +25,9 @@
 @use 'pagestyles/settings-page';
 @use 'pagestyles/forgot-password-page-first';
 @use 'pagestyles/forgot-password-page-second';
+
+
+
 
 //SECTIONS
 

@@ -23,7 +23,7 @@ class CheckUserPermission
         $userRole = $request->user()->role;
 
         $userPermissionsByRole = $this->permissionService->all();
-        $userPermissions = $userPermissionsByRole->all()[$userRole->id] ?? [];
+        $userPermissions = $userPermissionsByRole[$userRole->id] ?? [];
 
         foreach ($permissions as $permission) {
             if (!in_array($permission, $userPermissions)) {
