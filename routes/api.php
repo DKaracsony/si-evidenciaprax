@@ -32,7 +32,9 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('/account/password', [PasswordResetController::class, 'changePassword']);
     Route::get('/academic-years', [AcademicYearController::class, 'index']);
 
+    // Notifikácia
     Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/{notification}/seen', [NotificationController::class, 'markAsSeen']);
 
     Route::prefix('student')->group(function () {
         Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
