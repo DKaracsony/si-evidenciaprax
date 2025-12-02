@@ -36,4 +36,21 @@ class NotificationController extends Controller
 
         return response()->json($notification);
     }
+
+    public function markAllAsSeen(Request $request)
+    {
+        $user = $request->user();
+
+        $updatedCount = Notification::query()
+            ->where('receiver_user_id', $user->id)
+            ->whereNull('seen_at')
+            ->update([
+                'seen_at' => now(),
+            ]);
+
+        return response()->json([
+            'message' => 'Všetky notifikácie boli označené ako prečítané.',
+            'updated_count' => $updatedCount,
+        ]);
+    }
 }
