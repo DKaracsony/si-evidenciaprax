@@ -37,6 +37,8 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('/notifications/{notification}/seen', [NotificationController::class, 'markAsSeen']);
     Route::patch('/notifications/seen-all', [NotificationController::class, 'markAllAsSeen']);
 
+    Route::get('/company/internships', [InternshipController::class, 'companyCreatedInternships']);
+
     Route::prefix('student')->group(function () {
         Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
         Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);

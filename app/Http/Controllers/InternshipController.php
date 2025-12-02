@@ -469,4 +469,33 @@ class InternshipController extends Controller
         ], 200);
     }
 
+    public function companyCreatedInternships(Request $request)
+    {
+        $validated = $request->validate([
+            'company_id' => ['required', 'integer', 'exists:companies,id'],
+        ]);
+
+        $companyId = $validated['company_id'];
+
+        $createdStatusId = Status::where('name', Status::CREATED)->value('id');
+
+        // Praxe danej firmy, kde posledný status je "CREATED"
+        $internships = Internship::query()
+            ->where('company_id', $companyId)
+            ->with(['company', 'academicYear', 'internshipStatusHistories.status'])
+            ->get()
+            ->filter(function (Internship $internship) use ($createdStatusId) {
+                $latest = $internship->internshipStatusHistories
+                    ? $internship->internshipStatusHistories
+                        ->sortByDesc('status_changed_at')
+                        ->first()
+                    : null;
+
+                return $latest && $latest->status_id === $createdStatusId;
+            })
+            ->values();
+
+        return response()->json($internships);
+    }
+
 }
