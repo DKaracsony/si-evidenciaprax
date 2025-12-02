@@ -96,4 +96,8 @@ class User extends Authenticatable
         return $this->hasMany(InternshipStatusHistory::class, 'changed_by_user_id');
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'receiver_user_id', 'id');
+    }
 }

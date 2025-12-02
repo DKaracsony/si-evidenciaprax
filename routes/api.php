@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
+use App\Models\Status;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\FacultyController;
@@ -34,9 +35,13 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
         Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);
         Route::get('/internship-detail/{id}', [InternshipController::class, 'show'])->middleware(['permission:practice.view_detail_own']);
-        Route::get('/internship-detail/{internship}/agreement-pdf', [InternshipController::class, 'downloadAgreementPdf'])->middleware(['permission:practice.view_detail_own']);
+        Route::get('/internship-detail/{internship}/agreement-pdf', [InternshipController::class, 'downloadAgreementPdf'])->middleware(['permission:practice.generate_agreement_pdf']);
     });
 
     Route::get('/companies/search', [CompanyController::class, 'searchByName'])->middleware(['permission:company.search']);
-    Route::get('/companies/{company}', [CompanyController::class, 'show'])->middleware(['permission:company.search']);
+
+    Route::prefix('internship/change-status')->group(function () {
+        Route::post('/acceptance', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_accepted'])->defaults('to', 'acceptance');
+        // TODO: neskor sem doplnit dalsie statusy, bude iba jedna metoda + middleware riesi ci dany user moze menit dany status
+    });
 });
