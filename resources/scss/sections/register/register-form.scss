@@ -1,4 +1,4 @@
-@use '../settings/breakpoints' as *;
+@use '../../settings/breakpoints' as *;
 
 /* =============================================================================
    Register — desktop-first responsive layout
@@ -14,14 +14,19 @@
     border: 7px solid var(--color-primary-300);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.10);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.12),
+        0 12px 28px rgba(0, 0, 0, 0.14),
+        0 20px 48px rgba(0, 0, 0, 0.08);
+
+
 
     /* match landing's fixed CTA height */
     --btn-h: 50px;
 
     /* button height scales like lp-first */
     @include up($bp-md) { --btn-h: 48px; }
-    @include up($bp-xl) { --btn-h: 64px; }
+    @include up($bp-xl) { --btn-h: 55px; }
 
     /* =========================
        PANELS / BODY

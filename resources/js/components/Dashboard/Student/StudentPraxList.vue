@@ -279,9 +279,9 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
-import { useInternshipStore } from '../../stores/internship.js';
-import InternshipStatusBadge from './InternshipStatusBadge.vue';
-import { downloadStudentInternshipAgreementPdf } from '../../services/internship';
+import { useInternshipStore } from '@/stores/internship.js';
+import InternshipStatusBadge from '../General/InternshipStatusBadge.vue';
+import { downloadStudentInternshipAgreementPdf } from '@/services/internship.js';
 
 const internshipStore = useInternshipStore();
 
@@ -354,7 +354,7 @@ function formatSemester(semester) {
  */
 function getDraftCreatedAt(internship) {
     return (
-        internship.created_at ??
+        internship['created_at'] ??
         internship.submitted_at ??
         internship.status?.changed_at ??
         null

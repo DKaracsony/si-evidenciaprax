@@ -60,12 +60,10 @@ export async function createOrUpdateStudentInternship(payload) {
  * Route: GET /api/student/internship-detail/{internship}/agreement-pdf
  */
 export async function downloadStudentInternshipAgreementPdf(id) {
-    const response = await axios.get(
+    return await axios.get(
         `${STUDENT_INTERNSHIP_DETAIL_ENDPOINT}/${id}/agreement-pdf`,
         {
             responseType: 'blob',
         }
     );
-
-    return response;
 }

@@ -2,15 +2,15 @@
 @use 'settings/colors' as *;
 @use 'settings/breakpoints' as *;
 
-@use 'sections/lp-nav';
-@use 'sections/lp-first';
-@use 'sections/lp-second';
-@use 'sections/lp-footer';
-@use 'sections/register-form';
+@use 'sections/navbar/navbar';
+@use 'sections/landingpage/lp-first';
+@use 'sections/landingpage/lp-second';
+@use 'sections/footer/footer';
+@use 'sections/register/register-form';
 @use 'sections/login/login-form';
-@use 'sections/forgot-password-first';
-@use 'sections/forgot-password-second';
-@use 'sections/first-login-form';
+@use 'sections/passwordreset/forgot-password-first';
+@use 'sections/passwordreset/forgot-password-second';
+@use 'sections/login/first-login-form';
 @use 'sections/dashboard/internship-status-badge';
 @use 'sections/dashboard/student-prax-list';
 @use 'sections/dashboard/new-prax-form';
@@ -25,8 +25,8 @@
 @use 'pagestyles/settings-page';
 @use 'pagestyles/forgot-password-page-first';
 @use 'pagestyles/forgot-password-page-second';
-
-
+@use 'pagestyles/register-confirmation-page';
+@use 'pagestyles/company-activation-page';
 
 
 //SECTIONS

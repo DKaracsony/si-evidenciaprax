@@ -1,4 +1,4 @@
-@use '../settings/breakpoints' as *;
+@use '../../settings/breakpoints' as *;
 
 /* =============================================================================
    Landing Page — Section 2 (lp-second)
@@ -34,7 +34,7 @@
     }
 }
 
-/* ------- Card: thicker border, no shadow, generous height ------- */
+/* ------- Card: thicker border, generous height ------- */
 .lp-second__card {
     position: relative;
     margin-inline: auto;
@@ -45,7 +45,10 @@
     background: #7CADFA; /* primary-400 */
     border: 7px solid var(--color-primary-300);
     border-radius: 16px;
-    box-shadow: none;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.12),
+        0 12px 28px rgba(0, 0, 0, 0.14),
+        0 20px 48px rgba(0, 0, 0, 0.08);
 
     /* Clips the top of the hanging tabs so only bottom arcs are visible */
     overflow: hidden;

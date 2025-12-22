@@ -94,7 +94,7 @@
 
 <script setup>
 import { ref, watch, computed, onBeforeUnmount } from 'vue';
-import { searchCompaniesByName } from '../../services/company';
+import { searchCompaniesByName } from '@/services/company';
 
 const props = defineProps({
     modelValue: {
@@ -204,8 +204,8 @@ async function loadOptions(term) {
 
         if (Array.isArray(result)) {
             options.value = result;
-        } else if (Array.isArray(result.data)) {
-            options.value = result.data;
+        } else if (result && Array.isArray(result['data'])) {
+            options.value = result['data'];
         } else {
             options.value = [];
         }
@@ -219,6 +219,7 @@ async function loadOptions(term) {
         isLoading.value = false;
     }
 }
+
 
 function onFocus() {
     if (options.value.length) {

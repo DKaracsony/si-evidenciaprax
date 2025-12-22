@@ -14,7 +14,7 @@ use App\Http\Controllers\InternshipController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\NotificationController;
 
-//REGISTRATION FORM ENDPOINTS
+// REGISTRATION FORM ENDPOINTS
 Route::get('/faculties', [FacultyController::class, 'index']);
 Route::post('/register', [RegistrationController::class, 'handleRegister']);
 Route::get('/company/activate', [CompanyActivationController::class, 'activate']);
@@ -25,8 +25,9 @@ Route::post('/company/activate/resend', [CompanyActivationController::class, 're
 Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
 Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 
-//AUTHENTICATED ENDPOINTS
+// AUTHENTICATED ENDPOINTS
 Route::middleware('auth:api')->group(function () {
+
     Route::get('/user', [AuthController::class, 'userDetails']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::patch('/account/password', [PasswordResetController::class, 'changePassword']);
@@ -48,8 +49,11 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/companies/search', [CompanyController::class, 'searchByName'])->middleware(['permission:company.search']);
 
+    // 🔹 ONLY NECESSARY FIX ADDED HERE
+    Route::get('/companies/{company}', [CompanyController::class, 'show']);
+
     Route::prefix('internship/change-status')->group(function () {
         Route::post('/acceptance', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_accepted'])->defaults('to', 'acceptance');
-        // TODO: neskor sem doplnit dalsie statusy, bude iba jedna metoda + middleware riesi ci dany user moze menit dany status
+        // TODO: neskor sem doplnit dalsie statusy
     });
 });

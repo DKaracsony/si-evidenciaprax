@@ -1,6 +1,6 @@
 <template>
     <!--
-      Landing Header
+      Navbar
       - Minimal, sticky nav bar with centered logo on wide viewports.
       - On smaller viewports the logo shifts left (see SCSS for breakpoint).
       - Reacts to auth store: guest vs. prihlásený používateľ.
@@ -105,8 +105,8 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
-import { logout } from '../services/auth';
+import { useAuthStore } from '@/stores/auth.js';
+import { logout } from '@/services/auth.js';
 
 // Header logo path (served from public/storage).
 const logoUrl = '/storage/lp-nav-1.png';
@@ -126,7 +126,7 @@ const profileInitials = computed(() => {
     const p = profile.value || {};
 
     let baseName =
-        p.full_name ||
+        p['full_name'] || // bracket notation to avoid unresolved variable warning
         p.name ||
         (p.first_name && p.last_name
             ? `${p.first_name} ${p.last_name}`
@@ -154,7 +154,7 @@ const handleLogout = async () => {
         await logout();
     } finally {
         // After logout, send user to landing page.
-        router.push({ name: 'LandingPage' });
+        await router.push({ name: 'LandingPage' });
     }
 };
 </script>

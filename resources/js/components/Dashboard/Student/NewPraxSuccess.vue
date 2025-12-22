@@ -1,17 +1,17 @@
+<!-- resources/js/components/Dashboard/Student/NewPraxSuccess.vue -->
 <template>
     <section class="new-prax-success">
         <header class="new-prax-success__header">
             <h2 class="new-prax-success__title">
-                Pridať odborný prax
+                Nová odborná prax
             </h2>
 
-            <!-- rovnaká čiara ako pri ostatných sekciách -->
-            <div class="student-prax-list__divider new-prax-success__divider"></div>
+            <div class="new-prax-success__divider"></div>
         </header>
 
         <div class="new-prax-success__content">
             <p class="new-prax-success__text">
-                Úspešne ste vytvorili záznam o odbornej praxe, čakajte na potvrdenie od firmy.
+                Úspešne ste vytvorili záznam o odbornej praxi, čakajte na potvrdenie od firmy.
             </p>
 
             <button
@@ -22,11 +22,8 @@
                 Späť na zoznam
             </button>
         </div>
-
-        </section>
+    </section>
 </template>
 
 <script setup>
-// žiadna logika, len emituje späť na zoznam
-const emit = defineEmits(['back-to-list']);
 </script>

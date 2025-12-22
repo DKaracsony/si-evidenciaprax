@@ -1,7 +1,7 @@
 <template>
     <div class="forgot-page-wrapper">
         <!-- HEADER -->
-        <LandingHeader />
+        <AppHeader />
 
         <!-- MAIN CONTENT -->
         <main class="forgot-page-first">
@@ -11,12 +11,12 @@
         </main>
 
         <!-- FOOTER -->
-        <LandingFooter />
+        <Footer />
     </div>
 </template>
 
 <script setup>
-import LandingHeader from "../../components/LandingHeader.vue";
-import LandingFooter from "../../components/LandingFooter.vue";
+import AppHeader from "../../components/Navbar/Navbar.vue";
+import Footer from "../../components/Footer/Footer.vue";
 import ForgotPasswordFirst from '../../components/PasswordReset/ForgotPasswordFirst.vue';
 </script>

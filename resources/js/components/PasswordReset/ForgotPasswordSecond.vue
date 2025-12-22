@@ -1,9 +1,5 @@
 <template>
-    <article
-        class="forgot-second-card"
-        role="form"
-        aria-labelledby="reset-password-title"
-    >
+    <article class="forgot-second-card">
         <header class="forgot-second-card__header">
             <h1 id="reset-password-title" class="forgot-second-card__title">
                 Nastavenie nového hesla
@@ -41,6 +37,7 @@
             class="forgot-second-card__form"
             @submit.prevent="handleSubmit"
             novalidate
+            aria-labelledby="reset-password-title"
         >
             <div class="forgot-second-card__field-group">
                 <label class="forgot-second-card__field">

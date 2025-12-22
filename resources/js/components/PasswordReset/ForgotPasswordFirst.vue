@@ -1,9 +1,5 @@
 <template>
-    <article
-        class="forgot-card"
-        role="form"
-        aria-labelledby="forgot-password-title"
-    >
+    <article class="forgot-card">
         <header class="forgot-card__header">
             <h1 id="forgot-password-title" class="forgot-card__title">
                 Obnova zabudnutého hesla
@@ -16,7 +12,12 @@
             </p>
         </header>
 
-        <form class="forgot-card__form" @submit.prevent="handleSubmit" novalidate>
+        <form
+            class="forgot-card__form"
+            @submit.prevent="handleSubmit"
+            novalidate
+            aria-labelledby="forgot-password-title"
+        >
             <label class="forgot-card__field">
                 <span class="forgot-card__label">Váš email</span>
                 <input
@@ -35,10 +36,16 @@
             </p>
 
             <!-- form-level feedback (generic, no leak of account existence) -->
-            <p v-if="formSuccess" class="forgot-card__form-message forgot-card__form-message--success">
+            <p
+                v-if="formSuccess"
+                class="forgot-card__form-message forgot-card__form-message--success"
+            >
                 {{ formSuccess }}
             </p>
-            <p v-if="formError" class="forgot-card__form-message forgot-card__form-message--error">
+            <p
+                v-if="formError"
+                class="forgot-card__form-message forgot-card__form-message--error"
+            >
                 {{ formError }}
             </p>
 
@@ -107,11 +114,9 @@ async function handleSubmit() {
         });
 
         // backend always returns generic text: don't leak if account exists
-        const backendMessage =
+        formSuccess.value =
             response?.data?.message ??
             'Ak existuje účet, poslali sme e-mail s ďalším postupom.';
-
-        formSuccess.value = backendMessage;
     } catch (e) {
         // network / server error – stále bez prezradenia existencie účtu
         formError.value =

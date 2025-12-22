@@ -1,4 +1,4 @@
-@use '../settings/breakpoints' as *;
+@use '../../settings/breakpoints' as *;
 
 /* =============================================================================
    Landing Page — Section 1 (lp-first)
@@ -48,7 +48,10 @@
     border: 6px solid #a9c9ff;
     border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.10);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.12),
+        0 12px 28px rgba(0, 0, 0, 0.14),
+        0 20px 48px rgba(0, 0, 0, 0.08);
 
     @include up($bp-md) {
         grid-template-columns: 1.2fr 1fr;

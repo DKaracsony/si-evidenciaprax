@@ -13,15 +13,15 @@
 </template>
 
 <script>
-import LandingHeader from '../../components/LandingHeader.vue';
-import LandingFooter from '../../components/LandingFooter.vue';
+import AppHeader from '../../components/Navbar/Navbar.vue';
+import Footer from '../../components/Footer/Footer.vue';
 import LoginForm from '../../components/Login/LoginForm.vue';
 
 export default {
     name: 'LoginPage',
     components: {
-        LandingHeader,
-        LandingFooter,
+        LandingHeader: AppHeader,
+        LandingFooter: Footer,
         LoginForm,
     },
 };
