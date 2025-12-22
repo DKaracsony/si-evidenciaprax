@@ -9,9 +9,10 @@ const LOGOUT_ENDPOINT = '/api/logout';                   // AuthController@logou
 const CHANGE_PASSWORD_ENDPOINT = '/api/account/password';// PasswordResetController@changePassword
 
 // Support both Vite (VITE_*) and Vue CLI (VUE_APP_*) env vars
-const env = (typeof import.meta !== 'undefined' && import.meta.env)
-    ? import.meta.env
-    : (typeof process !== 'undefined' ? process.env : {});
+const env =
+    (typeof import.meta !== 'undefined' && import.meta.env)
+        ? import.meta.env
+        : (typeof process !== 'undefined' ? process.env : {});
 
 const clientId =
     env.VITE_OAUTH_CLIENT_ID ||
@@ -25,12 +26,6 @@ const clientSecret =
 
 /**
  * Login with email + password via Laravel Passport (/oauth/token).
- * - sends client_id + client_secret + username/password
- * - stores accessToken/refreshToken in Pinia
- * - fetches user profile and stores it
- *
- * @param {{ email: string, password: string }} payload
- * @returns {Promise<object|null>} user profile after login
  */
 export async function login({ email, password }) {
     if (!clientId || !clientSecret) {
@@ -50,27 +45,26 @@ export async function login({ email, password }) {
     };
 
     const { data } = await axios.post(LOGIN_ENDPOINT, requestBody);
-    // Expected Passport-style response:
     // { token_type, expires_in, access_token, refresh_token, ... }
+
+    // Use bracket notation to avoid "unresolved variable" warnings
+    const accessToken = data['access_token'];
+    const refreshToken = data['refresh_token'] ?? null;
 
     const authStore = useAuthStore();
     authStore.setAuth({
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token ?? null,
+        accessToken,
+        refreshToken,
         profile: null, // will be filled by fetchAndStoreUser()
     });
 
-    // Immediately fetch user details and store them
     await fetchAndStoreUser();
 
     return authStore.profile;
 }
 
 /**
- * Fetch current user details from backend and store them in Pinia.
- * Uses AuthController@userDetails, which returns: { user: { ... } }
- *
- * @returns {Promise<object|null>} user object or null if not authenticated
+ * Fetch current user details and store them in Pinia.
  */
 export async function fetchAndStoreUser() {
     const authStore = useAuthStore();
@@ -80,8 +74,6 @@ export async function fetchAndStoreUser() {
     }
 
     const { data } = await axios.get(USER_DETAILS_ENDPOINT);
-
-    // Your AuthController wraps it as { user: $userData }
     const user = data.user ?? data;
 
     authStore.setProfile(user);
@@ -89,20 +81,13 @@ export async function fetchAndStoreUser() {
     return user;
 }
 
-/**
- * Logout:
- * - Call API to revoke token
- * - Clear auth store regardless of network errors
- *
- * @returns {Promise<void>}
- */
+
 export async function logout() {
     const authStore = useAuthStore();
 
     try {
         await axios.post(LOGOUT_ENDPOINT);
     } catch (error) {
-        // Even if request fails (network, already logged out, etc.) we still clear local state.
         console.warn('Logout request failed (continuing anyway).', error);
     }
 
@@ -112,10 +97,10 @@ export async function logout() {
 /**
  * Change password for a logged-in user.
  * Endpoint: PATCH /api/account/password
- * (PasswordResetController@changePassword)
  *
- * @param {{ currentPassword: string, newPassword: string, newPasswordConfirmation: string }} payload
- * @returns {Promise<any>} backend response data (for toasts, messages, etc.)
+ * - currentPassword je voliteľné:
+ *   - ak ho pošleš, pridá sa current_password (SettingsPage)
+ *   - ak nie, posielajú sa len nové heslá (FirstLoginForm pri password_reset_needed = true)
  */
 export async function changePassword({
                                          currentPassword,
@@ -123,12 +108,14 @@ export async function changePassword({
                                          newPasswordConfirmation,
                                      }) {
     const requestBody = {
-        current_password: currentPassword,
         new_password: newPassword,
         new_password_confirmation: newPasswordConfirmation,
     };
 
+    if (currentPassword) {
+        requestBody.current_password = currentPassword;
+    }
+
     const { data } = await axios.patch(CHANGE_PASSWORD_ENDPOINT, requestBody);
     return data;
 }
-

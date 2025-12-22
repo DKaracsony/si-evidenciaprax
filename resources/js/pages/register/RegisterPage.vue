@@ -1,6 +1,6 @@
 <template>
     <div class="register-layout">
-        <LandingHeader />
+        <AppHeader />
 
         <main class="register-main">
             <div class="register-inner">
@@ -8,12 +8,12 @@
             </div>
         </main>
 
-        <LandingFooter />
+        <Footer />
     </div>
 </template>
 
 <script setup>
-import LandingHeader from '../../components/LandingHeader.vue'
-import LandingFooter from '../../components/LandingFooter.vue'
+import AppHeader from '../../components/Navbar/Navbar.vue'
+import Footer from '../../components/Footer/Footer.vue'
 import RegisterForm from '../../components/Register/RegisterForm.vue'
 </script>

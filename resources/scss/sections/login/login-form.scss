@@ -76,7 +76,7 @@
         font-weight: 500;
     }
 
-    /* NEW: global/system error above button */
+    /* System/backend error above button */
     &__system-error {
         margin-top: 4px;
         margin-bottom: 0;
@@ -101,6 +101,15 @@
         block-size: 56px;
         max-block-size: 56px;
         padding-inline: 64px;
+
+        /* Match disabled look/feel from register primary button */
+        &[disabled],
+        &:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+        }
     }
 
     &__submit--loading {
@@ -115,17 +124,20 @@
     }
 
     &__forgot {
-        color: var(--text-inverse);
+        color: #4d9df4;
         text-decoration: none;
         cursor: pointer;
 
         &:hover,
         &:focus,
         &:focus-visible,
-        &:active,
+        &:active {
+            color: #155CC4;
+            text-decoration: underline;
+        }
+
         &:visited {
-            color: var(--color-primary-900);
-            text-decoration: none;
+            color: #4d9df4;
         }
     }
 }

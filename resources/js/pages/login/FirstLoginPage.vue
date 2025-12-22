@@ -1,6 +1,6 @@
 <template>
     <div class="page page--first-login">
-        <LandingHeader />
+        <AppHeader />
 
         <main class="first-login">
             <section class="first-login__inner container">
@@ -8,12 +8,12 @@
             </section>
         </main>
 
-        <LandingFooter />
+        <Footer />
     </div>
 </template>
 
 <script setup>
-import LandingHeader from "../components/LandingHeader.vue";
-import LandingFooter from "../components/LandingFooter.vue";
-import FirstLoginForm from "../components/FirstLoginForm.vue";
+import AppHeader from "../../components/Navbar/Navbar.vue";
+import Footer from "../../components/Footer/Footer.vue";
+import FirstLoginForm from "../../components/Login/FirstLoginForm.vue";
 </script>

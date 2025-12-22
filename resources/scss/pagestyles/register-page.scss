@@ -8,14 +8,16 @@
     flex-direction: column;
 }
 
-/* Main area centers the card and has the split background */
+/* Main area centers the card and has a uniform background */
 .register-main {
     flex: 1 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
 
-    background: linear-gradient(to bottom, #f2f7ff 0 50%, #cde0ff 50% 100%);
+    /* UPDATED — full background instead of split gradient */
+    background: #cde0ff;
+
     border-bottom: 4px solid #155cc4;
 }
 

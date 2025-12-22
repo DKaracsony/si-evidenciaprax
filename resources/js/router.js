@@ -2,17 +2,17 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from './stores/auth';
 
-import LandingPage from "./pages/LandingPage.vue";
+import LandingPage from "./pages/landingpage/LandingPage.vue";
 import RegisterPage from "./pages/register/RegisterPage.vue";
 import RegisterConfirmationPage from "./pages/register/RegisterConfirmationPage.vue";
 import CompanyActivationPage from "./pages/register/CompanyActivationPage.vue";
 import RegisterSentPage from "./pages/register/RegisterConfirmationPage.vue";
 import LoginPage from "./pages/login/LoginPage.vue";
-import DashboardPage from "./pages/DashboardPage.vue";
+import DashboardPage from "./pages/dashboard/DashboardPage.vue";
 import SettingsPage from "./pages/settings/SettingsPage.vue";
 import ForgotPasswordPageFirst from "./pages/passwordreset/ForgotPasswordPageFirst.vue";
 import ForgotPasswordPageSecond from "./pages/passwordreset/ForgotPasswordPageSecond.vue";
-import FirstLoginPage from "./pages/FirstLoginPage.vue";
+import FirstLoginPage from "./pages/login/FirstLoginPage.vue";
 
 const publicRouteNames = new Set([
     'LandingPage',

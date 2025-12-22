@@ -88,7 +88,7 @@
 </template>
 
 <script>
-import { login } from '../../services/auth';
+import { login } from '@/services/auth.js';
 
 export default {
     name: 'LoginForm',
@@ -157,7 +157,7 @@ export default {
                 });
 
                 // 1) Ak si musí povinne zmeniť heslo, pošli ho na onboarding screen
-                if (profile && profile.password_reset_needed) {
+                if (profile && profile['password_reset_needed']) {
                     this.$router.push({ name: 'FirstLoginPage' });
                     return;
                 }

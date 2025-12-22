@@ -9,4 +9,8 @@ return [
     'DRAFT_SAVED' => 'Koncept bol úspešne uložený.',
     'MISSING_DRAFT_REQUIRED_FIELD' => 'Chýbajúci povinný údaj - koncept',
     'INTERNSHIP_SUBMITTED_SUCCESSFULLY' => 'Prax bola úspešne zaznamenaná.',
+    'INVALID_STATUS_CHANGE_DATA' => 'Neplatné údaje o zmene stavu.',
+    'ALREADY_IN_DESIRED_STATUS' => 'Prax už má požadovaný stav.',
+    'STATUS_CHANGE_NOT_ALLOWED' => 'Zmena stavu praxe v tomto momente nie je povolená.',
+    'INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY' => 'Stav praxe bol úspešne aktualizovaný.',
 ];

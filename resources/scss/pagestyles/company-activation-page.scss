@@ -1,0 +1,285 @@
+// resources/scss/pagestyles/company-activation-page.scss
+@use '../settings/breakpoints' as *;
+@use '../settings/colors' as *;
+
+/* ===== Page background ===== */
+.activation-main {
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* full blue background + dark line above footer (same as .sent) */
+    background: #CDE0FF;
+    border-bottom: 4px solid #155cc4;
+}
+
+/* ===== Card ===== */
+.activation-card {
+    /* Desktop baseline */
+    --btn-h: 56px;
+
+    margin-inline: auto;
+    width: min(94%, 980px);
+    max-width: 980px;
+
+    background: var(--color-primary-400);
+    border: 6px solid #a9c9ff;
+    border-radius: var(--radius, 16px);
+    overflow: hidden;
+
+    /* stronger unified shadow */
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.12),
+        0 12px 28px rgba(0, 0, 0, 0.14),
+        0 20px 48px rgba(0, 0, 0, 0.08);
+
+    padding: 60px;
+    text-align: center;
+    color: #000;
+
+    h1 {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1.14;
+        font-weight: 700; // slightly less bold
+        letter-spacing: -0.013em;
+
+        &::after {
+            content: '';
+            display: block;
+            height: 3px;
+            width: min(92%, 860px);
+            background: #155cc4; // darker blue divider (parity with other pages)
+            margin: 20px auto 0;
+            border-radius: 9999px;
+        }
+    }
+
+    p {
+        font-size: 18px;
+        line-height: 1.52;
+        font-weight: 600;
+        margin: 16px 0 22px;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        margin-bottom: 2px;
+    }
+
+    /* Primary-styled compact buttons (both blue), equal-feeling widths */
+    .btn-primary,
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        inline-size: auto;
+        min-inline-size: clamp(200px, 30ch, 360px);
+        block-size: var(--btn-h);
+        line-height: 1;
+
+        padding: 0 32px;
+        font-size: 16px;
+        font-weight: 800;
+        border-radius: calc(var(--radius, 16px) - 2px);
+        text-decoration: none;
+
+        border: 4px solid #a9c9ff;
+        background: #1868DB !important;
+        color: var(--text-inverse) !important;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.26);
+
+        transition:
+            background-color 200ms ease,
+            border-color 200ms ease,
+            box-shadow 200ms ease,
+            transform 120ms ease;
+        will-change: transform;
+        backface-visibility: hidden;
+
+        &:hover {
+            background: #155CC4 !important;
+            border-color: var(--color-primary-700);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.30);
+            transform: scale(1.02);
+        }
+
+        &:active {
+            background: #134FAA !important;
+            transform: translateY(0.5px);
+        }
+
+        &:focus-visible {
+            outline: 3px solid #a9c9ff;
+            outline-offset: 2px;
+        }
+
+        &:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+    }
+
+    /* Single-button success view: keep auto width with a sensible minimum */
+    .btn-primary:not(.button-group .btn-primary) {
+        min-inline-size: clamp(170px, 26ch, 300px);
+    }
+
+    .resent-feedback {
+        color: #00b35c;
+        font-weight: 700;
+        margin-top: 14px;
+        font-size: 15.5px;
+    }
+
+    .resent-feedback.error {
+        color: #DC2626;
+    }
+}
+
+/* ===== Inline resend e-mail input ===== */
+.activation-resend {
+    margin-top: 14px;
+    margin-bottom: 4px;
+    display: grid;
+    row-gap: 6px;
+    justify-items: center;
+
+    &__label {
+        font-weight: 600;
+        font-size: 15px;
+        color: #0a1b3d;
+        text-align: center;
+    }
+
+    &__input {
+        @extend .input;
+        width: min(100%, 360px);
+        font-size: 15px;
+        min-height: 50px;
+        border-radius: 8px;
+        border-color: #1868db;
+        border-width: 2px;
+    }
+}
+
+
+/* ===== Large / Desktop down (≤1024px) ===== */
+@media (max-width: $bp-lg) {
+    .activation-card {
+        --btn-h: 54px;
+        padding: 56px;
+
+        h1 {
+            font-size: 32px;
+        }
+
+        p {
+            font-size: 17.5px;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            font-size: 16px;
+        }
+    }
+}
+
+/* ===== Medium / Tablet down (≤768px) ===== */
+@media (max-width: $bp-md) {
+    .activation-card {
+        --btn-h: 52px;
+        width: min(96%, 980px);
+        padding: clamp(36px, 6.4vw, 56px);
+
+        h1 {
+            font-size: clamp(26px, 3.2vw, 32px);
+
+            &::after {
+                margin-top: 20px;
+            }
+        }
+
+        p {
+            font-size: clamp(15.5px, 1.8vw, 18px);
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            min-inline-size: clamp(190px, 30ch, 340px);
+            font-size: 15.5px;
+            padding-inline: clamp(24px, 3.4vw, 32px);
+        }
+    }
+
+    .activation-resend__input {
+        width: min(100%, 420px);
+    }
+}
+
+/* ===== Small down (≤480px) ===== */
+@media (max-width: $bp-sm) {
+    .activation-card {
+        --btn-h: 50px;
+        padding: clamp(32px, 6vw, 44px);
+
+        h1 {
+            font-size: clamp(24px, 4.2vw, 30px);
+        }
+
+        p {
+            font-size: clamp(15px, 2.8vw, 17px);
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            min-inline-size: clamp(180px, 28ch, 310px);
+            font-size: 14.5px;
+            padding-inline: clamp(22px, 4vw, 28px);
+        }
+    }
+}
+
+/* ===== Tiny phones down (≤360px) ===== */
+@media (max-width: 360px) {
+    .activation-card {
+        border-width: 5px;
+        padding: 20px;
+        --btn-h: 46px;
+
+        .btn-primary,
+        .btn-secondary {
+            min-inline-size: clamp(150px, 24ch, 260px);
+            padding-inline: 18px;
+            font-size: 13.5px;
+        }
+    }
+
+    .activation-resend__input {
+        min-height: 46px;
+        font-size: 14px;
+    }
+}
+
+/* ===== Hover polish only on hover-capable devices ===== */
+@media (hover: hover) and (pointer: fine) {
+    .activation-card .btn-primary:hover,
+    .activation-card .btn-secondary:hover {
+        transform: scale(1.02);
+    }
+}
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+    .activation-card .btn-primary,
+    .activation-card .btn-secondary {
+        transition: none;
+    }
+}

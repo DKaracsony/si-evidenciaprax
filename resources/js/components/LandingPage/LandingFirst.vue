@@ -44,9 +44,9 @@
                             v-if="!isAuthenticated"
                             href="/register"
                             class="btn-primary lp-first__btn-register"
-                            @click.prevent="$router.push('/register')"
+                            @click.prevent="router.push('/register')"
                         >
-                            Registrovať
+                        Registrovať
                         </a>
                     </div>
                 </div>
@@ -57,10 +57,11 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useAuthStore } from '../stores/auth'; // adjust path if LandingFirst is elsewhere
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth.js';
 
-// Static assets served from public/storage.
-// Keeping plain string URLs avoids Vite import handling.
+const router = useRouter();
+
 const imgUrl  = '/storage/lp-first-1.png';
 const iconUrl = '/storage/icons/tick-box-icon.png';
 

@@ -14,7 +14,10 @@
         </div>
 
         <!-- ERROR -->
-        <div v-else-if="error" class="student-prax-detail__state student-prax-detail__state--error">
+        <div
+            v-else-if="error"
+            class="student-prax-detail__state student-prax-detail__state--error"
+        >
             <p>{{ error }}</p>
             <button
                 type="button"
@@ -37,11 +40,17 @@
                     {{ internship.company?.name ?? 'Neznáma firma' }}
                 </p>
 
-                <p v-if="internship.company?.description" class="student-prax-detail__text-muted">
+                <p
+                    v-if="internship.company?.description"
+                    class="student-prax-detail__text-muted"
+                >
                     {{ internship.company.description }}
                 </p>
 
-                <p v-if="internship.company?.website" class="student-prax-detail__row">
+                <p
+                    v-if="internship.company?.website"
+                    class="student-prax-detail__row"
+                >
                     <span class="student-prax-detail__row-label">Web:</span>
                     <a
                         :href="internship.company.website"
@@ -52,7 +61,10 @@
                     </a>
                 </p>
 
-                <p v-if="internship.company?.address" class="student-prax-detail__row">
+                <p
+                    v-if="internship.company?.address"
+                    class="student-prax-detail__row"
+                >
                     <span class="student-prax-detail__row-label">Adresa:</span>
                     <span>
                         {{ internship.company.address.street }}
@@ -65,23 +77,34 @@
                     </span>
                 </p>
 
-                <p v-if="internship.company?.contact_person" class="student-prax-detail__row">
+                <p
+                    v-if="contactPerson"
+                    class="student-prax-detail__row"
+                >
                     <span class="student-prax-detail__row-label">Kontakt:</span>
                     <span>
-                        {{ internship.company.contact_person.title_before }}
-                        {{ internship.company.contact_person.first_name }}
-                        {{ internship.company.contact_person.last_name }}
-                        {{ internship.company.contact_person.title_after }}
-                        <span v-if="internship.company.contact_person.email">
-                            &nbsp;– {{ internship.company.contact_person.email }}
+                        {{ contactPerson.title_before }}
+                        {{ contactPerson.first_name }}
+                        {{ contactPerson.last_name }}
+                        {{ contactPerson.title_after }}
+                        <span v-if="contactPerson.email">
+                            &nbsp;– {{ contactPerson.email }}
                         </span>
-                        <span v-if="internship.company.contact_person.role_at_company">
-                            &nbsp;({{ internship.company.contact_person.role_at_company }})
+                        <span v-if="contactPerson.role_at_company">
+                            &nbsp;({{ contactPerson.role_at_company }})
                         </span>
-                        <span v-if="internship.company.contact_person.phone_number">
-                            &nbsp;· Tel: {{ internship.company.contact_person.phone_number }}
+                        <span v-if="contactPerson.phone_number">
+                            &nbsp;· Tel: {{ contactPerson.phone_number }}
                         </span>
                     </span>
+                </p>
+
+                <!-- Non-blocking warning if detail fetch failed but we still show store fallback -->
+                <p
+                    v-if="nonBlockingError"
+                    class="student-prax-detail__text-muted"
+                >
+                    {{ nonBlockingError }}
                 </p>
             </section>
 
@@ -101,8 +124,13 @@
                     <span>{{ formatDate(internship.date_to) }}</span>
                 </p>
 
-                <p v-if="internship.semester" class="student-prax-detail__row">
-                    <span class="student-prax-detail__row-label">Akademický rok / semester:</span>
+                <p
+                    v-if="internship.semester"
+                    class="student-prax-detail__row"
+                >
+                    <span class="student-prax-detail__row-label">
+                        Akademický rok / semester:
+                    </span>
                     <span>{{ formatSemester(internship.semester) }}</span>
                 </p>
             </section>
@@ -127,17 +155,18 @@
                     />
 
                     <p
-                        v-if="internship.is_draft && internship.created_at"
+                        v-if="internship.is_draft && internship['created_at']"
                         class="student-prax-detail__status-meta"
                     >
-                        Návrh vytvorený: {{ formatDate(internship.created_at) }}
+                        Návrh vytvorený: {{ formatDate(internship['created_at']) }}
                     </p>
 
                     <p
                         v-else-if="!internship.is_draft && internship.status?.changed_at"
                         class="student-prax-detail__status-meta"
                     >
-                        Stav aktualizovaný: {{ formatDate(internship.status.changed_at) }}
+                        Stav aktualizovaný:
+                        {{ formatDate(internship.status.changed_at) }}
                     </p>
                 </div>
             </section>
@@ -157,13 +186,16 @@
                 <button
                     type="button"
                     class="student-prax-detail__button student-prax-detail__button--ghost"
-                    @click="$emit('back-to-list')"
+                    @click="emit('back-to-list')"
                 >
                     Späť na zoznam
                 </button>
             </section>
 
-            <p v-if="pdfError" class="student-prax-detail__pdf-error">
+            <p
+                v-if="pdfError"
+                class="student-prax-detail__pdf-error"
+            >
                 {{ pdfError }}
             </p>
         </div>
@@ -172,12 +204,12 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { useInternshipStore } from '../../stores/internship';
+import { useInternshipStore } from '@/stores/internship';
 import {
     fetchStudentInternshipDetail,
     downloadStudentInternshipAgreementPdf,
-} from '../../services/internship';
-import InternshipStatusBadge from '../Dashboard/InternshipStatusBadge.vue';
+} from '@/services/internship';
+import InternshipStatusBadge from '@/components/Dashboard/General/InternshipStatusBadge.vue';
 
 const props = defineProps({
     internshipId: {
@@ -186,49 +218,93 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits(['back-to-list']);
+
 const internshipStore = useInternshipStore();
 
 const internship = ref(null);
 const isLoading = ref(false);
 const error = ref('');
+const nonBlockingError = ref('');
 const isDownloading = ref(false);
 const pdfError = ref('');
 
-const numericId = computed(() => Number(props.internshipId));
+const numericId = computed(() => {
+    const n = Number(props.internshipId);
+    return Number.isFinite(n) ? n : null;
+});
+
+const contactPerson = computed(() =>
+    internship.value?.company?.['contact_person'] ?? null
+);
+
+function toTime(value) {
+    const t = new Date(value).getTime();
+    return Number.isFinite(t) ? t : 0;
+}
 
 async function loadDetail() {
     isLoading.value = true;
     error.value = '';
+    nonBlockingError.value = '';
     pdfError.value = '';
 
+    if (!numericId.value) {
+        internship.value = null;
+        error.value = 'Neplatné ID praxe.';
+        isLoading.value = false;
+        return;
+    }
+
     try {
-        // ak máme v store, použijeme ho ako základ
+        // If we have an item in store, use it as quick fallback (clone to avoid mutating Pinia object)
         const fromStore = internshipStore.internshipById(numericId.value);
         if (fromStore) {
-            internship.value = fromStore;
+            internship.value = { ...fromStore };
         }
 
-        // skúsiť dotiahnuť detail z backendu (kvôli kontaktu, adrese atď.)
         const data = await fetchStudentInternshipDetail(numericId.value);
 
-// Primary data
+        // Primary data
         internship.value = data;
 
-// Extract latest status
-        if (Array.isArray(data.status_history) && data.status_history.length > 0) {
-            const flat = data.status_history.flat();
-            const latest = flat[0];
+        // Extract latest status safely (do not assume ordering)
+        const historyRaw = Array.isArray(data?.['status_history'])
+            ? data['status_history']
+            : [];
+
+        const history = historyRaw.flat ? historyRaw.flat() : historyRaw;
+
+        if (history.length > 0) {
+            const latest = history
+                .slice()
+                .sort(
+                    (a, b) =>
+                        toTime(b?.['status_changed_at']) -
+                        toTime(a?.['status_changed_at'])
+                )[0];
 
             internship.value.status = {
-                name: latest.status,
-                changed_at: latest.status_changed_at
+                name: latest?.status ?? internship.value.status?.name ?? null,
+                changed_at:
+                    latest?.['status_changed_at'] ??
+                    internship.value.status?.changed_at ??
+                    null,
             };
         }
 
+        // Keep list/store in sync with newes-t version of the internship
+        internshipStore.upsertInternship(internship.value);
     } catch (e) {
         console.error('[StudentPraxDetail] Failed to load detail', e);
+
+        // If we have no fallback data, show blocking error
         if (!internship.value) {
             error.value = 'Nepodarilo sa načítať detail praxe.';
+        } else {
+            // Otherwise show a non-blocking message (user still sees basic info)
+            nonBlockingError.value =
+                'Detail praxe sa nepodarilo načítať. Zobrazujú sa údaje zo zoznamu.';
         }
     } finally {
         isLoading.value = false;
@@ -246,7 +322,8 @@ async function downloadPdf() {
     pdfError.value = '';
 
     try {
-        const response = await downloadStudentInternshipAgreementPdf(numericId.value);
+        const response =
+            await downloadStudentInternshipAgreementPdf(numericId.value);
         const blob = new Blob([response.data], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
 

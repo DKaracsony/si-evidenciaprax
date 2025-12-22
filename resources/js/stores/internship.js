@@ -2,32 +2,62 @@
 import { defineStore } from 'pinia';
 import { fetchStudentInternships } from '../services/internship';
 
+/**
+ * @typedef {Object} InternshipItem
+ * @property {number} id
+ * @property {string} start_date
+ * @property {string} date_to
+ * @property {string|null} description
+ * @property {boolean} is_draft
+ * @property {string|null} submitted_at
+ * @property {Object|null} company
+ * @property {Object|null} semester
+ * @property {{name: string, changed_at: string}|null} status
+ * @property {Array} documents
+ */
+
+/**
+ * @typedef {Object} InternshipState
+ * @property {InternshipItem[]} items
+ * @property {boolean} isLoading
+ * @property {any} error
+ * @property {boolean} hasLoadedOnce
+ * @property {string|null} lastFetchedAt
+ */
+
+/** @returns {InternshipState} */
+function state() {
+    return {
+        items: [],
+        isLoading: false,
+        error: null,
+        hasLoadedOnce: false,
+        lastFetchedAt: null,
+    };
+}
+
 export const useInternshipStore = defineStore('internship', {
-    state: () => ({
-        items: [],            // zoznam praxí
-        isLoading: false,     // globálny loading flag
-        error: null,          // posledná chyba (ak nejaká bola)
-        hasLoadedOnce: false, // či už sme raz úspešne nahrali zoznam
-        lastFetchedAt: null,  // ISO timestamp posledného refreshu
-    }),
+    state,
 
     getters: {
+        /** @param {InternshipState} state */
         hasData: (state) => state.items.length > 0,
 
+        /** @param {InternshipState} state */
         isEmpty: (state) =>
             !state.isLoading && state.items.length === 0 && !state.error,
 
+        /** @param {InternshipState} state */
         internshipById: (state) => (id) =>
             state.items.find((item) => String(item.id) === String(id)) || null,
     },
 
     actions: {
         /**
-         * Načíta zoznam praxí z backendu a uloží ho do store.
-         * - ak už bol zoznam raz načítaný, nevolá API (pokiaľ force !== true)
+         * Load internship list from backend.
          *
          * @param {{ force?: boolean }} options
-         * @returns {Promise<Array>}
+         * @returns {Promise<InternshipItem[]>}
          */
         async loadList({ force = false } = {}) {
             if (this.hasLoadedOnce && !force) {
@@ -40,16 +70,7 @@ export const useInternshipStore = defineStore('internship', {
             try {
                 const list = await fetchStudentInternships();
 
-                if (!Array.isArray(list)) {
-                    console.warn(
-                        '[useInternshipStore] Expected internships array, got:',
-                        list
-                    );
-                    this.items = [];
-                } else {
-                    this.items = list;
-                }
-
+                this.items = Array.isArray(list) ? list : [];
                 this.hasLoadedOnce = true;
                 this.lastFetchedAt = new Date().toISOString();
 
@@ -66,12 +87,11 @@ export const useInternshipStore = defineStore('internship', {
         },
 
         /**
-         * Napr. po vytvorení / update praxe, aby si nemusel robiť hneď refetch.
+         * Update or insert one internship without refetch.
+         * @param {InternshipItem} internship
          */
         upsertInternship(internship) {
-            if (!internship || typeof internship.id === 'undefined') {
-                return;
-            }
+            if (!internship || internship.id == null) return;
 
             const id = internship.id;
             const index = this.items.findIndex(
@@ -88,6 +108,7 @@ export const useInternshipStore = defineStore('internship', {
             this.lastFetchedAt = new Date().toISOString();
         },
 
+        /** @param {InternshipItem[]} list */
         setList(list) {
             this.items = Array.isArray(list) ? list : [];
             this.hasLoadedOnce = true;

@@ -4,6 +4,17 @@
 
 .student-prax-list {
     padding-block: clamp(32px, 5vw, 48px);
+
+    /* mirror register-card button height behaviour for MAIN CTA (empty state) */
+    --btn-h: 50px;
+
+    @include up($bp-md) {
+        --btn-h: 48px;
+    }
+
+    @include up($bp-xl) {
+        --btn-h: 55px;
+    }
 }
 
 /* HEADER + LINES ---------------------------------------------------------- */
@@ -15,7 +26,7 @@
 .student-prax-list__header-row {
     display: flex;
     align-items: center;
-    justify-content: center; // default – empty state => title center
+    justify-content: center;
     gap: 16px;
     margin-bottom: 16px;
 
@@ -24,7 +35,6 @@
     }
 }
 
-/* keď máme aspoň jednu prax, zarovnáme na kraje a ukážeme button */
 .student-prax-list__header--with-button .student-prax-list__header-row {
     justify-content: space-between;
 }
@@ -33,7 +43,7 @@
     font-size: clamp(24px, 3vw, 28px);
     font-weight: 700;
     color: var(--color-neutral-900);
-    margin: 0; // spacing riešime cez header-row
+    margin: 0;
 }
 
 .student-prax-list__divider {
@@ -44,7 +54,6 @@
     background: var(--color-primary-700);
 }
 
-/* spodnú modrú čiaru úplne schováme */
 .student-prax-list__divider--bottom {
     display: none;
 }
@@ -80,52 +89,111 @@
     color: var(--color-neutral-900);
 }
 
+.student-prax-item__description-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+
+    /* ✅ prevent ultra-long words from breaking layout */
+    overflow-wrap: anywhere;   // modern + best behavior
+    word-break: break-word;    // fallback for older engines
+    hyphens: auto;             // nicer breaks for normal words
+}
+
+
 /* PRIMARY BUTTON (Pridať prax / Skúsiť znova / header) -------------------- */
+/* ⛔️ DO NOT CHANGE – stays as-is */
 
 .student-prax-list__primary-button {
-    padding: 10px 32px;
-    border-radius: 999px;
-    border: 2px solid var(--color-primary-700);
-    background: var(--color-primary-600);
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-    transition: background 0.15s ease, transform 0.1s ease,
-    box-shadow 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+
+    border: 4px solid #a9c9ff;
+    background: #1868DB !important;
+    color: var(--text-inverse) !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    text-decoration: none;
+
+    min-width: 220px;
+    padding: 0 40px;
+    line-height: 1;
+    height: var(--btn-h);
+    min-height: var(--btn-h);
+    max-height: var(--btn-h);
+
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: calc(var(--radius, 16px) - 2px);
+
+    will-change: transform;
+    backface-visibility: hidden;
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms ease;
 
     &:hover {
-        background: var(--color-primary-700);
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+        background: #155CC4 !important;
+        color: var(--text-inverse) !important;
+        border-color: var(--color-primary-700);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
     }
 
     &:active {
-        transform: translateY(0);
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        background: #134FAA !important;
+        transform: translateY(0.5px);
+    }
+
+    &:focus-visible {
+        outline: 3px solid #a9c9ff;
+        outline-offset: 2px;
+    }
+
+    &[disabled],
+    &:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
     }
 }
 
-/* menšia verzia tlačidla, keď je v headeri pri zozname */
 .student-prax-list__primary-button--inline {
-    padding: 8px 20px;
-    font-size: 14px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    font-size: 15px;
+    min-width: 0;
+    padding: 0 28px;
+}
+
+@include up($bp-md) {
+    .student-prax-list__primary-button--inline {
+        height: 44px;
+        min-height: 44px;
+        max-height: 44px;
+        padding-inline: 32px;
+    }
 }
 
 .student-prax-list__primary-button--outline {
-    background: transparent;
-    color: var(--color-danger-700);
+    background: transparent !important;
+    color: var(--color-danger-700) !important;
     border-color: var(--color-danger-400);
     box-shadow: none;
 
-    &:hover {
-        background: var(--color-danger-50);
+    &:hover:not(:disabled) {
+        background: var(--color-danger-50) !important;
     }
 }
 
-/* LIST VIEW (keď budú dáta) ---------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+    .student-prax-list__primary-button:hover {
+        transform: scale(1.03);
+    }
+}
+
+/* LIST VIEW --------------------------------------------------------------- */
 
 .student-prax-list__items {
     list-style: none;
@@ -133,7 +201,6 @@
     margin: 0;
     max-width: 1120px;
     margin-inline: auto;
-    // border-top odstránený – nechceme čiaru nad prvým záznamom
 }
 
 .student-prax-item {
@@ -151,50 +218,6 @@
     }
 }
 
-.student-prax-item__main {
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-.student-prax-item__company {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--color-neutral-900);
-    margin-bottom: 4px;
-}
-
-.student-prax-item__company-city {
-    font-weight: 500;
-    color: var(--color-neutral-700);
-}
-
-.student-prax-item__dates,
-.student-prax-item__semester {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-.student-prax-item__semester {
-    margin-bottom: 8px;
-}
-
-.student-prax-item__description {
-    margin-top: 6px;
-}
-
-.student-prax-item__description-label {
-    display: inline-block;
-    font-weight: 600;
-    margin-bottom: 2px;
-    color: var(--color-neutral-800);
-}
-
-.student-prax-item__description-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.5;
-}
-
 .student-prax-item__side {
     flex: 0 0 auto;
     display: flex;
@@ -205,7 +228,7 @@
     @include up($bp-md) {
         align-items: flex-end;
         min-width: 220px;
-        align-self: stretch; // dôležité – pravý stĺpec má výšku riadku
+        align-self: stretch;
     }
 }
 
@@ -219,43 +242,85 @@
     }
 }
 
+/* ✅ INTERACTION BUTTONS – UPDATED STYLE ONLY ----------------------------- */
+/* Same visual language as Login/Register primary button, scaled down */
+
 .student-prax-item__cta-button {
     margin-top: 4px;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: 999px;
-    border: none;
-    cursor: pointer;
-    background: var(--color-primary-500);
-    color: #fff;
-    white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
 
-    &:hover {
-        background: var(--color-primary-600);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+
+    padding: 8px 20px;
+    min-height: 40px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    border-radius: calc(var(--radius, 16px) - 6px);
+    border: 3px solid #a9c9ff;
+
+    background: #1868DB;
+    color: var(--text-inverse);
+
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+
+    cursor: pointer;
+    will-change: transform;
+    backface-visibility: hidden;
+
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms ease;
+
+    &:hover:not(:disabled) {
+        background: #155CC4;
+        border-color: var(--color-primary-700);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+        transform: scale(1.03);
     }
 
-    // na desktop – tlačidlo sa odtlačí na spodok pravého stĺpca
+    &:active:not(:disabled) {
+        background: #134FAA;
+        transform: translateY(0.5px);
+    }
+
+    &:focus-visible {
+        outline: 3px solid #a9c9ff;
+        outline-offset: 2px;
+    }
+
+    &[disabled],
+    &:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    }
+
     @include up($bp-md) {
         margin-top: auto;
     }
 }
 
-/* ROW FOR TWO ACTION BUTTONS (Vytvorená / Potvrdená) --------------------- */
+/* ROW FOR MULTIPLE ACTION BUTTONS ---------------------------------------- */
 
 .student-prax-item__actions-row {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 8px; // trošku odstupu od status meta
+    margin-top: 8px;
 
     @include up($bp-md) {
         justify-content: flex-end;
-        margin-top: auto; // na desktop tlačidlá k spodku záznamu
+        margin-top: auto;
     }
 
     .student-prax-item__cta-button {
-        margin-top: 0; // overrides auto z .student-prax-item__cta-button
+        margin-top: 0;
     }
 }

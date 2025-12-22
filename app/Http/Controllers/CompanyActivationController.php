@@ -68,12 +68,11 @@ class CompanyActivationController extends Controller
                 ->update(['consumed_at' => now()]);
 
             // 3) Flip the company owner profile to active + link the activation id
-            //    (update all profiles for safety; schema suggests hasOne in practice)
             CompanyOwnerProfile::where('company_user_id', $user->id)
                 ->update([
                     'is_active'             => true,
                     'company_activation_id' => $rec->id,
-                    'updated_at'            => now(), // ensure timestamps are consistent
+                    'updated_at'            => now(),
                 ]);
         });
 
@@ -105,28 +104,56 @@ class CompanyActivationController extends Controller
         ]);
 
         $email = $request->input('email');
-        $generic = ['message' => 'Ak účet existuje a nie je aktivovaný, poslali sme nový aktivačný email.'];
 
         /** @var User|null $user */
         $user = User::where('email', $email)->first();
 
-        if (!$user || (bool) $user->active) {
-            return response()->json($generic, 200);
+        // 1) User neexistuje
+        if (!$user) {
+            return response()->json([
+                'sent'    => false,
+                'reason'  => 'NOT_FOUND',
+                'message' => 'Účet s daným e-mailom neexistuje.',
+            ], 200);
         }
 
+        // 2) Už aktivovaný
+        if ((bool) $user->active) {
+            return response()->json([
+                'sent'    => false,
+                'reason'  => 'ALREADY_ACTIVATED',
+                'message' => 'Účet už bol aktivovaný. Skúste sa prihlásiť.',
+            ], 200);
+        }
+
+        // 3) Neaktívny účet → vytvor nový aktivačný link a pošli e-mail
         $company = method_exists($user, 'companyOwnerProfile') && $user->companyOwnerProfile
             ? ($user->companyOwnerProfile->company ?? null)
             : null;
 
-        DB::transaction(function () use ($user, $company) {
-            // Remove any stale, unconsumed activations
-            CompanyActivation::where('sent_to_mail', $user->email)
-                ->whereNull('consumed_at')
-                ->delete();
+        try {
+            DB::transaction(function () use ($user, $company) {
+                // Remove any stale, unconsumed activations
+                CompanyActivation::where('sent_to_mail', $user->email)
+                    ->whereNull('consumed_at')
+                    ->delete();
 
-            $this->activationService->createAndSendActivation($user, $company);
-        });
+                $this->activationService->createAndSendActivation($user, $company);
+            });
 
-        return response()->json($generic, 200);
+            return response()->json([
+                'sent'    => true,
+                'reason'  => 'OK',
+                'message' => 'Poslali sme vám nový aktivačný e-mail.',
+            ], 200);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'sent'    => false,
+                'reason'  => 'SEND_FAILED',
+                'message' => 'Nepodarilo sa odoslať aktivačný e-mail. Skúste to prosím znova neskôr.',
+            ], 500);
+        }
     }
 }

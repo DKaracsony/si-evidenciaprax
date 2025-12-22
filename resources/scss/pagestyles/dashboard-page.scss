@@ -18,10 +18,13 @@
     padding-block: clamp(24px, 4vw, 40px);
     background: var(--color-primary-50);
 
+    border-bottom: 4px solid #155cc4; // 🔹 Add dark blue separator line
+
     @include up($bp-md) {
         padding-block: clamp(32px, 5vw, 56px);
     }
 }
+
 
 .dashboard-page__inner {
     max-width: 1120px;

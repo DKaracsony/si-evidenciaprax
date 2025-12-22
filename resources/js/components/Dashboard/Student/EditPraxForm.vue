@@ -2,9 +2,8 @@
     <section class="new-prax-form">
         <header class="new-prax-form__header">
             <h2 class="new-prax-form__title">
-                Nová odborná prax
+                Editácia návrhu odbornej praxe
             </h2>
-            <!-- rovnaká čiara ako v zozname praxí -->
             <div class="student-prax-list__divider new-prax-form__divider"></div>
         </header>
 
@@ -70,28 +69,27 @@
                     </p>
 
                     <p
-                        v-if="selectedCompanyDetail.contact_person"
+                        v-if="contactPerson"
                         class="company-summary-card__contact"
                     >
                         Kontakt:
-                        {{ selectedCompanyDetail.contact_person.title_before }}
-                        {{ selectedCompanyDetail.contact_person.first_name }}
-                        {{ selectedCompanyDetail.contact_person.last_name }}
-                        {{ selectedCompanyDetail.contact_person.title_after }}
-                        <span v-if="selectedCompanyDetail.contact_person.email">
-        &nbsp;– {{ selectedCompanyDetail.contact_person.email }}
-    </span>
-                        <span v-if="selectedCompanyDetail.contact_person.role_at_company">
-        &nbsp;({{ selectedCompanyDetail.contact_person.role_at_company }})
-    </span>
+                        {{ contactPerson.title_before }}
+                        {{ contactPerson.first_name }}
+                        {{ contactPerson.last_name }}
+                        {{ contactPerson.title_after }}
+                        <span v-if="contactPerson.email">
+                            &nbsp;– {{ contactPerson.email }}
+                        </span>
+                        <span v-if="contactPerson.role_at_company">
+                            &nbsp;({{ contactPerson.role_at_company }})
+                        </span>
                         <span
-                            v-if="selectedCompanyDetail.contact_person.phone_number"
+                            v-if="contactPerson.phone_number"
                             class="company-summary-card__phone"
                         >
-        &nbsp;· Tel: {{ selectedCompanyDetail.contact_person.phone_number }}
-    </span>
+                            &nbsp;· Tel: {{ contactPerson.phone_number }}
+                        </span>
                     </p>
-
                 </div>
             </div>
 
@@ -209,18 +207,36 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, watch } from 'vue';
-import { fetchAcademicYears } from '../../services/academicYear';
-import { createOrUpdateStudentInternship } from '../../services/internship';
-import { useInternshipStore } from '../../stores/internship';
-import { fetchCompanyDetail } from '../../services/company';
-import CompanyAutocomplete from './CompanyAutoComplete.vue';
+import { reactive, ref, onMounted, watch, computed } from 'vue';
+import { fetchAcademicYears } from '@/services/academicYear';
+import { createOrUpdateStudentInternship } from '@/services/internship';
+import { useInternshipStore } from '@/stores/internship';
+import { fetchCompanyDetail } from '@/services/company';
+import CompanyAutocomplete from '@/components/Dashboard/General/CompanyAutoComplete.vue';
+
+const props = defineProps({
+    internship: {
+        type: Object,
+        required: true,
+    },
+});
 
 const emit = defineEmits(['created', 'cancel']);
 
 const internshipStore = useInternshipStore();
 
+/**
+ * @typedef {Object} AcademicYearOption
+ * @property {number|string} id
+ * @property {string} [name]
+ * @property {string} [season]
+ * @property {string} [start_date]
+ * @property {string} [end_date]
+ */
+
+/** @type {import('vue').Ref<AcademicYearOption[]>} */
 const academicYears = ref([]);
+
 const isSubmitting = ref(false);
 const submitMode = ref(null); // 'draft' | 'final'
 const globalError = ref('');
@@ -229,14 +245,29 @@ const globalError = ref('');
 const selectedCompanyDetail = ref(null);
 const isLoadingCompanyDetail = ref(false);
 
+const contactPerson = computed(() =>
+    selectedCompanyDetail.value
+        ? selectedCompanyDetail.value['contact_person'] ?? null
+        : null
+);
+
 const form = reactive({
-    company: null,          // { id, name }
+    company: null, // { id, name }
     startDate: '',
     endDate: '',
     academicYearId: '',
     description: '',
 });
 
+/**
+ * @type {{
+ *   company: string;
+ *   startDate: string;
+ *   endDate: string;
+ *   academicYearId: string;
+ *   description: string;
+ * }}
+ */
 const errors = reactive({
     company: '',
     startDate: '',
@@ -245,14 +276,39 @@ const errors = reactive({
     description: '',
 });
 
+const editingInternshipId = ref(props.internship?.id ?? null);
+
+function hydrateFormFromInternship(internship) {
+    if (!internship) return;
+
+    form.company = internship.company
+        ? { id: internship.company.id, name: internship.company.name }
+        : null;
+
+    form.startDate = internship.start_date ?? '';
+    form.endDate = internship.date_to ?? '';
+    form.academicYearId = internship.semester?.id ?? '';
+    form.description = internship.description ?? '';
+}
+
 onMounted(async () => {
     try {
         academicYears.value = await fetchAcademicYears();
     } catch (e) {
-        console.error('[NewPraxForm] Failed to load academic years', e);
+        console.error('[EditPraxForm] Failed to load academic years', e);
         globalError.value = 'Nepodarilo sa načítať zoznam akademických rokov.';
     }
+
+    hydrateFormFromInternship(props.internship);
 });
+
+watch(
+    () => props.internship,
+    (value) => {
+        editingInternshipId.value = value?.id ?? null;
+        hydrateFormFromInternship(value);
+    }
+);
 
 // keď sa zmení vybraná firma, dotiahneme detail z /api/companies/{id}
 watch(
@@ -260,21 +316,21 @@ watch(
     async (company) => {
         selectedCompanyDetail.value = null;
 
-        if (!company || !company.id) {
+        if (!company || !company['id']) {
             return;
         }
 
         try {
             isLoadingCompanyDetail.value = true;
-            const detail = await fetchCompanyDetail(company.id);
-            selectedCompanyDetail.value = detail;
+            selectedCompanyDetail.value = await fetchCompanyDetail(company['id']);
         } catch (e) {
-            console.error('[NewPraxForm] Failed to load company detail', e);
+            console.error('[EditPraxForm] Failed to load company detail', e);
         } finally {
             isLoadingCompanyDetail.value = false;
         }
     }
 );
+
 
 function resetErrors() {
     errors.company = '';
@@ -308,7 +364,9 @@ function validateForFinalSubmit() {
         errors.academicYearId = 'Vyberte akademický rok / semester.';
         ok = false;
     }
-    if (!form.description || form.description.trim().length < 10) {
+
+    const description = (form.description ?? '').toString().trim();
+    if (!description || description.length < 10) {
         errors.description = 'Popis by mal mať aspoň 10 znakov.';
         ok = false;
     }
@@ -333,7 +391,7 @@ async function submit(asDraft) {
         description: form.description || null,
         company_id: form.company?.id || null,
         academic_year_id: form.academicYearId || null,
-        // internship_id by sa tu doplnilo pri editácii draftu
+        internship_id: editingInternshipId.value || null,
     };
 
     try {
@@ -346,24 +404,29 @@ async function submit(asDraft) {
 
         emit('created', { internship, isDraft: asDraft, raw: data });
     } catch (error) {
-        console.error('[NewPraxForm] Failed to submit internship', error);
+        console.error('[EditPraxForm] Failed to submit internship', error);
 
-        if (error.response?.status === 422 && error.response.data?.errors) {
-            const backendErrors = error.response.data.errors;
-            if (backendErrors.start_date?.[0]) {
-                errors.startDate = backendErrors.start_date[0];
+        if (
+            error.response?.status === 422 &&
+            error.response.data &&
+            error.response.data['errors']
+        ) {
+            const backendErrors = error.response.data['errors'] || {};
+
+            if (backendErrors['start_date']?.[0]) {
+                errors.startDate = backendErrors['start_date'][0];
             }
-            if (backendErrors.date_to?.[0]) {
-                errors.endDate = backendErrors.date_to[0];
+            if (backendErrors['date_to']?.[0]) {
+                errors.endDate = backendErrors['date_to'][0];
             }
-            if (backendErrors.description?.[0]) {
-                errors.description = backendErrors.description[0];
+            if (backendErrors['description']?.[0]) {
+                errors.description = backendErrors['description'][0];
             }
-            if (backendErrors.company_id?.[0]) {
-                errors.company = backendErrors.company_id[0];
+            if (backendErrors['company_id']?.[0]) {
+                errors.company = backendErrors['company_id'][0];
             }
-            if (backendErrors.academic_year_id?.[0]) {
-                errors.academicYearId = backendErrors.academic_year_id[0];
+            if (backendErrors['academic_year_id']?.[0]) {
+                errors.academicYearId = backendErrors['academic_year_id'][0];
             }
         } else {
             globalError.value = 'Pri ukladaní praxe došlo k chybe. Skúste to znova.';
@@ -374,19 +437,24 @@ async function submit(asDraft) {
 }
 
 function formatAcademicYearOption(year) {
-    // odhad: year.start_date / end_date / season
-    const start = year.start_date ? new Date(year.start_date).getFullYear() : null;
-    const end = year.end_date ? new Date(year.end_date).getFullYear() : null;
+    const start = year['start_date']
+        ? new Date(year['start_date']).getFullYear()
+        : null;
+    const end = year['end_date']
+        ? new Date(year['end_date']).getFullYear()
+        : null;
 
     const range =
         start && end && start !== end
             ? `${start}/${String(end).slice(-2)}`
             : start || '';
 
-    if (range && year.season) {
-        return `${range} – ${year.season}`;
+    const seasonLabel = year['season'];
+
+    if (range && seasonLabel) {
+        return `${range} – ${seasonLabel}`;
     }
     if (range) return range;
-    return year.name || year.season || `ID ${year.id}`;
+    return year.name || seasonLabel || `ID ${year['id']}`;
 }
 </script>

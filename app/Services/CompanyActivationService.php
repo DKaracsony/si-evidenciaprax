@@ -4,11 +4,12 @@ namespace App\Services;
 
 use App\Models\CompanyActivation;
 use App\Models\CompanyOwnerProfile;
+use App\Services\MailSender;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-class CompanyActivationService {
-
+class CompanyActivationService
+{
     public function createAndSendActivation($user, $company): void
     {
         $plainToken = Str::random(64);
@@ -27,7 +28,7 @@ class CompanyActivationService {
             ]);
 
         $activationUrl = $this->buildActivationUrl($plainToken, $user->email);
-        $expiresText = $this->getExpirationText($activation->created_at);
+        $expiresText   = $this->getExpirationText($activation->created_at);
 
         $this->sendActivationEmail($user, $company, $activationUrl, $expiresText);
     }
