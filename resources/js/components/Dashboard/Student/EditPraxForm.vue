@@ -1,24 +1,22 @@
 <template>
-    <section class="new-prax-form">
-        <header class="new-prax-form__header">
-            <h2 class="new-prax-form__title">
+    <section class="edit-prax-form">
+        <header class="edit-prax-form__header">
+            <h2 class="edit-prax-form__title">
                 Editácia návrhu odbornej praxe
             </h2>
-            <div class="student-prax-list__divider new-prax-form__divider"></div>
+            <div class="student-prax-list__divider edit-prax-form__divider"></div>
         </header>
 
         <form @submit.prevent="submit(false)" novalidate>
             <!-- Firma -->
-            <div class="new-prax-form__field">
+            <div class="edit-prax-form__field">
                 <CompanyAutocomplete
                     v-model="form.company"
                     label="Firma"
                     :required="false"
-                    placeholder=""
                     :error="errors.company"
                 />
 
-                <!-- Karta s read-only informáciami o firme -->
                 <div
                     v-if="isLoadingCompanyDetail"
                     class="company-summary-card company-summary-card--loading"
@@ -80,61 +78,52 @@
                         <span v-if="contactPerson.email">
                             &nbsp;– {{ contactPerson.email }}
                         </span>
-                        <span v-if="contactPerson.role_at_company">
-                            &nbsp;({{ contactPerson.role_at_company }})
-                        </span>
-                        <span
-                            v-if="contactPerson.phone_number"
-                            class="company-summary-card__phone"
-                        >
-                            &nbsp;· Tel: {{ contactPerson.phone_number }}
-                        </span>
                     </p>
                 </div>
             </div>
 
             <!-- Dátumy -->
-            <div class="new-prax-form__field new-prax-form__field--row">
-                <div class="new-prax-form__field-col">
-                    <label class="new-prax-form__label">
-                        Začiatok praxe <span class="new-prax-form__required">*</span>
+            <div class="edit-prax-form__field edit-prax-form__field--row">
+                <div class="edit-prax-form__field-col">
+                    <label class="edit-prax-form__label">
+                        Začiatok praxe <span class="edit-prax-form__required">*</span>
                     </label>
                     <input
                         type="date"
                         v-model="form.startDate"
-                        class="new-prax-form__input"
-                        :class="{ 'new-prax-form__input--error': errors.startDate }"
+                        class="edit-prax-form__input"
+                        :class="{ 'edit-prax-form__input--error': errors.startDate }"
                     />
-                    <p v-if="errors.startDate" class="new-prax-form__error">
+                    <p v-if="errors.startDate" class="edit-prax-form__error">
                         {{ errors.startDate }}
                     </p>
                 </div>
 
-                <div class="new-prax-form__field-col">
-                    <label class="new-prax-form__label">
-                        Koniec praxe <span class="new-prax-form__required">*</span>
+                <div class="edit-prax-form__field-col">
+                    <label class="edit-prax-form__label">
+                        Koniec praxe <span class="edit-prax-form__required">*</span>
                     </label>
                     <input
                         type="date"
                         v-model="form.endDate"
-                        class="new-prax-form__input"
-                        :class="{ 'new-prax-form__input--error': errors.endDate }"
+                        class="edit-prax-form__input"
+                        :class="{ 'edit-prax-form__input--error': errors.endDate }"
                     />
-                    <p v-if="errors.endDate" class="new-prax-form__error">
+                    <p v-if="errors.endDate" class="edit-prax-form__error">
                         {{ errors.endDate }}
                     </p>
                 </div>
             </div>
 
-            <!-- Semester / akademický rok -->
-            <div class="new-prax-form__field">
-                <label class="new-prax-form__label">
-                    Akademický rok / semester <span class="new-prax-form__required">*</span>
+            <!-- Akademický rok -->
+            <div class="edit-prax-form__field">
+                <label class="edit-prax-form__label">
+                    Akademický rok / semester <span class="edit-prax-form__required">*</span>
                 </label>
                 <select
                     v-model="form.academicYearId"
-                    class="new-prax-form__select"
-                    :class="{ 'new-prax-form__input--error': errors.academicYearId }"
+                    class="edit-prax-form__select"
+                    :class="{ 'edit-prax-form__input--error': errors.academicYearId }"
                 >
                     <option value="">Vyberte možnosť</option>
                     <option
@@ -145,38 +134,37 @@
                         {{ formatAcademicYearOption(year) }}
                     </option>
                 </select>
-                <p v-if="errors.academicYearId" class="new-prax-form__error">
+                <p v-if="errors.academicYearId" class="edit-prax-form__error">
                     {{ errors.academicYearId }}
                 </p>
             </div>
 
             <!-- Popis -->
-            <div class="new-prax-form__field">
-                <label class="new-prax-form__label">
-                    Popis praxe <span class="new-prax-form__required">*</span>
+            <div class="edit-prax-form__field">
+                <label class="edit-prax-form__label">
+                    Popis praxe <span class="edit-prax-form__required">*</span>
                 </label>
                 <textarea
                     v-model="form.description"
                     rows="5"
-                    class="new-prax-form__textarea"
-                    :class="{ 'new-prax-form__input--error': errors.description }"
-                    placeholder="Stručne popíšte náplň praxe..."
+                    class="edit-prax-form__textarea"
+                    :class="{ 'edit-prax-form__input--error': errors.description }"
                 ></textarea>
-                <p v-if="errors.description" class="new-prax-form__error">
+                <p v-if="errors.description" class="edit-prax-form__error">
                     {{ errors.description }}
                 </p>
             </div>
 
             <!-- Global error -->
-            <p v-if="globalError" class="new-prax-form__error new-prax-form__error--global">
+            <p v-if="globalError" class="edit-prax-form__error edit-prax-form__error--global">
                 {{ globalError }}
             </p>
 
-            <!-- Akcie -->
-            <div class="new-prax-form__actions">
+            <!-- Actions -->
+            <div class="edit-prax-form__actions">
                 <button
                     type="button"
-                    class="new-prax-form__button new-prax-form__button--secondary"
+                    class="edit-prax-form__button"
                     :disabled="isSubmitting"
                     @click="submit(true)"
                 >
@@ -186,7 +174,7 @@
 
                 <button
                     type="submit"
-                    class="new-prax-form__button new-prax-form__button--primary"
+                    class="edit-prax-form__button"
                     :disabled="isSubmitting"
                 >
                     <span v-if="isSubmitting && submitMode === 'final'">Odosielam...</span>
@@ -195,7 +183,7 @@
 
                 <button
                     type="button"
-                    class="new-prax-form__button new-prax-form__button--ghost"
+                    class="edit-prax-form__button"
                     :disabled="isSubmitting"
                     @click="$emit('cancel')"
                 >
@@ -205,6 +193,7 @@
         </form>
     </section>
 </template>
+
 
 <script setup>
 import { reactive, ref, onMounted, watch, computed } from 'vue';

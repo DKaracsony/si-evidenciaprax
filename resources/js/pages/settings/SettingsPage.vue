@@ -26,9 +26,6 @@
                         >
                             Zmena hesla účtu
                         </li>
-                        <li class="placeholder">Jazyk</li>
-                        <li class="placeholder">Zobrazenie</li>
-                        <li class="placeholder">Účet</li>
                     </ul>
                 </nav>
             </aside>
@@ -36,7 +33,12 @@
             <!-- MAIN CONTENT -->
             <section class="settings-content">
                 <div v-if="activeSection === 'general'" class="password-section">
-                    <h1 class="settings-title">Zmeniť heslo účtu</h1>
+                    <div class="settings-title-wrap">
+                        <h1 class="settings-title">
+                            Zmeniť heslo účtu
+                        </h1>
+                        <div class="settings-title-divider"></div>
+                    </div>
 
                     <form class="password-form" @submit.prevent="submitChange">
                         <label class="label">Aktuálne heslo</label>
@@ -78,7 +80,7 @@
 
                         <button
                             type="submit"
-                            class="btn-primary submit-btn"
+                            class="lp-first__btn-register submit-btn"
                             :disabled="loading"
                         >
                             {{ loading ? 'Nastavujem...' : 'Zmeniť heslo' }}
@@ -91,6 +93,8 @@
         <Footer />
     </div>
 </template>
+
+
 
 <script setup>
 import { ref } from 'vue';

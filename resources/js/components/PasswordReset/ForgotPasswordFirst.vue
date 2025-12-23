@@ -18,8 +18,10 @@
             novalidate
             aria-labelledby="forgot-password-title"
         >
-            <label class="forgot-card__field">
-                <span class="forgot-card__label">Váš email</span>
+            <div class="forgot-card__field">
+                <label class="forgot-card__label">
+                    Váš email
+                </label>
                 <input
                     v-model.trim="email"
                     type="email"
@@ -29,13 +31,12 @@
                     :class="{ 'is-invalid': emailError }"
                     @blur="touchEmail"
                 />
-            </label>
+                <p v-if="emailError" class="forgot-card__error">
+                    {{ emailError }}
+                </p>
+            </div>
 
-            <p v-if="emailError" class="forgot-card__error">
-                {{ emailError }}
-            </p>
-
-            <!-- form-level feedback (generic, no leak of account existence) -->
+            <!-- form-level feedback (generic, no account existence leak) -->
             <p
                 v-if="formSuccess"
                 class="forgot-card__form-message forgot-card__form-message--success"
@@ -52,7 +53,7 @@
             <div class="forgot-card__actions">
                 <button
                     type="submit"
-                    class="forgot-card__btn"
+                    class="lp-first__btn-register forgot-card__btn"
                     :disabled="isSubmitting || !canSubmit"
                 >
                     {{ isSubmitting ? 'Skontrolujem…' : 'Pokračovať' }}
@@ -73,7 +74,6 @@ const isSubmitting = ref(false);
 const formSuccess = ref('');
 const formError = ref('');
 
-// simple email validation
 const emailError = computed(() => {
     if (!touchedEmail.value && !isSubmitting.value) return '';
 
@@ -81,8 +81,8 @@ const emailError = computed(() => {
         return 'Zadajte prosím e-mailovú adresu.';
     }
 
-    const basicPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!basicPattern.test(email.value)) {
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!pattern.test(email.value)) {
         return 'Zadajte platný e-mail.';
     }
 
@@ -102,9 +102,7 @@ async function handleSubmit() {
     formSuccess.value = '';
     formError.value = '';
 
-    if (!canSubmit.value) {
-        return;
-    }
+    if (!canSubmit.value) return;
 
     isSubmitting.value = true;
 
@@ -113,12 +111,10 @@ async function handleSubmit() {
             email: email.value,
         });
 
-        // backend always returns generic text: don't leak if account exists
         formSuccess.value =
             response?.data?.message ??
             'Ak existuje účet, poslali sme e-mail s ďalším postupom.';
     } catch (e) {
-        // network / server error – stále bez prezradenia existencie účtu
         formError.value =
             'Nepodarilo sa odoslať požiadavku. Skúste to prosím neskôr.';
     } finally {

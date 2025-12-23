@@ -1,6 +1,7 @@
 // resources/js/services/auth.js
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
+import { useInternshipStore } from '@/stores/internship';
 
 // API endpoints based on routes/api.php
 const LOGIN_ENDPOINT = '/oauth/token';                   // Passport default
@@ -45,9 +46,7 @@ export async function login({ email, password }) {
     };
 
     const { data } = await axios.post(LOGIN_ENDPOINT, requestBody);
-    // { token_type, expires_in, access_token, refresh_token, ... }
 
-    // Use bracket notation to avoid "unresolved variable" warnings
     const accessToken = data['access_token'];
     const refreshToken = data['refresh_token'] ?? null;
 
@@ -55,7 +54,7 @@ export async function login({ email, password }) {
     authStore.setAuth({
         accessToken,
         refreshToken,
-        profile: null, // will be filled by fetchAndStoreUser()
+        profile: null,
     });
 
     await fetchAndStoreUser();
@@ -81,9 +80,12 @@ export async function fetchAndStoreUser() {
     return user;
 }
 
-
+/**
+ * Logout + FULL APP STATE CLEANUP
+ */
 export async function logout() {
     const authStore = useAuthStore();
+    const internshipStore = useInternshipStore();
 
     try {
         await axios.post(LOGOUT_ENDPOINT);
@@ -92,15 +94,11 @@ export async function logout() {
     }
 
     authStore.clearAuth();
+    internshipStore.reset(); // ✅ CRITICAL FIX
 }
 
 /**
  * Change password for a logged-in user.
- * Endpoint: PATCH /api/account/password
- *
- * - currentPassword je voliteľné:
- *   - ak ho pošleš, pridá sa current_password (SettingsPage)
- *   - ak nie, posielajú sa len nové heslá (FirstLoginForm pri password_reset_needed = true)
  */
 export async function changePassword({
                                          currentPassword,
