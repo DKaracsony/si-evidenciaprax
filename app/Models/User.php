@@ -100,4 +100,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class, 'receiver_user_id', 'id');
     }
+
+    public function garantProfile()
+    {
+        return $this->hasOne(GarantProfile::class, 'garant_user_id', 'id');
+    }
 }

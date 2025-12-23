@@ -38,8 +38,22 @@ class NotificationService //TODO: doplnit neskor emailovu notfikaciu
         if(in_array(Role::GARANT, $rules['recipient'])) {
             $roleService = new RoleService();
             $garantRoleID = $roleService->all()->firstWhere('name', Role::GARANT)->id;
+            $facultyId = $internship->studentProfile->faculty_id;
 
-            $garantIDs = User::where('role_id',$garantRoleID)->pluck('id')->toArray();
+            $garantIDs = User::query() //TODO: otestovat je to novinka od FR-07
+                ->where('role_id', $garantRoleID)
+                ->whereHas('garantProfile', function ($q) use ($facultyId) {
+                    $q->where(function ($q2) use ($facultyId) {
+                        // má priradenú fakultu študenta
+                        $q2->whereHas('faculties', function ($q3) use ($facultyId) {
+                            $q3->where('faculties.id', $facultyId);
+                        })
+                            // alebo garant nemá žiadne fakulty
+                            ->orWhereDoesntHave('faculties');
+                    });
+                })
+                ->pluck('id')
+                ->toArray();
 
             if(empty($garantIDs)) {
                 Log::warning("No garant users found for internship id {$internship->id}");
