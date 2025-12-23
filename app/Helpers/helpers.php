@@ -33,3 +33,10 @@ if (!function_exists('hasInternshipRelationToLoggedUser')) {
         return $hasAccess;
     }
 }
+
+if (!function_exists('isGarant')) {
+    function isGarant($user)
+    {
+        return $user->role->name === Role::GARANT;
+    }
+}

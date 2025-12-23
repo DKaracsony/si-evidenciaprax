@@ -5,6 +5,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GarantController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\FacultyController;
@@ -43,6 +44,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/company/internships', [InternshipController::class, 'companyCreatedInternships']);
 
     Route::prefix('student')->group(function () {
+        Route::get('/search-by-name', [StudentController::class, 'searchStudentByName']);
         Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
         Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);
         Route::get('/internship-detail/{id}', [InternshipController::class, 'show'])->middleware(['permission:practice.view_detail_own']);
