@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Notification;
 use App\Models\Role;
+use App\Models\Status;
 use App\Models\User;
 use App\Services\Cache\RoleService;
 use Illuminate\Support\Facades\Log;
@@ -28,9 +29,11 @@ class NotificationService
     {
         $notificationsToCreate = [];
 
-        if(in_array(Role::STUDENT, $this->rules['recipient']))
-            if ($studentNotification = $this->notificationToStudent())
-                $notificationsToCreate[] = $studentNotification;
+        if(in_array(Role::STUDENT, $this->rules['recipient'])) {
+            $studentNotifications = $this->notificationToStudent();
+            if ($studentNotifications)
+                $notificationsToCreate = array_merge($notificationsToCreate, $studentNotifications);
+        }
 
 
         if(in_array(Role::GARANT, $this->rules['recipient'])) {
@@ -57,7 +60,8 @@ class NotificationService
             return null;
         }
 
-        $notification = [
+        $notifications = [];
+        $notifications[] = [
             'text' => $this->rules['notification_text_key']
                 ? __($this->rules['notification_text_key'], [
                     'company'  => optional($this->internship->company)->name,
@@ -76,7 +80,19 @@ class NotificationService
             ];
         }
 
-        return $notification;
+        if($this->statusName == Status::ACCEPTED){ // vyzva na nahranie zmluvy
+            $notifications[] = [
+                'text' => __('notification.PLEASE_UPLOAD_AGREEMENT', [
+                    'company'  => optional($this->internship->company)->name,
+                ]),
+                'type' => Notification::INFORMATION,
+                'emailed_at' => null,
+                'sent_at' => now(),
+                'receiver_user_id' => $userID,
+            ];
+        }
+
+        return $notifications;
     }
 
     private function notificationToGarants(){

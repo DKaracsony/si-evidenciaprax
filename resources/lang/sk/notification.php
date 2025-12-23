@@ -10,4 +10,5 @@ return [
     'INTERNSHIP_STATUS_CHANGED_TO_DEFENDED_COMPANY' => 'Prax študenta :student vo Vašej firme bola obhájená.',
     'INTERNSHIP_STATUS_CHANGED_TO_UNDEFENDED_STUDENT' => 'Vaša prax vo firme :company nebola obhájená.',
     'INTERNSHIP_STATUS_CHANGED_TO_UNDEFENDED_COMPANY' => 'Prax študenta :student vo Vašej firme nebola obhájená.',
+    'PLEASE_UPLOAD_AGREEMENT' => 'Prosím, nahrajte si zmluvu o praxi pre firmu :company. Ak ju už máte nahratú, ignorujte túto správu.',
 ];
