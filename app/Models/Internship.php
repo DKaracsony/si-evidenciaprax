@@ -45,4 +45,9 @@ class Internship extends Model
         return $this->hasOne(Document::class, 'internship_id', 'id')->where('type', 'agreement');
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('is_draft', false);
+    }
+
 }

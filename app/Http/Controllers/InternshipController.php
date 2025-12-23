@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\InternshipResource;
 use App\Models\CompanyOwnerProfile;
 use App\Models\Internship;
 use App\Models\InternshipStatusHistory;
@@ -397,15 +398,30 @@ class InternshipController extends Controller
         return response()->json($responseData, $statusCode);
     }
 
-    public function changeStatus(Request $request, $to)
+    public function changeStatus(Request $request, $to) //bulk and single supported
     {
         $rules = [
             'is_positive'   => 'required|boolean',
             'note'          => 'nullable|string',
-            'internship_id' => 'required|integer|exists:internships,id',
+
+            'internship_id'  => 'nullable|integer|exists:internships,id',
+            'internship_ids' => 'nullable|array|min:1',
+            'internship_ids.*' => 'integer|distinct|exists:internships,id',
         ];
 
         $validator = Validator::make($request->all(), $rules);
+        $validator->after(function ($v) use ($request) {
+            $hasSingle = $request->filled('internship_id');
+            $hasBulk   = is_array($request->input('internship_ids')) && count($request->input('internship_ids')) > 0;
+
+            if (!$hasSingle && !$hasBulk)
+                $v->errors()->add('internship_id', __('internship.INVALID_STATUS_CHANGE_DATA'));
+
+            if ($hasSingle && $hasBulk)
+                $v->errors()->add('internship_ids', __('internship.INVALID_STATUS_CHANGE_DATA'));
+        });
+
+
         if ($validator->fails())
             return response()->json([
                 'message' => __('internship.INVALID_STATUS_CHANGE_DATA'),
@@ -418,6 +434,14 @@ class InternshipController extends Controller
         switch($to){
             case 'acceptance':
                 $statusChangeTo = $isPositive ? Status::ACCEPTED : Status::REJECTED;
+                break;
+            case 'approval':
+                if(!$isPositive)
+                    return response()->json(['message' => __('internship.INVALID_STATUS_CHANGE_DATA'),], 422);
+                $statusChangeTo = Status::APPROVED;
+                break;
+            case 'defense':
+                $statusChangeTo = $isPositive ? Status::DEFENDED : Status::UNDEFENDED;
                 break;
             default:
                 return response()->json([
@@ -437,36 +461,66 @@ class InternshipController extends Controller
             ], 500);
         }
 
-        //TRANSITION IS ALLOWED?
-        $internship = Internship::where('id', $request->input('internship_id'))->with('internshipStatusHistories')->first();
-        $lastStatusId = $internship->internshipStatusHistories->sortByDesc('status_changed_at')->first()->status->id;
-        if($lastStatusId && $lastStatusId === $statusId){
-            return response()->json([
-                'message' => __('internship.ALREADY_IN_DESIRED_STATUS'),
-            ], 400);
+        $failed = [];
+        $updated = [];
+
+        $ids = $request->filled('internship_id')
+            ? [(int) $request->input('internship_id')]
+            : array_map('intval', $request->input('internship_ids', []));
+
+        $internships = Internship::whereIn('id', $ids)
+            ->with(['internshipStatusHistories.status'])
+            ->get()
+            ->keyBy('id');
+
+        foreach ($ids as $id) {
+            $internship = $internships->get($id);
+
+            if (!$internship) {
+                $failed[] = ['internship' => $internships->get($id), 'reason' => 'NOT_FOUND'];
+                continue;
+            }
+
+            //TRANSITION IS ALLOWED?
+            $internship = Internship::where('id', $id)->with('internshipStatusHistories')->first();
+            $lastStatusId = $internship->internshipStatusHistories->sortByDesc('status_changed_at')->first()->status->id;
+            if($lastStatusId && $lastStatusId === $statusId){
+                return response()->json([ //TODO TIEZ FAILED
+                    'message' => __('internship.ALREADY_IN_DESIRED_STATUS'),
+                ], 400);
+            }
+
+            if($lastStatusId){
+                $lastStatus = $statusService->all()->where('id', $lastStatusId)->first();
+                $newStatus = $statusService->all()->where('id', $statusId)->first();
+
+                if($newStatus->order_index < $lastStatus->order_index)
+                    return response()->json([ //TODO TIEZ FAILED
+                        'message' => __('internship.STATUS_CHANGE_NOT_ALLOWED'),
+                    ], 422);
+
+                if($newStatus->order_index != $lastStatus->order_index + 1)
+                    return response()->json([ //TODO TIEZ  DO FAILED
+                        'message' => __('internship.STATUS_CHANGE_PREVIOUS_STATUS_MISMATCH'),
+                    ], 422);
+            }
+
+            InternshipStatusHistory::create([
+                'internship_id'      => $id,
+                'status_id'          => $statusId,
+                'status_changed_at'  => now(),
+                'explanation'        => $request->input('note'),
+                'changed_by_user_id' => $request->user()->id,
+            ]);
+
+            $updated[] = $internships->get($id);
         }
-
-        if($lastStatusId){
-            $lastStatus = $statusService->all()->where('id', $lastStatusId)->first();
-            $newStatus = $statusService->all()->where('id', $statusId)->first();
-
-            if($newStatus->order_index < $lastStatus->order_index)
-                return response()->json([
-                    'message' => __('internship.STATUS_CHANGE_NOT_ALLOWED'),
-                ], 422);
-        }
-
-        InternshipStatusHistory::create([
-            'internship_id'      => $request->input('internship_id'),
-            'status_id'          => $statusId,
-            'status_changed_at'  => now(),
-            'explanation'        => $request->input('note'),
-            'changed_by_user_id' => $request->user()->id,
-        ]);
 
         return response()->json([
             'message' => __('internship.INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY'),
-        ], 200);
+            'updated' => $updated,
+            'failed'  => $failed,
+        ], empty($failed) ? 200 : 207);
     }
 
     public function companyCreatedInternships(Request $request)
@@ -496,6 +550,57 @@ class InternshipController extends Controller
             ->values();
 
         return response()->json($internships);
+    }
+
+    public function allInternshipsWithPaginationAndFilter(Request $request){
+        $perPage = (int) $request->input('per_page', 20);
+        $perPage = max(1, min($perPage, 100)); // max 100 na stranu
+
+        $query = Internship::query()
+            ->active()
+            ->with(['studentProfile.user', 'company.ownerProfiles', 'academicYear', 'internshipStatusHistories.status'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+
+        // FILTRACIA
+        // ROK - START + END DATE
+        if ($request->filled('date_from')) {
+            $query->where('start_date', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->where('date_to', '<=', $request->input('date_to'));
+        }
+
+        // SEMESTER
+        if ($request->filled('academic_year_ids')) {
+            $query->whereIn('academic_year_id', $request->input('academic_year_ids'));
+        }
+
+        // FIRMA
+        if ($request->filled('company_ids')) {
+            $query->whereIn('company_id', $request->input('company_ids'));
+        }
+
+        // STUDENT
+        if ($request->filled('student_ids')) {
+            $studentUserIds = $request->input('student_ids');
+            $query->whereHas('studentProfile', function ($q) use ($studentUserIds) {
+                $q->whereIn('student_user_id', $studentUserIds);
+            });
+        }
+
+        // ODBOR
+        if ($request->filled('faculty_ids')) {
+            $facultyIds = $request->input('faculty_ids');
+            $query->whereHas('studentProfile', function ($q) use ($facultyIds) {
+                $q->whereIn('faculty_id', $facultyIds);
+            });
+        }
+
+        return InternshipResource::collection(
+            $query->paginate($perPage)->withQueryString()
+        );
     }
 
 }

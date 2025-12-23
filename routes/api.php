@@ -56,8 +56,13 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/save-my-faculties', [GarantController::class, 'saveMyFaculties']);
     });
 
+    Route::prefix('internship')->group(function () {
+        Route::get('/all', [InternshipController::class, 'allInternshipsWithPaginationAndFilter'])->middleware(['permission:practice.view_detail_other']);
+    });
+
     Route::prefix('internship/change-status')->group(function () {
-        Route::post('/acceptance', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_accepted'])->defaults('to', 'acceptance');
-        // TODO: neskor sem doplnit dalsie statusy
+        Route::post('/acceptance', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_accepted'])->defaults('to', 'acceptance'); // POTVRDENIE
+        Route::post('/approval',   [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_approved'])->defaults('to', 'approval'); // SCHVÁLENIE
+        Route::post('/defense',    [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_defended'])->defaults('to', 'defense');  // OBHÁJENIE
     });
 });
