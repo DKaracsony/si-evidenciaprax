@@ -58,8 +58,10 @@ Route::middleware('auth:api')->group(function () {
 
     Route::prefix('internship')->group(function () {
         Route::get('/all', [InternshipController::class, 'allInternshipsWithPaginationAndFilter'])->middleware(['permission:practice.view_detail_other']);
+        Route::get('/documents/{id}', [DocumentController::class, 'getInternshipDocuments']);
         Route::prefix('/document')->group(function () {
            Route::post('/upload-agreement', [DocumentController::class, 'uploadAgreement'])->middleware(['permission:practice.upload_agreement']);
+           //TODO: Atus - vykaz
         });
     });
 

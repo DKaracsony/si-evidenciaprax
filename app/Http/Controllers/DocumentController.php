@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DocumentRequest;
 use App\Models\Document;
 use App\Models\Internship;
+use App\Models\Role;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
@@ -64,6 +65,42 @@ class DocumentController extends Controller
             'document' => $document,
             'file_path' => $path
         ]);
+    }
 
+    public function getInternshipDocuments($internshipId)
+    {
+        $user = request()->user();
+        $hasAccess = false;
+
+        switch($user->role->name) {
+            case Role::STUDENT:
+                $hasAccess = Internship::where('id', $internshipId)
+                    ->whereHas('studentProfile.user', fn ($q) => $q->whereKey($user->id))
+                    ->exists();
+                break;
+            case Role::COMPANY:
+                $hasAccess = Internship::where('id', $internshipId)
+                    ->whereHas('company.ownerProfiles.user', fn ($q) => $q->whereKey($user->id))
+                    ->exists();
+                break;
+            case Role::GARANT:
+                $hasAccess = true;
+                break;
+        }
+
+        if (!$hasAccess) {
+            return response()->json([
+                'message' => __('document.DO_NOT_HAVE_PERMISSION_TO_LIST_DOCUMENTS'),
+            ], 403);
+        }
+
+        $documents = Document::where('internship_id', $internshipId)->with(['status', 'uploadedByUser'])->get();
+
+        return response()->json([
+            'message' => $documents->isEmpty()
+                ? __('document.NO_DOCUMENTS_FOUND')
+                : __('document.DOCUMENTS_RETRIEVED_SUCCESSFULLY'),
+            'documents' => $documents,
+        ]);
     }
 }
