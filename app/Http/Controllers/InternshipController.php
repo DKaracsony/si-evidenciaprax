@@ -9,6 +9,7 @@ use App\Models\InternshipStatusHistory;
 use App\Models\Status;
 use App\Models\User;
 use App\Services\Cache\InternshipStatusService;
+use App\Services\StatusChangeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -473,36 +474,24 @@ class InternshipController extends Controller
             ->get()
             ->keyBy('id');
 
+        $statusChangeService = new StatusChangeService();
+
         foreach ($ids as $id) {
             $internship = $internships->get($id);
 
             if (!$internship) {
-                $failed[] = ['internship' => $internships->get($id), 'reason' => 'NOT_FOUND'];
+                $failed[] = ['internship' => $internships->get($id), 'reason' => __('internship.INTERNSHIP_NOT_FOUND'),];
                 continue;
             }
 
             //TRANSITION IS ALLOWED?
-            $internship = Internship::where('id', $id)->with('internshipStatusHistories')->first();
-            $lastStatusId = $internship->internshipStatusHistories->sortByDesc('status_changed_at')->first()->status->id;
-            if($lastStatusId && $lastStatusId === $statusId){
-                return response()->json([ //TODO TIEZ FAILED
-                    'message' => __('internship.ALREADY_IN_DESIRED_STATUS'),
-                ], 400);
-            }
+            $statusChangeService->setInternshipId($id);
+            $statusChangeService->setNewStatusId($statusId);
+            $transitionCheck = $statusChangeService->transitionAllowed();
 
-            if($lastStatusId){
-                $lastStatus = $statusService->all()->where('id', $lastStatusId)->first();
-                $newStatus = $statusService->all()->where('id', $statusId)->first();
-
-                if($newStatus->order_index < $lastStatus->order_index)
-                    return response()->json([ //TODO TIEZ FAILED
-                        'message' => __('internship.STATUS_CHANGE_NOT_ALLOWED'),
-                    ], 422);
-
-                if($newStatus->order_index != $lastStatus->order_index + 1)
-                    return response()->json([ //TODO TIEZ  DO FAILED
-                        'message' => __('internship.STATUS_CHANGE_PREVIOUS_STATUS_MISMATCH'),
-                    ], 422);
+            if ($transitionCheck !== '') {
+                $failed[] = ['internship' => $internships->get($id), 'reason' => $transitionCheck];
+                continue;
             }
 
             InternshipStatusHistory::create([
@@ -517,7 +506,9 @@ class InternshipController extends Controller
         }
 
         return response()->json([
-            'message' => __('internship.INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY'),
+            'message' => $failed === []
+                ? __('internship.INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY')
+                : __('internship.STATUS_CHANGED_PARTIALLY_SUCCESSFULLY'),
             'updated' => $updated,
             'failed'  => $failed,
         ], empty($failed) ? 200 : 207);

@@ -70,23 +70,7 @@ class DocumentController extends Controller
     public function getInternshipDocuments($internshipId)
     {
         $user = request()->user();
-        $hasAccess = false;
-
-        switch($user->role->name) {
-            case Role::STUDENT:
-                $hasAccess = Internship::where('id', $internshipId)
-                    ->whereHas('studentProfile.user', fn ($q) => $q->whereKey($user->id))
-                    ->exists();
-                break;
-            case Role::COMPANY:
-                $hasAccess = Internship::where('id', $internshipId)
-                    ->whereHas('company.ownerProfiles.user', fn ($q) => $q->whereKey($user->id))
-                    ->exists();
-                break;
-            case Role::GARANT:
-                $hasAccess = true;
-                break;
-        }
+        $hasAccess = hasInternshipRelationToLoggedUser($user, $internshipId);
 
         if (!$hasAccess) {
             return response()->json([
