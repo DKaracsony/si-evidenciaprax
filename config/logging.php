@@ -127,6 +127,13 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'external_system' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/external-status-changes.log'),
+            'level' => 'info',
+            'days' => 60,
+            'replace_placeholders' => true,
+        ]
     ],
 
 ];
