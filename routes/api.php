@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GarantController;
 use App\Http\Controllers\RegistrationController;
 use App\Models\Status;
 use Illuminate\Support\Facades\Route;
@@ -48,9 +49,12 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::get('/companies/search', [CompanyController::class, 'searchByName'])->middleware(['permission:company.search']);
-
-    // 🔹 ONLY NECESSARY FIX ADDED HERE
     Route::get('/companies/{company}', [CompanyController::class, 'show']);
+
+    Route::prefix('garant')->group(function () {
+        Route::get('/my-faculties', [GarantController::class, 'getMyFaculties']);
+        Route::post('/save-my-faculties', [GarantController::class, 'saveMyFaculties']);
+    });
 
     Route::prefix('internship/change-status')->group(function () {
         Route::post('/acceptance', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_accepted'])->defaults('to', 'acceptance');

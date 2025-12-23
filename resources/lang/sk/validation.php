@@ -153,6 +153,16 @@ return [
             'exists' => 'Vybraný študentský profil neexistuje.',
         ],
 
+        'faculty_ids' => [
+            'required' => 'Pole fakulty je povinné.',
+            'array' => 'Pole fakulty musí byť pole.',
+        ],
+
+        'faculty_ids.*' => [
+            'integer' => 'ID fakulty musí byť celé číslo.',
+            'exists' => 'Jedno z vybraných ID fakulty neexistuje.',
+        ]
+
     ],
 
 
