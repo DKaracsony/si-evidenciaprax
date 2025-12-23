@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Services\InternshipAgreementPdfService;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\AcademicYear;
 
 class InternshipController extends Controller
 {
@@ -498,4 +499,180 @@ class InternshipController extends Controller
         return response()->json($internships);
     }
 
+    public function updateInternship(Request $request, Internship $internship)
+    {
+        $rules = [
+            'company_id'         => 'sometimes|integer|exists:companies,id',
+            'student_profile_id' => 'sometimes|integer|exists:student_profiles,id',
+            'date_from'          => 'sometimes|date',
+            'date_to'            => 'sometimes|date',
+            'academic_year_id'   => 'sometimes|integer|exists:academic_years,id',
+
+            // status change (optional)
+            'status_id'    => 'sometimes|integer|exists:statuses,id',
+            'explanation'  => 'nullable|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('internship.INVALID_INTERNSHIP_DATA'),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            DB::beginTransaction();
+
+            $statusService = new InternshipStatusService();
+
+            $internship->load('internshipStatusHistories.status');
+
+            $latest = $internship->internshipStatusHistories
+                ? $internship->internshipStatusHistories->sortByDesc('status_changed_at')->first()
+                : null;
+
+            if (!$latest || !$latest->status_id) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => __('internship.STATUS_CHANGE_NOT_ALLOWED'),
+                ], 422);
+            }
+
+            $currentStatusId = $latest->status_id;
+            $currentStatusName = $statusService->all()->where('id', $currentStatusId)->first()?->name;
+
+            $changingCompany = array_key_exists('company_id', $data);
+            $changingStudent = array_key_exists('student_profile_id', $data);
+            $changingDates   = array_key_exists('date_from', $data) || array_key_exists('date_to', $data);
+            $changingAy      = array_key_exists('academic_year_id', $data);
+
+            if (in_array($currentStatusName, [Status::REJECTED, Status::DEFENDED, Status::UNDEFENDED], true)) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'V tomto stave nie je možné upravovať prax.',
+                ], 422);
+            }
+
+            if (in_array($currentStatusName, [Status::ACCEPTED, Status::APPROVED], true)) {
+                if ($changingCompany) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Firma sa v tomto stave nedá meniť.'], 422);
+                }
+                if ($changingStudent) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Študent sa v tomto stave nedá meniť.'], 422);
+                }
+            }
+
+            if ($currentStatusName === Status::APPROVED && $changingAy) {
+                DB::rollBack();
+                return response()->json(['message' => 'Akademický rok sa v stave Schválená nedá meniť.'], 422);
+            }
+
+            $touchingDates = $changingDates || $changingAy;
+            if ($touchingDates) {
+                $dateFrom = $data['date_from'] ?? $internship->date_from;
+                $dateTo   = $data['date_to']   ?? $internship->date_to;
+                $ayId     = $data['academic_year_id'] ?? $internship->academic_year_id;
+
+                if (!$dateFrom || !$dateTo) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Dátumy praxe musia byť vyplnené.'], 422);
+                }
+
+                if ($dateFrom > $dateTo) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Dátum od musí byť menší alebo rovný dátumu do.'], 422);
+                }
+
+                $ay = AcademicYear::find($ayId);
+                if (!$ay) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Neplatný akademický rok.'], 422);
+                }
+
+                if (!($dateFrom >= $ay->start_date && $dateTo <= $ay->end_date)) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Dátumy praxe musia byť v rámci zvoleného akademického roka.'], 422);
+                }
+            }
+
+            $internship->fill(collect($data)->only([
+                'company_id',
+                'student_profile_id',
+                'date_from',
+                'date_to',
+                'academic_year_id',
+            ])->toArray());
+            $internship->save();
+
+            if (array_key_exists('status_id', $data)) {
+                $newStatusId = (int) $data['status_id'];
+
+                if ($newStatusId === $currentStatusId) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => __('internship.ALREADY_IN_DESIRED_STATUS'),
+                    ], 400);
+                }
+
+                $newStatusName = $statusService->all()->where('id', $newStatusId)->first()?->name;
+
+                if ($newStatusName === Status::ACCEPTED && !$request->user()->can('practice.change_status_to_accepted')) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Forbidden'], 403);
+                }
+                if ($newStatusName === Status::APPROVED && !$request->user()->can('practice.change_status_to_approved')) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Forbidden'], 403);
+                }
+                if (in_array($newStatusName, [Status::DEFENDED, Status::UNDEFENDED], true) && !$request->user()->can('practice.change_status_to_defended')) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'Forbidden'], 403);
+                }
+
+                $rule = $statusService->getTransitionRuleByIds($currentStatusId, $newStatusId);
+                if (!$rule) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => __('internship.STATUS_CHANGE_NOT_ALLOWED'),
+                    ], 422);
+                }
+
+                if (($rule['requires_explanation'] ?? false) === true && empty($data['explanation'])) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Odôvodnenie je povinné.',
+                    ], 422);
+                }
+
+                InternshipStatusHistory::create([
+                    'internship_id'      => $internship->id,
+                    'status_id'          => $newStatusId,
+                    'status_changed_at'  => now(),
+                    'explanation'        => $data['explanation'] ?? null,
+                    'changed_by_user_id' => $request->user()->id,
+                ]);
+
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message'    => __('internship.INTERNSHIP_UPDATED_SUCCESSFULLY'),
+                'internship' => $internship->fresh(['company', 'academicYear', 'internshipStatusHistories.status']),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => __('global_error.SERVER_ERROR'),
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

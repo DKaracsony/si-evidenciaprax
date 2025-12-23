@@ -40,6 +40,9 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/company/internships', [InternshipController::class, 'companyCreatedInternships']);
 
+    Route::patch('/internships/{internship}', [InternshipController::class, 'updateInternship']);
+      //  ->middleware(['permission:practice.update_fields_any']);
+
     Route::prefix('student')->group(function () {
         Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
         Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);
