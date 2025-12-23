@@ -161,8 +161,19 @@ return [
         'faculty_ids.*' => [
             'integer' => 'ID fakulty musí byť celé číslo.',
             'exists' => 'Jedno z vybraných ID fakulty neexistuje.',
-        ]
+        ],
 
+        'internship_id' => [
+            'required' => 'Identifikátor praxe je povinný.',
+            'integer'  => 'Identifikátor praxe musí byť celé číslo.',
+            'exists'   => 'Vybraná prax neexistuje.',
+        ],
+        'document' => [
+            'required' => 'Dokument je povinný.',
+            'file'     => 'Dokument musí byť súbor.',
+            'mimes'    => 'Dokument musí byť vo formáte PDF.',
+            'max'      => 'Dokument nesmie presiahnuť veľkosť 10 MB.',
+        ],
     ],
 
 
