@@ -165,14 +165,18 @@ return [
 
         'internship_id' => [
             'required' => 'Identifikátor praxe je povinný.',
-            'integer'  => 'Identifikátor praxe musí byť celé číslo.',
-            'exists'   => 'Vybraná prax neexistuje.',
+            'integer' => 'Identifikátor praxe musí byť celé číslo.',
+            'exists' => 'Vybraná prax neexistuje.',
         ],
         'document' => [
             'required' => 'Dokument je povinný.',
-            'file'     => 'Dokument musí byť súbor.',
-            'mimes'    => 'Dokument musí byť vo formáte PDF.',
-            'max'      => 'Dokument nesmie presiahnuť veľkosť 10 MB.',
+            'file' => 'Dokument musí byť súbor.',
+            'mimes' => 'Dokument musí byť vo formáte PDF.',
+            'max' => 'Dokument nesmie presiahnuť veľkosť 10 MB.',
+        ],
+
+        'document.*' => [
+            'prohibited' => 'Viacnásobné nahrávanie dokumentov nie je povolené.',
         ],
     ],
 

@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\GarantController;
 use App\Http\Controllers\RegistrationController;
-use App\Models\Status;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\FacultyController;
@@ -58,6 +58,9 @@ Route::middleware('auth:api')->group(function () {
 
     Route::prefix('internship')->group(function () {
         Route::get('/all', [InternshipController::class, 'allInternshipsWithPaginationAndFilter'])->middleware(['permission:practice.view_detail_other']);
+        Route::prefix('/document')->group(function () {
+           Route::post('/upload-agreement', [DocumentController::class, 'uploadAgreement'])->middleware(['permission:practice.upload_agreement']);
+        });
     });
 
     Route::prefix('internship/change-status')->group(function () {

@@ -21,6 +21,8 @@ class DocumentRequest extends FormRequest
                 'mimes:pdf',
                 'max:10240', // 10 MB in KB
             ],
+
+            'document.*' => ['prohibited'],
         ];
     }
 }
