@@ -15,6 +15,7 @@ use App\Services\InternshipAgreementPdfService;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\AcademicYear;
+use App\Http\Requests\UpdateInternshipRequest;
 
 class InternshipController extends Controller
 {
@@ -498,30 +499,9 @@ class InternshipController extends Controller
 
         return response()->json($internships);
     }
-
-    public function updateInternship(Request $request, Internship $internship)
+    public function updateInternship(UpdateInternshipRequest $request, Internship $internship)
     {
-        $rules = [
-            'company_id'         => 'sometimes|integer|exists:companies,id',
-            'student_profile_id' => 'sometimes|integer|exists:student_profiles,id',
-            'date_from'          => 'sometimes|date',
-            'date_to'            => 'sometimes|date',
-            'academic_year_id'   => 'sometimes|integer|exists:academic_years,id',
-
-            // status change (optional)
-            'status_id'    => 'sometimes|integer|exists:statuses,id',
-            'explanation'  => 'nullable|string',
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => __('internship.INVALID_INTERNSHIP_DATA'),
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $data = $validator->validated();
+        $data = $request->validated();
 
         try {
             DB::beginTransaction();
@@ -546,7 +526,8 @@ class InternshipController extends Controller
 
             $changingCompany = array_key_exists('company_id', $data);
             $changingStudent = array_key_exists('student_profile_id', $data);
-            $changingDates   = array_key_exists('date_from', $data) || array_key_exists('date_to', $data);
+
+            $changingDates   = array_key_exists('start_date', $data) || array_key_exists('date_to', $data);
             $changingAy      = array_key_exists('academic_year_id', $data);
 
             if (in_array($currentStatusName, [Status::REJECTED, Status::DEFENDED, Status::UNDEFENDED], true)) {
@@ -572,41 +553,16 @@ class InternshipController extends Controller
                 return response()->json(['message' => 'Akademický rok sa v stave Schválená nedá meniť.'], 422);
             }
 
-            $touchingDates = $changingDates || $changingAy;
-            if ($touchingDates) {
-                $dateFrom = $data['date_from'] ?? $internship->date_from;
-                $dateTo   = $data['date_to']   ?? $internship->date_to;
-                $ayId     = $data['academic_year_id'] ?? $internship->academic_year_id;
-
-                if (!$dateFrom || !$dateTo) {
-                    DB::rollBack();
-                    return response()->json(['message' => 'Dátumy praxe musia byť vyplnené.'], 422);
-                }
-
-                if ($dateFrom > $dateTo) {
-                    DB::rollBack();
-                    return response()->json(['message' => 'Dátum od musí byť menší alebo rovný dátumu do.'], 422);
-                }
-
-                $ay = AcademicYear::find($ayId);
-                if (!$ay) {
-                    DB::rollBack();
-                    return response()->json(['message' => 'Neplatný akademický rok.'], 422);
-                }
-
-                if (!($dateFrom >= $ay->start_date && $dateTo <= $ay->end_date)) {
-                    DB::rollBack();
-                    return response()->json(['message' => 'Dátumy praxe musia byť v rámci zvoleného akademického roka.'], 422);
-                }
-            }
-
             $internship->fill(collect($data)->only([
                 'company_id',
                 'student_profile_id',
-                'date_from',
+                'start_date',
                 'date_to',
                 'academic_year_id',
+                'description',
+                'is_draft',
             ])->toArray());
+
             $internship->save();
 
             if (array_key_exists('status_id', $data)) {
@@ -656,7 +612,6 @@ class InternshipController extends Controller
                     'explanation'        => $data['explanation'] ?? null,
                     'changed_by_user_id' => $request->user()->id,
                 ]);
-
             }
 
             DB::commit();
