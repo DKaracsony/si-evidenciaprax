@@ -555,4 +555,96 @@ class InternshipController extends Controller
         );
     }
 
+    public function garantUpdateInternship(
+        Request $request,
+        Internship $internship,
+        InternshipStatusService $internshipStatusService
+    ) {
+        $user = $request->user();
+
+        $data = Validator::make($request->all(), [
+            'company_id'         => ['nullable', 'integer', 'exists:companies,id'],
+            'student_profile_id' => ['nullable', 'integer', 'exists:student_profiles,id'],
+            'academic_year_id'   => ['nullable', 'integer', 'exists:academic_years,id'],
+            'start_date'         => ['nullable', 'date'],
+            'date_to'            => ['nullable', 'date', 'after_or_equal:start_date'],
+
+            'status_id'          => ['nullable', 'integer', 'exists:statuses,id'],
+
+            'note'               => ['nullable', 'string', 'max:1000'],
+        ])->validate();
+
+        $latestHistory = $internship->internshipStatusHistories()
+            ->orderByDesc('status_changed_at')
+            ->first();
+
+        $currentStatusId = $latestHistory?->status_id;
+
+        $newStatusId = $data['status_id'] ?? null;
+        $rule = null;
+
+        if ($newStatusId !== null) {
+            if ($currentStatusId === null) {
+                return response()->json([
+                    'message' => 'Praxe nemá aktuálny status v histórii.'
+                ], 422);
+            }
+
+            if ((int)$newStatusId !== (int)$currentStatusId) {
+                $rule = $internshipStatusService->getTransitionRuleByIds((int)$currentStatusId, (int)$newStatusId);
+
+                if (!$rule) {
+                    return response()->json([
+                        'message' => 'Nem engedélyezett státuszváltás.'
+                    ], 422);
+                }
+
+                if (($rule['requires_explanation'] ?? false) && empty($data['note'])) {
+                    return response()->json([
+                        'message' => 'Ehhez a státuszváltáshoz indoklás szükséges (note).'
+                    ], 422);
+                }
+            }
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $internship->update([
+                'company_id'         => $data['company_id']         ?? $internship->company_id,
+                'student_profile_id' => $data['student_profile_id'] ?? $internship->student_profile_id,
+                'academic_year_id'   => $data['academic_year_id']   ?? $internship->academic_year_id,
+                'start_date'         => $data['start_date']         ?? $internship->start_date,
+                'date_to'            => $data['date_to']            ?? $internship->date_to,
+            ]);
+
+            if ($newStatusId !== null && $currentStatusId !== null && (int)$newStatusId !== (int)$currentStatusId) {
+                InternshipStatusHistory::create([
+                    'internship_id'      => $internship->id,
+                    'status_id'          => (int)$newStatusId,
+                    'status_changed_at'  => now(),
+                    'explanation'        => $data['note'] ?? null,
+                    'changed_by_user_id' => $user->id,
+                ]);
+
+
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => __('global_error.SERVER_ERROR'),
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+
+        $internship->load(['company', 'academicYear', 'internshipStatusHistories.status']);
+
+        return response()->json([
+            'message'    => 'Internship updated successfully.',
+            'internship' => $internship,
+        ], 200);
+    }
 }

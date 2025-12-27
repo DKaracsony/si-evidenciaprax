@@ -43,9 +43,6 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/company/internships', [InternshipController::class, 'companyCreatedInternships']);
 
-    Route::patch('/internships/{internship}', [InternshipController::class, 'updateInternship']);
-      //  ->middleware(['permission:practice.update_fields_any']);
-
     Route::prefix('student')->group(function () {
         Route::get('/search-by-name', [StudentController::class, 'searchStudentByName']);
         Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
@@ -70,6 +67,7 @@ Route::middleware('auth:api')->group(function () {
            //TODO: Atus - vykaz
         });
         Route::post('/export-csv', [ExportController::class, 'exportInternshipsCsv'])->middleware(['permission:practice.generate_export']);
+        Route::put('/{internship}', [InternshipController::class, 'garantUpdateInternship'])->middleware(['permission:practice.update_fields_any']);
     });
 
     Route::prefix('internship/change-status')->group(function () {
