@@ -26,8 +26,8 @@ class UpdateInternshipRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
             'is_draft'    => ['sometimes', 'boolean'],
 
-            'status_id'   => ['sometimes', 'integer', 'exists:statuses,id'],
-            'explanation' => ['sometimes', 'nullable', 'string'],
+            'status_id' => ['sometimes', 'integer', 'exists:statuses,id'],
+            'note'      => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
     }
 

@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Validator;
 use App\Services\InternshipAgreementPdfService;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\AcademicYear;
+use Carbon\Carbon;
+use App\Http\Requests\UpdateInternshipRequest;
 
 class InternshipController extends Controller
 {
@@ -556,23 +559,12 @@ class InternshipController extends Controller
     }
 
     public function garantUpdateInternship(
-        Request $request,
+        UpdateInternshipRequest $request,
         Internship $internship,
         InternshipStatusService $internshipStatusService
-    ) {
+        ) {
         $user = $request->user();
-
-        $data = Validator::make($request->all(), [
-            'company_id'         => ['nullable', 'integer', 'exists:companies,id'],
-            'student_profile_id' => ['nullable', 'integer', 'exists:student_profiles,id'],
-            'academic_year_id'   => ['nullable', 'integer', 'exists:academic_years,id'],
-            'start_date'         => ['nullable', 'date'],
-            'date_to'            => ['nullable', 'date', 'after_or_equal:start_date'],
-
-            'status_id'          => ['nullable', 'integer', 'exists:statuses,id'],
-
-            'note'               => ['nullable', 'string', 'max:1000'],
-        ])->validate();
+        $data = $request->validated();
 
         $latestHistory = $internship->internshipStatusHistories()
             ->orderByDesc('status_changed_at')
@@ -586,22 +578,22 @@ class InternshipController extends Controller
         if ($newStatusId !== null) {
             if ($currentStatusId === null) {
                 return response()->json([
-                    'message' => 'Praxe nemá aktuálny status v histórii.'
+                    'message' => 'Praxe nemá aktuálny status v histórii.',
                 ], 422);
             }
 
-            if ((int)$newStatusId !== (int)$currentStatusId) {
-                $rule = $internshipStatusService->getTransitionRuleByIds((int)$currentStatusId, (int)$newStatusId);
+            if ((int) $newStatusId !== (int) $currentStatusId) {
+                $rule = $internshipStatusService->getTransitionRuleByIds((int) $currentStatusId, (int) $newStatusId);
 
                 if (!$rule) {
                     return response()->json([
-                        'message' => 'Nem engedélyezett státuszváltás.'
+                        'message' => 'Zmena stavu nie je povolená.',
                     ], 422);
                 }
 
                 if (($rule['requires_explanation'] ?? false) && empty($data['note'])) {
                     return response()->json([
-                        'message' => 'Ehhez a státuszváltáshoz indoklás szükséges (note).'
+                        'message' => 'Pre túto zmenu stavu je potrebné zdôvodnenie.',
                     ], 422);
                 }
             }
@@ -616,12 +608,14 @@ class InternshipController extends Controller
                 'academic_year_id'   => $data['academic_year_id']   ?? $internship->academic_year_id,
                 'start_date'         => $data['start_date']         ?? $internship->start_date,
                 'date_to'            => $data['date_to']            ?? $internship->date_to,
+                'description'        => array_key_exists('description', $data) ? $data['description'] : $internship->description,
+                'is_draft'           => $data['is_draft']           ?? $internship->is_draft,
             ]);
 
-            if ($newStatusId !== null && $currentStatusId !== null && (int)$newStatusId !== (int)$currentStatusId) {
+            if ($newStatusId !== null && $currentStatusId !== null && (int) $newStatusId !== (int) $currentStatusId) {
                 InternshipStatusHistory::create([
                     'internship_id'      => $internship->id,
-                    'status_id'          => (int)$newStatusId,
+                    'status_id'          => (int) $newStatusId,
                     'status_changed_at'  => now(),
                     'explanation'        => $data['note'] ?? null,
                     'changed_by_user_id' => $user->id,
