@@ -6,12 +6,12 @@ use App\Models\Status;
 
 return [
     'statuses' => [
-        //ked vyvola firma notifikaciu
+        // keď vyvolá firma notifikáciu
         Status::ACCEPTED => [
             'recipient' => [Role::STUDENT, Role::GARANT],
             'email' => false,
-            'notification_text_key'         => 'notification.INTERNSHIP_STATUS_CHANGED_TO_ACCEPTED_STUDENT',
-            'notification_text_garant_key'  => 'notification.INTERNSHIP_STATUS_CHANGED_TO_ACCEPTED_GARANT',
+            'notification_text_key'        => 'notification.INTERNSHIP_STATUS_CHANGED_TO_ACCEPTED_STUDENT',
+            'notification_text_garant_key' => 'notification.INTERNSHIP_STATUS_CHANGED_TO_ACCEPTED_GARANT',
         ],
 
         Status::REJECTED => [
@@ -20,7 +20,7 @@ return [
             'notification_text_key' => 'notification.INTERNSHIP_STATUS_CHANGED_TO_REJECTED',
         ],
 
-        //ked vyvola garant notifikaciu
+        // keď vyvolá garant notifikáciu
         Status::APPROVED => [
             'recipient' => [Role::STUDENT, Role::COMPANY],
             'notification_text_key'         => 'notification.INTERNSHIP_STATUS_CHANGED_TO_APPROVED_STUDENT',
@@ -28,7 +28,7 @@ return [
             'email' => true,
         ],
 
-        //ked vyvola garant alebo externy system notifikaciu
+        // keď vyvolá garant alebo externý systém notifikáciu
         Status::DEFENDED => [
             'recipient' => [Role::STUDENT, Role::COMPANY],
             'notification_text_key'         => 'notification.INTERNSHIP_STATUS_CHANGED_TO_DEFENDED_STUDENT',
@@ -41,7 +41,7 @@ return [
             'notification_text_key'         => 'notification.INTERNSHIP_STATUS_CHANGED_TO_UNDEFENDED_STUDENT',
             'notification_text_company_key' => 'notification.INTERNSHIP_STATUS_CHANGED_TO_UNDEFENDED_COMPANY',
             'email' => true,
-        ]
+        ],
     ],
 
     /*
@@ -51,32 +51,35 @@ return [
     */
     'status_transitions' => [
 
-        'Vytvorená' => [
-            'Potvrdená' => [
+        // Vytvorená -> Potvrdená / Zamietnutá
+        Status::CREATED => [
+            Status::ACCEPTED => [
                 'requires_explanation' => false,
                 'send_email' => false,
             ],
-            'Zamietnutá' => [
+            Status::REJECTED => [
                 'requires_explanation' => true,
                 'send_email' => false,
             ],
         ],
 
-        'Potvrdená' => [
-            'Schválená' => [
+        // Potvrdená -> Schválená
+        Status::ACCEPTED => [
+            Status::APPROVED => [
                 'requires_explanation' => false,
                 'send_email' => true,
                 'email_type' => 'confirmed_to_approved',
             ],
         ],
 
-        'Schválená' => [
-            'Obhájená' => [
+        // Schválená -> Obhájená / Neobhájená
+        Status::APPROVED => [
+            Status::DEFENDED => [
                 'requires_explanation' => false,
                 'send_email' => true,
                 'email_type' => 'approved_to_defended',
             ],
-            'Neobhájená' => [
+            Status::UNDEFENDED => [
                 'requires_explanation' => true,
                 'send_email' => true,
                 'email_type' => 'approved_to_not_defended',
