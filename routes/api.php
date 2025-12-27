@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\GarantController;
 use App\Http\Controllers\RegistrationController;
-use App\Models\Status;
+use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\FacultyController;
@@ -44,6 +47,7 @@ Route::middleware('auth:api')->group(function () {
       //  ->middleware(['permission:practice.update_fields_any']);
 
     Route::prefix('student')->group(function () {
+        Route::get('/search-by-name', [StudentController::class, 'searchStudentByName']);
         Route::get('/internships', [InternshipController::class, 'index'])->middleware(['permission:practice.view_detail_own']);
         Route::post('/internship', [InternshipController::class, 'store'])->middleware(['permission:practice.create']);
         Route::get('/internship-detail/{id}', [InternshipController::class, 'show'])->middleware(['permission:practice.view_detail_own']);
@@ -51,12 +55,26 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::get('/companies/search', [CompanyController::class, 'searchByName'])->middleware(['permission:company.search']);
-
-    // 🔹 ONLY NECESSARY FIX ADDED HERE
     Route::get('/companies/{company}', [CompanyController::class, 'show']);
 
+    Route::prefix('garant')->group(function () {
+        Route::get('/my-faculties', [GarantController::class, 'getMyFaculties']);
+        Route::post('/save-my-faculties', [GarantController::class, 'saveMyFaculties']);
+    });
+
+    Route::prefix('internship')->group(function () {
+        Route::get('/all', [InternshipController::class, 'allInternshipsWithPaginationAndFilter'])->middleware(['permission:practice.view_detail_other']);
+        Route::get('/documents/{id}', [DocumentController::class, 'getInternshipDocuments']);
+        Route::prefix('/document')->group(function () {
+           Route::post('/upload-agreement', [DocumentController::class, 'uploadAgreement'])->middleware(['permission:practice.upload_agreement']);
+           //TODO: Atus - vykaz
+        });
+        Route::post('/export-csv', [ExportController::class, 'exportInternshipsCsv'])->middleware(['permission:practice.generate_export']);
+    });
+
     Route::prefix('internship/change-status')->group(function () {
-        Route::post('/acceptance', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_accepted'])->defaults('to', 'acceptance');
-        // TODO: neskor sem doplnit dalsie statusy
+        Route::post('/acceptance', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_accepted'])->defaults('to', 'acceptance'); // POTVRDENIE
+        Route::post('/approval',   [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_approved'])->defaults('to', 'approval'); // SCHVÁLENIE
+        Route::post('/defense',    [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_defended'])->defaults('to', 'defense');  // OBHÁJENIE
     });
 });
