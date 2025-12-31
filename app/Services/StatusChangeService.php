@@ -6,6 +6,8 @@ use App\Models\Document;
 use App\Models\Internship;
 use App\Models\Status;
 use App\Services\Cache\InternshipStatusService;
+use App\Services\MailSender;
+use Illuminate\Support\Facades\Log;
 
 class StatusChangeService
 {
@@ -62,5 +64,80 @@ class StatusChangeService
 
 
         return '';
+    }
+
+    public function sendEmailsForTransition(
+        Internship $internship,
+        Status $oldStatus,
+        Status $newStatus,
+        ?string $note = null
+    ): void {
+        $templateKey = $this->resolveTemplateKey($oldStatus, $newStatus);
+
+        if ($templateKey === null) {
+            return;
+        }
+
+        $recipients = $this->resolveRecipients($internship);
+
+        if (empty($recipients)) {
+            Log::warning('Status transition email skipped - no recipients', [
+                'internship_id' => $internship->id,
+                'from' => $oldStatus->name ?? null,
+                'to' => $newStatus->name ?? null,
+            ]);
+            return;
+        }
+
+        $variables = [
+            'student_name'  => $internship->studentProfile->user->first_name . ' ' . $internship->studentProfile->user->last_name,
+            'company_name'  => $internship->company->name,
+            'academic_year' => $internship->academicYear->season ?? '',
+            'start_date'    => optional($internship->start_date)->format('d.m.Y'),
+            'end_date'      => optional($internship->date_to)->format('d.m.Y'),
+            'note'          => $note,
+        ];
+
+        (new MailSender($templateKey, $recipients, $variables))->send();
+    }
+
+    private function resolveTemplateKey(Status $oldStatus, Status $newStatus): ?string
+    {
+        $from = $oldStatus->name;
+        $to   = $newStatus->name;
+
+        // Potvrdená → Schválená
+        if ($from === 'Potvrdená' && $to === 'Schválená') {
+            return 'internship_confirmed_to_approved';
+        }
+
+        // Schválená → Obhájená
+        if ($from === 'Schválená' && $to === 'Obhájená') {
+            return 'internship_approved_to_defended';
+        }
+
+        // Schválená → Neobhájená
+        if ($from === 'Schválená' && $to === 'Neobhájená') {
+            return 'internship_approved_to_not_defended';
+        }
+
+        return null;
+    }
+
+    private function resolveRecipients(Internship $internship): array
+    {
+        $studentEmail =
+            $internship->studentProfile?->user?->email
+            ?? $internship->student?->user?->email
+            ?? $internship->student?->email
+            ?? null;
+
+        $companyEmail =
+            $internship->company?->ownerProfiles?->first()?->user?->email
+            ?? $internship->company?->email
+            ?? $internship->company?->contact_email
+            ?? null;
+
+        return array_values(array_unique(array_filter([$studentEmail, $companyEmail])));
     }
 }
