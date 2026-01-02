@@ -14,4 +14,9 @@ return [
     'DO_NOT_HAVE_PERMISSION_TO_DOWNLOAD_DOCUMENT' => 'Nemáte oprávnenie stiahnuť tento dokument.',
     'DOCUMENT_TYPE_NOT_SUPPORTED' => 'Typ dokumentu nie je podporovaný.',
     'DOCUMENT_FILE_NOT_FOUND' => 'Súbor dokumentu sa nenašiel.',
+    'ONLY_REPORT_CAN_BE_REVIEWED' => 'Tento typ dokumentu nie je možné hodnotiť.',
+    'INTERNSHIP_NOT_FOUND' => 'Praxa sa nenašla.',
+    'DO_NOT_HAVE_PERMISSION_TO_REVIEW_REPORT' => 'Nemáte oprávnenie potvrdiť alebo zamietnuť výkaz.',
+    'REPORT_APPROVED_SUCCESS' => 'Výkaz bol úspešne potvrdený.',
+    'REPORT_REJECTED_SUCCESS' => 'Výkaz bol úspešne zamietnutý.',
 ];

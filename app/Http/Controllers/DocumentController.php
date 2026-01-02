@@ -8,6 +8,7 @@ use App\Models\Internship;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DocumentStatus;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Http\Requests\ReviewReportRequest;
 
 class DocumentController extends Controller
 {
@@ -170,6 +171,52 @@ class DocumentController extends Controller
         }
 
         return Storage::disk($disk)->download($relativePath, $document->file_name);
+    }
+
+    public function reviewReport(ReviewReportRequest $request, Document $document)
+    {
+        $user = $request->user();
+
+        if ($document->type !== Document::TYPE_STATEMENT) {
+            return response()->json([
+                'message' => __('document.ONLY_REPORT_CAN_BE_REVIEWED'),
+            ], 400);
+        }
+
+        $internship = $document->internship()->first();
+
+        if (!$internship) {
+            return response()->json([
+                'message' => __('document.INTERNSHIP_NOT_FOUND'),
+            ], 404);
+        }
+
+        $actor = $this->resolveInternshipAccessActor($user, $internship);
+        if ($actor !== 'company') {
+            return response()->json([
+                'message' => __('document.DO_NOT_HAVE_PERMISSION_TO_REVIEW_REPORT'),
+            ], 403);
+        }
+
+        $decision = $request->string('decision')->toString(); // approved | rejected
+        $note = $request->string('note')->toString();
+
+        $newStatus = DocumentStatus::create([
+            'decision' => $decision,
+            'note' => $note,
+            'reviewer_user_id' => $user->id,
+            // created_at auto (useCurrent)
+        ]);
+
+        $document->document_status_id = $newStatus->id;
+        $document->save();
+
+        return response()->json([
+            'message' => $decision === 'approved'
+                ? __('document.REPORT_APPROVED_SUCCESS')
+                : __('document.REPORT_REJECTED_SUCCESS'),
+            'document' => $document->fresh()->load(['status', 'uploadedByUser']),
+        ], 200);
     }
 
     public function getInternshipDocuments($internshipId)

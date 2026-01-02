@@ -67,7 +67,8 @@ Route::middleware('auth:api')->group(function () {
         Route::prefix('/document')->group(function () {
            Route::post('/upload-agreement', [DocumentController::class, 'uploadAgreement'])->middleware(['permission:practice.upload_agreement']);
            Route::post('/upload-report/{internship}', [DocumentController::class, 'uploadReport'])->name('documents.reports.upload');
-           Route::get('/download/{document}', [DocumentController::class, 'downloadDocument']);     });
+           Route::get('/download/{document}', [DocumentController::class, 'downloadDocument']);
+           Route::patch('/review-report/{document}', [DocumentController::class, 'reviewReport'])->name('documents.reports.review');    });
         Route::post('/export-csv', [ExportController::class, 'exportInternshipsCsv'])->middleware(['permission:practice.generate_export']);
         Route::put('/{internship}', [InternshipController::class, 'garantUpdateInternship'])->middleware(['permission:practice.update_fields_any']);
     });
