@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\Internship;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DocumentStatus;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends Controller
 {
@@ -134,6 +135,41 @@ class DocumentController extends Controller
             'document'  => $document->load(['status', 'uploadedByUser']),
             'file_path' => $path,
         ], 200);
+    }
+
+    public function downloadDocument(Document $document): StreamedResponse|\Illuminate\Http\JsonResponse
+    {
+        $user = request()->user();
+
+        $hasAccess = hasInternshipRelationToLoggedUser($user, $document->internship_id);
+
+        if (!$hasAccess) {
+            return response()->json([
+                'message' => __('document.DO_NOT_HAVE_PERMISSION_TO_DOWNLOAD_DOCUMENT'),
+            ], 403);
+        }
+
+        $disk = match ($document->type) {
+            Document::TYPE_AGREEMENT => 'internship_agreement',
+            Document::TYPE_STATEMENT => 'reports',
+            default => null,
+        };
+
+        if ($disk === null) {
+            return response()->json([
+                'message' => __('document.DOCUMENT_TYPE_NOT_SUPPORTED'),
+            ], 400);
+        }
+
+        $relativePath = $document->internship_id . '/' . $document->file_name;
+
+        if (!Storage::disk($disk)->exists($relativePath)) {
+            return response()->json([
+                'message' => __('document.DOCUMENT_FILE_NOT_FOUND'),
+            ], 404);
+        }
+
+        return Storage::disk($disk)->download($relativePath, $document->file_name);
     }
 
     public function getInternshipDocuments($internshipId)

@@ -11,4 +11,7 @@ return [
     'REPORT_UPLOAD_SUCCESS' => 'Výkaz bol úspešne nahraný.',
     'REPORT_UPLOAD_FAIL'    => 'Nahratie výkazu zlyhalo.',
     'REPORT_UPDATE_SUCCESS' => 'Výkaz bol úspešne nahradený.',
+    'DO_NOT_HAVE_PERMISSION_TO_DOWNLOAD_DOCUMENT' => 'Nemáte oprávnenie stiahnuť tento dokument.',
+    'DOCUMENT_TYPE_NOT_SUPPORTED' => 'Typ dokumentu nie je podporovaný.',
+    'DOCUMENT_FILE_NOT_FOUND' => 'Súbor dokumentu sa nenašiel.',
 ];
