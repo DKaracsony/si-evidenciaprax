@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Document extends Model
 {
+    public const TYPE_AGREEMENT = 'agreement';
+    public const TYPE_STATEMENT = 'statement';
     protected $fillable = [
         'file_name',
         'type',

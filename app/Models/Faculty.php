@@ -17,4 +17,14 @@ class Faculty extends Model
     {
         return $this->hasMany(StudentProfile::class, 'faculty_id');
     }
+
+    public function garantProfiles()
+    {
+        return $this->belongsToMany(
+            GarantProfile::class,
+            'garant_faculties',
+            'faculty_id',
+            'garant_profile_id'
+        );
+    }
 }

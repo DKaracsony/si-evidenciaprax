@@ -21,6 +21,7 @@ class RolePermissionSeeder extends Seeder
                     'practice.view_detail_other',
                     'practice.update_fields_any',
                     'practice.change_status_to_approved',
+                    'practice.change_status_to_defended',
                     'practice.can_see_all_documents',
                     'practice.generate_export',
                     'dashboard.view_overview'

@@ -28,12 +28,7 @@ class InternshipStatusHistoryObserver
             return;
         }
 
-        $notificationService = new NotificationService();
-        $notificationService->sendStatusChangeNotification(
-            $statusHistory->internship,
-            $statusName,
-            $rules
-        );
+        $notificationService = new NotificationService($statusHistory->internship, $rules, $statusName);
     }
 
 }

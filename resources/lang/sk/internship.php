@@ -13,4 +13,8 @@ return [
     'ALREADY_IN_DESIRED_STATUS' => 'Prax už má požadovaný stav.',
     'STATUS_CHANGE_NOT_ALLOWED' => 'Zmena stavu praxe v tomto momente nie je povolená.',
     'INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY' => 'Stav praxe bol úspešne aktualizovaný.',
+    'STATUS_CHANGE_PREVIOUS_STATUS_MISMATCH' => 'Predchádzajúci stav praxe nezodpovedá očakávanému stavu.',
+    'STATUS_CHANGE_NO_AGREEMENT' => 'Nie je možné zmeniť stav praxe na "obhájená", pretože neexistuje zmluva o praxi.',
+    'STATUS_CHANGED_PARTIALLY_SUCCESSFULLY' => 'Stav praxe bol čiastočne úspešne zmenený.',
+    'NO_DATA_TO_EXPORT' => 'Nie sú dostupné žiadne dáta na export.'
 ];

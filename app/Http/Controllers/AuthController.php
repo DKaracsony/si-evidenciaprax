@@ -41,6 +41,12 @@ class AuthController extends Controller
                 'company_owner_profile' => $user->companyOwnerProfile->company->makeHidden(['address', 'address_id']),
             ];
 
+        if ($user->garantProfile)
+            $userData['garant_profile'] = [
+                'garant_profile_id' => $user->garantProfile->id,
+                'preselected_faculties' => $user->garantProfile->faculties()->pluck('faculties.id')->toArray(),
+            ];
+
         return response()->json(['user' => $userData]);
     }
 

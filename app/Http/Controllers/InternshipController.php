@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\InternshipResource;
 use App\Models\CompanyOwnerProfile;
 use App\Models\Internship;
 use App\Models\InternshipStatusHistory;
 use App\Models\Status;
 use App\Models\User;
 use App\Services\Cache\InternshipStatusService;
+use App\Services\InternshipQueryBuilder;
+use App\Services\StatusChangeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Services\InternshipAgreementPdfService;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\AcademicYear;
+use Carbon\Carbon;
+use App\Http\Requests\UpdateInternshipRequest;
 
 class InternshipController extends Controller
 {
@@ -397,15 +403,30 @@ class InternshipController extends Controller
         return response()->json($responseData, $statusCode);
     }
 
-    public function changeStatus(Request $request, $to)
+    public function changeStatus(Request $request, $to) //bulk and single supported
     {
         $rules = [
             'is_positive'   => 'required|boolean',
             'note'          => 'nullable|string',
-            'internship_id' => 'required|integer|exists:internships,id',
+
+            'internship_id'  => 'nullable|integer|exists:internships,id',
+            'internship_ids' => 'nullable|array|min:1',
+            'internship_ids.*' => 'integer|distinct|exists:internships,id',
         ];
 
         $validator = Validator::make($request->all(), $rules);
+        $validator->after(function ($v) use ($request) {
+            $hasSingle = $request->filled('internship_id');
+            $hasBulk   = is_array($request->input('internship_ids')) && count($request->input('internship_ids')) > 0;
+
+            if (!$hasSingle && !$hasBulk)
+                $v->errors()->add('internship_id', __('internship.INVALID_STATUS_CHANGE_DATA'));
+
+            if ($hasSingle && $hasBulk)
+                $v->errors()->add('internship_ids', __('internship.INVALID_STATUS_CHANGE_DATA'));
+        });
+
+
         if ($validator->fails())
             return response()->json([
                 'message' => __('internship.INVALID_STATUS_CHANGE_DATA'),
@@ -418,6 +439,14 @@ class InternshipController extends Controller
         switch($to){
             case 'acceptance':
                 $statusChangeTo = $isPositive ? Status::ACCEPTED : Status::REJECTED;
+                break;
+            case 'approval':
+                if(!$isPositive)
+                    return response()->json(['message' => __('internship.INVALID_STATUS_CHANGE_DATA'),], 422);
+                $statusChangeTo = Status::APPROVED;
+                break;
+            case 'defense':
+                $statusChangeTo = $isPositive ? Status::DEFENDED : Status::UNDEFENDED;
                 break;
             default:
                 return response()->json([
@@ -437,36 +466,74 @@ class InternshipController extends Controller
             ], 500);
         }
 
-        //TRANSITION IS ALLOWED?
-        $internship = Internship::where('id', $request->input('internship_id'))->with('internshipStatusHistories')->first();
-        $lastStatusId = $internship->internshipStatusHistories->sortByDesc('status_changed_at')->first()->status->id;
-        if($lastStatusId && $lastStatusId === $statusId){
-            return response()->json([
-                'message' => __('internship.ALREADY_IN_DESIRED_STATUS'),
-            ], 400);
+        $failed = [];
+        $updated = [];
+
+        $ids = $request->filled('internship_id')
+            ? [(int) $request->input('internship_id')]
+            : array_map('intval', $request->input('internship_ids', []));
+
+        $internships = Internship::whereIn('id', $ids)
+            ->with(['internshipStatusHistories.status', 'studentProfile.user', 'company.ownerProfiles.user'])
+            ->get()
+            ->keyBy('id');
+
+        $statusChangeService = new StatusChangeService();
+
+        foreach ($ids as $id) {
+            $internship = $internships->get($id);
+
+            if (!$internship) {
+                $failed[] = ['internship' => $internships->get($id), 'reason' => __('internship.INTERNSHIP_NOT_FOUND'),];
+                continue;
+            }
+
+            //TRANSITION IS ALLOWED?
+            $statusChangeService->setInternshipId($id);
+            $statusChangeService->setNewStatusId($statusId);
+            $transitionCheck = $statusChangeService->transitionAllowed();
+
+            if ($transitionCheck !== '') {
+                $failed[] = ['internship' => $internships->get($id), 'reason' => $transitionCheck];
+                continue;
+            }
+
+            $oldStatus = $internship->internshipStatusHistories
+                ->sortByDesc('status_changed_at')
+                ->first()
+                ?->status;
+
+            InternshipStatusHistory::create([
+                'internship_id'      => $id,
+                'status_id'          => $statusId,
+                'status_changed_at'  => now(),
+                'explanation'        => $request->input('note'),
+                'changed_by_user_id' => $request->user()->id,
+            ]);
+
+            $newStatus = $statusService->all()->where('id', (int) $statusId)->first();
+
+            if ($oldStatus && $newStatus) {
+                $statusChangeService->sendEmailsForTransition(
+                    $internship,
+                    $oldStatus,
+                    $newStatus,
+                    $request->input('note')
+                );
+            }
+
+            $internship = Internship::with(['internshipStatusHistories.status', 'studentProfile.user', 'company.ownerProfiles.user'])
+                ->find($id);
+            $updated[] = $internship;
         }
-
-        if($lastStatusId){
-            $lastStatus = $statusService->all()->where('id', $lastStatusId)->first();
-            $newStatus = $statusService->all()->where('id', $statusId)->first();
-
-            if($newStatus->order_index < $lastStatus->order_index)
-                return response()->json([
-                    'message' => __('internship.STATUS_CHANGE_NOT_ALLOWED'),
-                ], 422);
-        }
-
-        InternshipStatusHistory::create([
-            'internship_id'      => $request->input('internship_id'),
-            'status_id'          => $statusId,
-            'status_changed_at'  => now(),
-            'explanation'        => $request->input('note'),
-            'changed_by_user_id' => $request->user()->id,
-        ]);
 
         return response()->json([
-            'message' => __('internship.INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY'),
-        ], 200);
+            'message' => $failed === []
+                ? __('internship.INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY')
+                : __('internship.STATUS_CHANGED_PARTIALLY_SUCCESSFULLY'),
+            'updated' => $updated,
+            'failed'  => $failed,
+        ], empty($failed) ? 200 : 207);
     }
 
     public function companyCreatedInternships(Request $request)
@@ -498,4 +565,126 @@ class InternshipController extends Controller
         return response()->json($internships);
     }
 
+    public function allInternshipsWithPaginationAndFilter(Request $request){
+        $perPage = (int) $request->input('per_page', 20);
+        $perPage = max(1, min($perPage, 100)); // max 100 na stranu
+
+        $query = InternshipQueryBuilder::fromRequest($request);
+
+        return InternshipResource::collection(
+            $query->paginate($perPage)->withQueryString()
+        );
+    }
+
+    public function garantUpdateInternship(
+        UpdateInternshipRequest $request,
+        Internship $internship,
+        InternshipStatusService $internshipStatusService
+        ) {
+        $user = $request->user();
+        $data = $request->validated();
+
+        $latestHistory = $internship->internshipStatusHistories()
+            ->orderByDesc('status_changed_at')
+            ->first();
+
+        $currentStatusId = $latestHistory?->status_id;
+
+        $newStatusId = $data['status_id'] ?? null;
+        $oldStatus = null;
+        $newStatus = null;
+
+        if ($currentStatusId) {
+            $oldStatus = $internshipStatusService->all()->where('id', (int)$currentStatusId)->first();
+        }
+
+        if ($newStatusId) {
+            $newStatus = $internshipStatusService->all()->where('id', (int)$newStatusId)->first();
+        }
+
+        $rule = null;
+
+        if ($newStatusId !== null) {
+            if ($currentStatusId === null) {
+                return response()->json([
+                    'message' => 'Praxe nemá aktuálny status v histórii.',
+                ], 422);
+            }
+
+            if ((int) $newStatusId !== (int) $currentStatusId) {
+                $rule = $internshipStatusService->getTransitionRuleByIds((int) $currentStatusId, (int) $newStatusId);
+
+                if (!$rule) {
+                    return response()->json([
+                        'message' => 'Zmena stavu nie je povolená.',
+                    ], 422);
+                }
+
+                if (($rule['requires_explanation'] ?? false) && empty($data['note'])) {
+                    return response()->json([
+                        'message' => 'Pre túto zmenu stavu je potrebné zdôvodnenie.',
+                    ], 422);
+                }
+            }
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $internship->update([
+                'company_id'         => $data['company_id']         ?? $internship->company_id,
+                'student_profile_id' => $data['student_profile_id'] ?? $internship->student_profile_id,
+                'academic_year_id'   => $data['academic_year_id']   ?? $internship->academic_year_id,
+                'start_date'         => $data['start_date']         ?? $internship->start_date,
+                'date_to'            => $data['date_to']            ?? $internship->date_to,
+                'description'        => array_key_exists('description', $data) ? $data['description'] : $internship->description,
+                'is_draft'           => $data['is_draft']           ?? $internship->is_draft,
+            ]);
+
+            if ($newStatusId !== null && $currentStatusId !== null && (int) $newStatusId !== (int) $currentStatusId) {
+                InternshipStatusHistory::create([
+                    'internship_id'      => $internship->id,
+                    'status_id'          => (int) $newStatusId,
+                    'status_changed_at'  => now(),
+                    'explanation'        => $data['note'] ?? null,
+                    'changed_by_user_id' => $user->id,
+                ]);
+
+
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => __('global_error.SERVER_ERROR'),
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+
+        if ($newStatusId !== null
+            && $currentStatusId !== null
+            && (int)$newStatusId !== (int)$currentStatusId
+            && $oldStatus
+            && $newStatus
+        ) {
+            $internship->loadMissing(['studentProfile.user', 'company.ownerProfiles.user']);
+
+            app(\App\Services\StatusChangeService::class)
+                ->sendEmailsForTransition(
+                    $internship,
+                    $oldStatus,
+                    $newStatus,
+                    $data['note'] ?? null
+                );
+        }
+
+        $internship->load(['company', 'academicYear', 'internshipStatusHistories.status']);
+
+        return response()->json([
+            'message'    => 'Internship updated successfully.',
+            'internship' => $internship,
+        ], 200);
+    }
 }
