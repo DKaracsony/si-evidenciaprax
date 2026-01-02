@@ -66,8 +66,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/documents/{id}', [DocumentController::class, 'getInternshipDocuments']);
         Route::prefix('/document')->group(function () {
            Route::post('/upload-agreement', [DocumentController::class, 'uploadAgreement'])->middleware(['permission:practice.upload_agreement']);
-           //TODO: Atus - vykaz
-        });
+           Route::post('/upload-report/{internship}', [DocumentController::class, 'uploadReport'])->name('documents.reports.upload'); });
         Route::post('/export-csv', [ExportController::class, 'exportInternshipsCsv'])->middleware(['permission:practice.generate_export']);
         Route::put('/{internship}', [InternshipController::class, 'garantUpdateInternship'])->middleware(['permission:practice.update_fields_any']);
     });

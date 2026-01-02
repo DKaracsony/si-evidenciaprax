@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\Internship;
 use App\Models\Role;
 use Illuminate\Support\Facades\Storage;
+use App\Models\DocumentStatus;
 
 class DocumentController extends Controller
 {
@@ -67,6 +68,55 @@ class DocumentController extends Controller
         ]);
     }
 
+    public function uploadReport(DocumentRequest $request, Internship $internship)
+    {
+        $user = $request->user();
+        $file = $request->file('document');
+        $filename = $file->getClientOriginalName();
+
+        $actor = $this->resolveInternshipAccessActor($user, $internship);
+        if ($actor === null) {
+            return response()->json([
+                'message' => __('document.INTERNHIP_NOT_FOUND_FOR_USER'),
+            ], 404);
+        }
+
+        try {
+            $path = Storage::disk('reports')->putFileAs(
+                $internship->id,
+                $file,
+                $filename
+            );
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => __('document.REPORT_UPLOAD_FAIL'),
+            ], 500);
+        }
+
+        $decision = $actor === 'company' ? 'approved' : 'pending';
+
+        $status = DocumentStatus::where('decision', $decision)->first();
+        if (!$status) {
+            return response()->json([
+                'message' => "Document status not configured (missing decision: {$decision})",
+            ], 500);
+        }
+
+        $document = Document::create([
+            'file_name' => $filename,
+            'type' => Document::TYPE_STATEMENT,
+            'internship_id' => $internship->id,
+            'uploaded_by_user_id' => $user->id,
+            'document_status_id' => $status->id,
+        ]);
+
+        return response()->json([
+            'message'   => __('document.REPORT_UPLOAD_SUCCESS'),
+            'document'  => $document->load(['status', 'uploadedByUser']),
+            'file_path' => $path,
+        ], 201);
+    }
+
     public function getInternshipDocuments($internshipId)
     {
         $user = request()->user();
@@ -86,5 +136,21 @@ class DocumentController extends Controller
                 : __('document.DOCUMENTS_RETRIEVED_SUCCESSFULLY'),
             'documents' => $documents,
         ]);
+    }
+    private function resolveInternshipAccessActor($user, Internship $internship): ?string
+    {
+        $studentProfileId = $user->studentProfile?->id;
+
+        if ($studentProfileId && (int) $internship->student_profile_id === (int) $studentProfileId) {
+            return 'student';
+        }
+
+        $companyId = $user->companyOwnerProfile?->company?->id;
+
+        if ($companyId && (int) $internship->company_id === (int) $companyId) {
+            return 'company';
+        }
+
+        return null;
     }
 }
