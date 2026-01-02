@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 
 import AppHeader from '../../components/Navbar/Navbar.vue';
@@ -97,17 +97,23 @@ import {
     ROLE_GARANT,
 } from '@/constants/roles.js';
 
-const view = ref('list'); // 'list' | 'new' | 'success' | 'detail' | 'edit'
+const view = ref('list');
 const selectedInternshipId = ref(null);
 const editingInternshipId = ref(null);
 
 const internshipStore = useInternshipStore();
 
-// 🔐 Auth – rola z Pinie (reactive)
+// 🔐 Auth
 const authStore = useAuthStore();
 const { role } = storeToRefs(authStore);
 
-// Handlery view-u
+// ✅ HARD SAFETY: reset prax data when user/role changes
+watch(role, () => {
+    internshipStore.reset();
+    view.value = 'list';
+});
+
+// Handlers
 function handleNewInternship() {
     view.value = 'new';
 }
@@ -127,10 +133,6 @@ function handleBackToList() {
 }
 
 async function handleCreated({ internship, isDraft }) {
-    console.log('Prax vytvorená/uložená', { internship, isDraft });
-
-    // draft (nový alebo update draftu) → späť na list
-    // finálne odoslanie → success screen
     view.value = isDraft ? 'list' : 'success';
 
     try {
@@ -140,3 +142,4 @@ async function handleCreated({ internship, isDraft }) {
     }
 }
 </script>
+

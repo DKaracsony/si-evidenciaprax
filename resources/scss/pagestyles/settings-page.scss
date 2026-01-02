@@ -2,6 +2,7 @@
 .settings-layout {
     display: flex;
     min-height: calc(100vh - 160px);
+    border-bottom: 4px solid #155cc4; /* blue divider above footer */
 }
 
 /* SIDEBAR */
@@ -29,13 +30,13 @@
     border-radius: 50%;
     background: var(--color-primary-400);
     border: 3px solid var(--color-primary-700);
-    color: white;
+    color: #fff;
     font-size: 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 3px 7px rgba(0,0,0,0.25);
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.25);
 }
 
 /* Sidebar menu */
@@ -60,7 +61,7 @@
         border-radius: 8px;
         cursor: pointer;
         margin-bottom: 4px;
-        transition: background .2s;
+        transition: background 0.2s ease;
 
         &:hover {
             background: var(--color-primary-100);
@@ -70,11 +71,6 @@
             background: var(--color-primary-300);
             color: var(--color-primary-900);
             font-weight: 600;
-        }
-
-        &.placeholder {
-            cursor: not-allowed;
-            color: var(--color-neutral-500);
         }
     }
 }
@@ -86,13 +82,25 @@
     background: var(--color-neutral-100);
 }
 
+/* TITLE + DIVIDER */
+.settings-title-wrap {
+    display: inline-block;
+    margin-bottom: 24px;
+}
+
 .settings-title {
     font-size: 32px;
     font-weight: 700;
     color: var(--color-primary-900);
-    margin-bottom: 20px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--color-primary-300);
+}
+
+.settings-title-divider {
+    height: 2px; /* thinner */
+    width: calc(100% + 24px); /* slight overhang */
+    margin-top: 6px;
+    margin-left: -12px; /* center the overhang */
+    background: var(--color-primary-300);
+    border-radius: 9999px;
 }
 
 /* FORM */
@@ -119,8 +127,9 @@
     margin-top: 10px;
 }
 
+/* Button sizing only – visuals come from lp-first__btn-register */
 .submit-btn {
     margin-top: 25px;
-    height: 48px;
+    min-height: 56px;
     font-size: 18px;
 }

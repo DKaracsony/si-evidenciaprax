@@ -12,7 +12,7 @@
             </p>
         </header>
 
-        <!-- Neplatný link – chýba token/email v URL -->
+        <!-- INVALID LINK -->
         <section
             v-if="!hasValidLink"
             class="forgot-second-card__invalid-link"
@@ -21,17 +21,25 @@
             <p class="forgot-second-card__form-message forgot-second-card__form-message--error">
                 Odkaz na obnovenie hesla je neplatný alebo neúplný.
             </p>
+
             <div class="forgot-second-card__actions forgot-second-card__actions--center">
-                <router-link :to="{ name: 'ForgotPasswordPageFirst' }" class="btn-secondary">
-                    Požiadať znova o obnovenie hesla
+                <router-link
+                    :to="{ name: 'ForgotPasswordPageFirst' }"
+                    class="lp-first__btn-register"
+                >
+                    Požiadať znova
                 </router-link>
-                <router-link :to="{ name: 'LoginPage' }" class="btn-primary">
-                    Prejsť na prihlásenie
+
+                <router-link
+                    :to="{ name: 'LoginPage' }"
+                    class="lp-first__btn-register"
+                >
+                    Prihlásenie
                 </router-link>
             </div>
         </section>
 
-        <!-- Platný link – zobraz formulár -->
+        <!-- VALID LINK -->
         <form
             v-else
             class="forgot-second-card__form"
@@ -39,39 +47,35 @@
             novalidate
             aria-labelledby="reset-password-title"
         >
-            <div class="forgot-second-card__field-group">
-                <label class="forgot-second-card__field">
-                    <span class="forgot-second-card__label">Nové heslo</span>
-                    <input
-                        v-model="password"
-                        type="password"
-                        name="password"
-                        autocomplete="new-password"
-                        class="forgot-second-card__input"
-                        :class="{ 'is-invalid': passwordError }"
-                        @blur="touchedPassword = true"
-                    />
+            <div class="forgot-second-card__field">
+                <label class="forgot-second-card__label">
+                    Nové heslo
                 </label>
+                <input
+                    v-model="password"
+                    type="password"
+                    autocomplete="new-password"
+                    class="forgot-second-card__input"
+                    :class="{ 'forgot-second-card__input--error': passwordError }"
+                    @blur="touchedPassword = true"
+                />
                 <p v-if="passwordError" class="forgot-second-card__error">
                     {{ passwordError }}
                 </p>
             </div>
 
-            <div class="forgot-second-card__field-group">
-                <label class="forgot-second-card__field">
-                    <span class="forgot-second-card__label">
-                        Potvrdenie nového hesla
-                    </span>
-                    <input
-                        v-model="passwordConfirmation"
-                        type="password"
-                        name="password_confirmation"
-                        autocomplete="new-password"
-                        class="forgot-second-card__input"
-                        :class="{ 'is-invalid': passwordConfirmationError }"
-                        @blur="touchedPasswordConfirmation = true"
-                    />
+            <div class="forgot-second-card__field">
+                <label class="forgot-second-card__label">
+                    Potvrdenie nového hesla
                 </label>
+                <input
+                    v-model="passwordConfirmation"
+                    type="password"
+                    autocomplete="new-password"
+                    class="forgot-second-card__input"
+                    :class="{ 'forgot-second-card__input--error': passwordConfirmationError }"
+                    @blur="touchedPasswordConfirmation = true"
+                />
                 <p
                     v-if="passwordConfirmationError"
                     class="forgot-second-card__error"
@@ -80,13 +84,14 @@
                 </p>
             </div>
 
-            <!-- form-level feedback -->
+            <!-- FORM FEEDBACK -->
             <p
                 v-if="formError"
                 class="forgot-second-card__form-message forgot-second-card__form-message--error"
             >
                 {{ formError }}
             </p>
+
             <p
                 v-if="formSuccess"
                 class="forgot-second-card__form-message forgot-second-card__form-message--success"
@@ -97,10 +102,10 @@
             <div class="forgot-second-card__actions">
                 <button
                     type="submit"
-                    class="forgot-second-card__btn"
+                    class="lp-first__btn-register forgot-second-card__submit"
                     :disabled="isSubmitting || !canSubmit"
                 >
-                    {{ isSubmitting ? 'Ukladám nové heslo…' : 'Nastaviť nové heslo' }}
+                    {{ isSubmitting ? 'Ukladám…' : 'Nastaviť nové heslo' }}
                 </button>
             </div>
         </form>
@@ -115,14 +120,10 @@ import axios from 'axios';
 const route = useRoute();
 const router = useRouter();
 
-// query params z URL
 const token = ref('');
 const email = ref('');
-
-// stav linku
 const hasValidLink = ref(true);
 
-// heslá
 const password = ref('');
 const passwordConfirmation = ref('');
 
@@ -133,57 +134,36 @@ const isSubmitting = ref(false);
 const formError = ref('');
 const formSuccess = ref('');
 
-// načítanie query parametrov pri mountnutí komponentu
 onMounted(() => {
-    const qToken = route.query.token;
-    const qEmail = route.query.email;
-
-    if (typeof qToken === 'string') token.value = qToken;
-    if (typeof qEmail === 'string') email.value = qEmail;
+    if (typeof route.query.token === 'string') token.value = route.query.token;
+    if (typeof route.query.email === 'string') email.value = route.query.email;
 
     if (!token.value || !email.value) {
         hasValidLink.value = false;
     }
 });
 
-// VALIDÁCIE
 const passwordError = computed(() => {
     if (!touchedPassword.value && !isSubmitting.value) return '';
-
-    if (!password.value) {
-        return 'Zadajte nové heslo.';
-    }
-
-    if (password.value.length < 8) {
-        return 'Heslo musí mať aspoň 8 znakov.';
-    }
-
+    if (!password.value) return 'Zadajte nové heslo.';
+    if (password.value.length < 8) return 'Heslo musí mať aspoň 8 znakov.';
     return '';
 });
 
 const passwordConfirmationError = computed(() => {
     if (!touchedPasswordConfirmation.value && !isSubmitting.value) return '';
-
-    if (!passwordConfirmation.value) {
-        return 'Zopakujte nové heslo.';
-    }
-
-    if (passwordConfirmation.value !== password.value) {
-        return 'Heslá sa musia zhodovať.';
-    }
-
+    if (!passwordConfirmation.value) return 'Zopakujte nové heslo.';
+    if (passwordConfirmation.value !== password.value) return 'Heslá sa musia zhodovať.';
     return '';
 });
 
-const canSubmit = computed(() => {
-    return (
-        hasValidLink.value &&
-        !passwordError.value &&
-        !passwordConfirmationError.value &&
-        !!password.value &&
-        !!passwordConfirmation.value
-    );
-});
+const canSubmit = computed(() =>
+    hasValidLink.value &&
+    !passwordError.value &&
+    !passwordConfirmationError.value &&
+    password.value &&
+    passwordConfirmation.value
+);
 
 async function handleSubmit() {
     touchedPassword.value = true;
@@ -203,27 +183,13 @@ async function handleSubmit() {
             password_confirmation: passwordConfirmation.value,
         });
 
-        const backendMessage =
-            data?.message ?? 'Heslo bolo zmenené. Môžete sa prihlásiť novým heslom.';
-
-        formSuccess.value = backendMessage;
-
-        // jednoduchý "toast" + redirect na login
-        alert(backendMessage);
+        const msg = data?.message ?? 'Heslo bolo zmenené.';
+        formSuccess.value = msg;
+        alert(msg);
         await router.push({ name: 'LoginPage' });
-    } catch (error) {
-        const status = error.response?.status;
-
-        if (status === 422) {
-            // validácia z backendu – napr. prázdne/krátke heslo (fallback)
-            formError.value =
-                'Neplatné údaje. Skontrolujte, či heslo spĺňa požiadavky.';
-        } else {
-            // token expirovaný, neplatný, alebo iný problém – backend vracia generickú odpoveď,
-            // takže tu len zobrazíme všeobecnú chybu
-            formError.value =
-                'Nepodarilo sa nastaviť nové heslo. Skúste to prosím neskôr alebo požiadajte o nový odkaz.';
-        }
+    } catch {
+        formError.value =
+            'Nepodarilo sa nastaviť nové heslo. Skúste to znova alebo požiadajte o nový odkaz.';
     } finally {
         isSubmitting.value = false;
     }

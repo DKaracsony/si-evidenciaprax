@@ -98,7 +98,6 @@ import { searchCompaniesByName } from '@/services/company';
 
 const props = defineProps({
     modelValue: {
-        // očakávame objekt firmy {id, name} alebo null
         type: Object,
         default: null,
     },
@@ -145,12 +144,14 @@ const isOpen = ref(false);
 const internalError = ref('');
 let debounceTimer = null;
 
+// 🔒 request versioning to prevent race conditions
+let lastRequestId = 0;
+
 const displayError = computed(() => props.error || internalError.value);
 
 watch(
     () => props.modelValue,
     (newVal) => {
-        // ak sa zmení vybraná firma zvonka, upravíme text v inpute
         if (newVal && newVal.name && !isOpen.value) {
             searchTerm.value = newVal.name;
         }
@@ -161,9 +162,7 @@ watch(
 );
 
 watch(searchTerm, (newTerm) => {
-    // 1) Ak je newTerm presne názov už vybranej firmy,
-    //    ide o programovú zmenu (selectCompany / initial hydrate)
-    //    -> nevyvolávaj nové vyhľadávanie, len nechaj vybranú firmu.
+    // programmatic change (select / hydrate)
     if (props.modelValue && newTerm === props.modelValue.name) {
         options.value = [];
         internalError.value = '';
@@ -172,7 +171,7 @@ watch(searchTerm, (newTerm) => {
         return;
     }
 
-    // 2) User začal prepísať názov -> zrušíme aktuálny výber
+    // user overwrote selection
     if (props.modelValue && newTerm !== props.modelValue.name) {
         emit('update:modelValue', null);
     }
@@ -185,7 +184,7 @@ watch(searchTerm, (newTerm) => {
         options.value = [];
         internalError.value = '';
         isLoading.value = false;
-        isOpen.value = false; // schovať kartu, ak je text krátky
+        isOpen.value = false;
         return;
     }
 
@@ -195,6 +194,8 @@ watch(searchTerm, (newTerm) => {
 });
 
 async function loadOptions(term) {
+    const requestId = ++lastRequestId;
+
     isLoading.value = true;
     internalError.value = '';
     isOpen.value = true;
@@ -202,24 +203,28 @@ async function loadOptions(term) {
     try {
         const result = await searchCompaniesByName(term);
 
+        // ❗ ignore stale responses
+        if (requestId !== lastRequestId) return;
+
         if (Array.isArray(result)) {
             options.value = result;
-        } else if (result && Array.isArray(result['data'])) {
-            options.value = result['data'];
+        } else if (result && Array.isArray(result.data)) {
+            options.value = result.data;
         } else {
             options.value = [];
         }
     } catch (error) {
-        console.error('[CompanyAutocomplete] Failed to search companies:', error);
+        if (requestId !== lastRequestId) return;
 
-        // ak by sa aj tak niekedy trafilo 422, zobrazíme len všeobecnú hlášku
+        console.error('[CompanyAutocomplete] Failed to search companies:', error);
         internalError.value = 'Nepodarilo sa načítať zoznam firiem.';
         options.value = [];
     } finally {
-        isLoading.value = false;
+        if (requestId === lastRequestId) {
+            isLoading.value = false;
+        }
     }
 }
-
 
 function onFocus() {
     if (options.value.length) {
@@ -228,7 +233,6 @@ function onFocus() {
 }
 
 function onBlur() {
-    // malý delay, aby fungoval klik na položku (mousedown)
     setTimeout(() => {
         isOpen.value = false;
         emit('blur');

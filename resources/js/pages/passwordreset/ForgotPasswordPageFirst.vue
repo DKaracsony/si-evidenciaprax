@@ -1,13 +1,13 @@
 <template>
-    <div class="forgot-page-wrapper">
+    <div class="forgot-page">
         <!-- HEADER -->
         <AppHeader />
 
         <!-- MAIN CONTENT -->
-        <main class="forgot-page-first">
-            <section class="forgot-page-first__inner container">
+        <main class="forgot-page__main">
+            <div class="container forgot-page__content">
                 <ForgotPasswordFirst />
-            </section>
+            </div>
         </main>
 
         <!-- FOOTER -->
