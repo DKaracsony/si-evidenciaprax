@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DocumentRequest;
 use App\Models\Document;
 use App\Models\Internship;
-use App\Models\Role;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DocumentStatus;
 
@@ -81,6 +80,19 @@ class DocumentController extends Controller
             ], 404);
         }
 
+        $decision = $actor === 'company' ? 'approved' : 'pending';
+        $status = DocumentStatus::where('decision', $decision)->first();
+
+        if (!$status) {
+            return response()->json([
+                'message' => "Document status not configured (missing decision: {$decision})",
+            ], 500);
+        }
+
+        $existing = Document::where('internship_id', $internship->id)
+            ->where('type', Document::TYPE_STATEMENT)
+            ->first();
+
         try {
             $path = Storage::disk('reports')->putFileAs(
                 $internship->id,
@@ -93,28 +105,35 @@ class DocumentController extends Controller
             ], 500);
         }
 
-        $decision = $actor === 'company' ? 'approved' : 'pending';
+        $document = Document::updateOrCreate(
+            [
+                'internship_id' => $internship->id,
+                'type' => Document::TYPE_STATEMENT,
+            ],
+            [
+                'file_name' => $filename,
+                'uploaded_by_user_id' => $user->id,
+                'document_status_id' => $status->id,
+            ]
+        );
 
-        $status = DocumentStatus::where('decision', $decision)->first();
-        if (!$status) {
-            return response()->json([
-                'message' => "Document status not configured (missing decision: {$decision})",
-            ], 500);
+        if ($existing && $existing->file_name !== $filename) {
+            $files = Storage::disk('reports')->files($internship->id);
+
+            foreach ($files as $filePath) {
+                if (basename($filePath) !== $filename) {
+                    Storage::disk('reports')->delete($filePath);
+                }
+            }
         }
 
-        $document = Document::create([
-            'file_name' => $filename,
-            'type' => Document::TYPE_STATEMENT,
-            'internship_id' => $internship->id,
-            'uploaded_by_user_id' => $user->id,
-            'document_status_id' => $status->id,
-        ]);
-
         return response()->json([
-            'message'   => __('document.REPORT_UPLOAD_SUCCESS'),
+            'message'   => $document->wasRecentlyCreated
+                ? __('document.REPORT_UPLOAD_SUCCESS')
+                : __('document.REPORT_UPDATE_SUCCESS'),
             'document'  => $document->load(['status', 'uploadedByUser']),
             'file_path' => $path,
-        ], 201);
+        ], 200);
     }
 
     public function getInternshipDocuments($internshipId)

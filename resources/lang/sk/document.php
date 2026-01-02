@@ -10,4 +10,5 @@ return [
     'DOCUMENTS_RETRIEVED_SUCCESSFULLY' => 'Dokumenty praxe boli úspešne načítané.',
     'REPORT_UPLOAD_SUCCESS' => 'Výkaz bol úspešne nahraný.',
     'REPORT_UPLOAD_FAIL'    => 'Nahratie výkazu zlyhalo.',
+    'REPORT_UPDATE_SUCCESS' => 'Výkaz bol úspešne nahradený.',
 ];
