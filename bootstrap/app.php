@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'permission' => CheckUserPermission::class,
+            'external.ip_allowlist' => \App\Http\Middleware\ExternalApiIpAllowlist::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

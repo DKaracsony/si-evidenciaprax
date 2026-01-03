@@ -17,6 +17,7 @@ use App\Http\Controllers\InternshipController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\InternshipStatsController;
+use App\Http\Controllers\ExternalInternshipStatusController;
 
 // REGISTRATION FORM ENDPOINTS
 Route::get('/faculties', [FacultyController::class, 'index']);
@@ -79,3 +80,8 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/defense',    [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_defended'])->defaults('to', 'defense');  // OBHÁJENIE
     });
 });
+
+// EXTERNAL SYSTEM
+Route::prefix('external')->middleware(['auth:api', 'external.ip_allowlist'])->group(function () {
+        Route::post('/internships/{internship}/change-status', [ExternalInternshipStatusController::class, 'changeStatus']);
+    });
