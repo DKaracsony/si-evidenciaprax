@@ -79,3 +79,10 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/defense',    [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_defended'])->defaults('to', 'defense');  // OBHÁJENIE
     });
 });
+
+// EXTERNAL SYSTEM
+Route::prefix('external')->middleware('auth:api')->group(function () {
+        Route::post('/internships/{internship}/change-status', function () {
+            return response()->json(['message' => 'OK (authorized)']);
+        });
+    });
