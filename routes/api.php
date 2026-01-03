@@ -82,6 +82,6 @@ Route::middleware('auth:api')->group(function () {
 });
 
 // EXTERNAL SYSTEM
-Route::prefix('external')->middleware('auth:api')->group(function () {
+Route::prefix('external')->middleware(['auth:api', 'external.ip_allowlist'])->group(function () {
         Route::post('/internships/{internship}/change-status', [ExternalInternshipStatusController::class, 'changeStatus']);
     });
