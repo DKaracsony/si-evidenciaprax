@@ -538,29 +538,30 @@ class InternshipController extends Controller
 
     public function companyCreatedInternships(Request $request)
     {
-        $validated = $request->validate([
-            'company_id' => ['required', 'integer', 'exists:companies,id'],
-        ]);
+        $user = $request->user();
 
-        $companyId = $validated['company_id'];
+        $companyId = $user?->companyOwnerProfile?->company_id;
+
+        if (!$companyId) {
+            return response()->json([
+                'message' => 'User is not a company owner or has no company assigned.',
+            ], 403);
+        }
 
         $createdStatusId = Status::where('name', Status::CREATED)->value('id');
 
-        // Praxe danej firmy, kde posledný status je "CREATED"
         $internships = Internship::query()
             ->where('company_id', $companyId)
-            ->with(['company', 'academicYear', 'internshipStatusHistories.status'])
-            ->get()
-            ->filter(function (Internship $internship) use ($createdStatusId) {
-                $latest = $internship->internshipStatusHistories
-                    ? $internship->internshipStatusHistories
-                        ->sortByDesc('status_changed_at')
-                        ->first()
-                    : null;
-
-                return $latest && $latest->status_id === $createdStatusId;
+            ->whereHas('internshipStatusHistories', function ($q) use ($createdStatusId) {
+                $q->where('status_id', $createdStatusId)
+                    ->whereRaw('internship_status_histories.status_changed_at = (
+                    SELECT MAX(ish2.status_changed_at)
+                    FROM internship_status_histories ish2
+                    WHERE ish2.internship_id = internship_status_histories.internship_id
+                )');
             })
-            ->values();
+            ->with(['company', 'academicYear', 'internshipStatusHistories.status'])
+            ->get();
 
         return response()->json($internships);
     }
