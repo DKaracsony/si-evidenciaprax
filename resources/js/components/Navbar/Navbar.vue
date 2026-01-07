@@ -33,6 +33,15 @@
                         Úvod
                     </RouterLink>
 
+                    <!-- 🔔 Notifications -->
+                    <div class="lp-nav__notifications">
+                        <NotificationBell @toggle="toggleNotifications" />
+
+                        <NotificationDropdown
+                            v-if="showNotifications"
+                        />
+                    </div>
+
                     <!-- Profile bubble + hover card -->
                     <div class="lp-nav__profile-wrap">
                         <button
@@ -107,6 +116,15 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
 import { logout } from '@/services/auth.js';
+import NotificationBell from '../Navbar/NotificationBell.vue';
+import NotificationDropdown from '../Navbar/NotificationDropdown.vue';
+import { ref } from 'vue';
+
+const showNotifications = ref(false);
+
+const toggleNotifications = () => {
+    showNotifications.value = !showNotifications.value;
+};
 
 // Header logo path (served from public/storage).
 const logoUrl = '/storage/lp-nav-1.png';

@@ -74,6 +74,17 @@
     }
 }
 
+/* =============================================================================
+   Notifications (bell + dropdown)
+   ========================================================================== */
+
+.lp-nav__notifications {
+    position: relative; /* 🔑 ABSOLUTE ANCHOR POINT */
+    display: inline-flex;
+    align-items: center;
+}
+
+
 .lp-nav__link--dashboard {
     font-weight: 700;
 }

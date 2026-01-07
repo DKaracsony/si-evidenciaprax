@@ -1,0 +1,141 @@
+// resources/scss/sections/dashboard/company-prax-list.scss
+@use '../../settings/breakpoints' as *;
+@use '../../settings/colors' as *;
+
+.company-prax-list {
+    padding-block: clamp(32px, 5vw, 48px);
+}
+
+/* HEADER ---------------------------------------------------------- */
+
+.company-prax-list__header {
+    margin-bottom: clamp(16px, 3vw, 24px);
+}
+
+.company-prax-list__title {
+    font-size: clamp(24px, 3vw, 28px);
+    font-weight: 700;
+    color: var(--color-neutral-900);
+    margin: 0 0 8px 0;
+    text-align: left;
+}
+
+.company-prax-list__divider {
+    height: 2px;
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    background: var(--color-primary-700);
+}
+
+/* STATES ---------------------------------------------------------- */
+
+.company-prax-list__state {
+    text-align: center;
+    font-size: 15px;
+    color: var(--text-secondary);
+}
+
+.company-prax-list__state--error {
+    color: var(--color-danger-700);
+}
+
+/* LIST ------------------------------------------------------------ */
+
+.company-prax-list__items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-width: 1120px;
+    margin-inline: auto;
+}
+
+.company-prax-item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-block: 16px;
+    border-bottom: 1px solid var(--border-subtle, #d1d5db);
+
+    @include up($bp-md) {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 24px;
+    }
+}
+
+.company-prax-item__title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.student-prax-list .student-prax-list__header-row {
+    justify-content: flex-start;
+}
+
+.company-prax-item__dates,
+.company-prax-item__semester {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.company-prax-item__side {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    @include up($bp-md) {
+        align-items: flex-end;
+        min-width: 220px;
+    }
+}
+
+.company-prax-item__status-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: left;
+
+    @include up($bp-md) {
+        text-align: right;
+    }
+}
+
+/* COMPANY ACTION VARIANTS ------------------------------------------ */
+/* Same behavior as default CTA, only color + width overridden */
+
+/* POTVRDIŤ (green, black text) */
+.student-prax-item__cta-button--approve {
+    padding: 8px 26px;
+
+    background: #00ff44;
+    color: #000 !important;
+    border-color: #a9c9ff;
+
+    &:hover:not(:disabled) {
+        background: #00e63e;
+        border-color: var(--color-primary-700);
+    }
+
+    &:active:not(:disabled) {
+        background: #00cc3a;
+    }
+}
+
+/* ZAMIETNUŤ (red, white text) */
+.student-prax-item__cta-button--reject {
+    padding: 8px 26px;
+
+    background: #ff0000;
+    color: var(--text-inverse);
+    border-color: #a9c9ff;
+
+    &:hover:not(:disabled) {
+        background: #e60000;
+        border-color: var(--color-primary-700);
+    }
+
+    &:active:not(:disabled) {
+        background: #cc0000;
+    }
+}

@@ -20,24 +20,18 @@
 /* HEADER + LINES ---------------------------------------------------------- */
 
 .student-prax-list__header {
+    position: relative; /* anchor for absolute button */
     margin-bottom: clamp(16px, 3vw, 24px);
 }
 
-.student-prax-list__header-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    margin-bottom: 16px;
 
-    @include up($bp-md) {
-        gap: 24px;
-    }
+.student-prax-list__header-button {
+    position: absolute;
+    top: 0;
+    right: 0;
 }
 
-.student-prax-list__header--with-button .student-prax-list__header-row {
-    justify-content: space-between;
-}
+
 
 .student-prax-list__title {
     font-size: clamp(24px, 3vw, 28px);
@@ -51,8 +45,10 @@
     width: 100%;
     max-width: 1120px;
     margin-inline: auto;
+    margin-top: 20px; /* ✅ pushes divider below the button */
     background: var(--color-primary-700);
 }
+
 
 .student-prax-list__divider--bottom {
     display: none;

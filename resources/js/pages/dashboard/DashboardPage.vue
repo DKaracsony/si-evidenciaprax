@@ -46,6 +46,7 @@
                               TODO: sem neskôr príde firemný dashboard
                               (napr. zoznam praxí firmy, prehľady atď.)
                             -->
+                            <CompanyPraxList />
                         </template>
 
                         <!-- 👨‍🏫 GARANT DASHBOARD – will be implemented later -->
@@ -88,6 +89,7 @@ import NewPraxForm from '../../components/Dashboard/Student/NewPraxForm.vue';
 import EditPraxForm from '../../components/Dashboard/Student/EditPraxForm.vue';
 import NewPraxSuccess from '../../components/Dashboard/Student/NewPraxSuccess.vue';
 import StudentPraxDetail from '../../components/Dashboard/Student/StudentPraxDetail.vue';
+import CompanyPraxList from '../../components/Dashboard/Company/CompanyPraxList.vue';
 
 import { useInternshipStore } from '@/stores/internship.js';
 import { useAuthStore } from '@/stores/auth.js';
