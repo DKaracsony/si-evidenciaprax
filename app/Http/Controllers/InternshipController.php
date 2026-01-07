@@ -548,23 +548,19 @@ class InternshipController extends Controller
             ], 403);
         }
 
-        $createdStatusId = Status::where('name', Status::CREATED)->value('id');
-
         $internships = Internship::query()
             ->where('company_id', $companyId)
-            ->whereHas('internshipStatusHistories', function ($q) use ($createdStatusId) {
-                $q->where('status_id', $createdStatusId)
-                    ->whereRaw('internship_status_histories.status_changed_at = (
-                    SELECT MAX(ish2.status_changed_at)
-                    FROM internship_status_histories ish2
-                    WHERE ish2.internship_id = internship_status_histories.internship_id
-                )');
-            })
-            ->with(['company', 'academicYear', 'internshipStatusHistories.status'])
+            ->with([
+                'company',
+                'academicYear',
+                'internshipStatusHistories.status',
+            ])
+            ->orderByDesc('created_at')
             ->get();
 
         return response()->json($internships);
     }
+
 
     public function allInternshipsWithPaginationAndFilter(Request $request){
         $perPage = (int) $request->input('per_page', 20);

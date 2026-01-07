@@ -1,0 +1,76 @@
+.reject-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* CARD */
+.reject-modal {
+    max-width: 820px;
+    width: 100%;
+    padding-top: 32px;
+}
+
+/* TITLE */
+.reject-modal .login-form__title {
+    margin-bottom: 10px;
+}
+
+/* DIVIDER */
+.reject-modal .login-form__divider {
+    width: 92%;
+    margin-bottom: 24px;
+}
+
+/* BODY */
+.reject-modal .login-form__body {
+    margin-top: 0;
+}
+
+/* TEXTAREA */
+.reject-modal__textarea {
+    resize: vertical;
+    min-height: 160px;
+    font-size: 17px;
+}
+
+/* ACTIONS – slightly higher */
+.reject-modal .login-form__actions {
+    margin-top: 18px; /* pulled up */
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+}
+
+/* BUTTON BASE */
+.reject-modal .student-prax-item__cta-button {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* RED – compact */
+.reject-modal .student-prax-item__cta-button--reject {
+    width: 220px;
+}
+
+/* BLUE – same width (balanced look) */
+.reject-modal
+.student-prax-item__cta-button:not(.student-prax-item__cta-button--reject) {
+    width: 220px;
+}
+
+/* ERROR BELOW BUTTONS */
+.reject-modal__error {
+    margin-top: 10px;
+    text-align: center;
+}

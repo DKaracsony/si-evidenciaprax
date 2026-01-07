@@ -18,6 +18,9 @@
 @use 'sections/dashboard/new-prax-success';
 @use 'sections/dashboard/student-prax-detail';
 @use 'sections/dashboard/edit-prax-form';
+@use 'sections/dashboard/company-prax-list';
+@use 'sections/dashboard/reject-modal';
+@use 'sections/dashboard/company-prax-detail';
 
 
 @use 'pagestyles/first-login-page';

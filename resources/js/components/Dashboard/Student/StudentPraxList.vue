@@ -4,27 +4,28 @@
         <header
             class="student-prax-list__header"
             :class="{
-                'student-prax-list__header--with-button': internshipStore.hasData
-            }"
+        'student-prax-list__header--with-button': internshipStore.hasData
+    }"
         >
-            <div class="student-prax-list__header-row">
-                <h2 class="student-prax-list__title">
-                    Zoznam odborných praxí
-                </h2>
+            <h2 class="student-prax-list__title">
+                Zoznam odborných praxí
+            </h2>
 
-                <!-- Button nad čiarou sa zobrazí len keď existuje aspoň jedna prax -->
-                <button
-                    v-if="internshipStore.hasData"
-                    type="button"
-                    class="student-prax-list__primary-button student-prax-list__primary-button--inline"
-                    @click="$emit('new-internship')"
-                >
-                    Pridať prax
-                </button>
-            </div>
+            <button
+                v-if="internshipStore.hasData"
+                type="button"
+                class="student-prax-list__primary-button
+           student-prax-list__primary-button--inline
+           student-prax-list__header-button"
+                @click="$emit('new-internship')"
+            >
+                Pridať prax
+            </button>
+
 
             <div class="student-prax-list__divider"></div>
         </header>
+
 
         <!-- LOADING -->
         <div
