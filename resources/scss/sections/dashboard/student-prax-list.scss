@@ -320,3 +320,25 @@
         margin-top: 0;
     }
 }
+
+/* ERROR STATE – retry button should look like PRIMARY (Login/Register style) */
+.student-prax-list__state--error {
+    .student-prax-list__primary-button--outline {
+        background: #1868DB !important;
+        color: var(--text-inverse) !important;
+        border-color: #a9c9ff;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+
+        &:hover:not(:disabled) {
+            background: #155CC4 !important;
+            border-color: var(--color-primary-700);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+            transform: scale(1.03);
+        }
+
+        &:active:not(:disabled) {
+            background: #134FAA !important;
+            transform: translateY(0.5px);
+        }
+    }
+}

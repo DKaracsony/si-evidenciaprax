@@ -284,13 +284,19 @@ async function loadDetail() {
                         toTime(a?.['status_changed_at'])
                 )[0];
 
+            const rawStatus = latest?.status ?? null;
+
             internship.value.status = {
-                name: latest?.status ?? internship.value.status?.name ?? null,
+                name:
+                    typeof rawStatus === 'string'
+                        ? rawStatus
+                        : rawStatus?.name ?? internship.value.status?.name ?? null,
                 changed_at:
                     latest?.['status_changed_at'] ??
                     internship.value.status?.changed_at ??
                     null,
             };
+
         }
 
         // Keep list/store in sync with newes-t version of the internship
