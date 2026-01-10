@@ -1,0 +1,92 @@
+// resources/scss/sections/dashboard/garant-prax-statistics.scss
+@use '../../settings/breakpoints' as *;
+@use '../../settings/colors' as *;
+
+.garant-prax-statistics {
+    padding-block: clamp(32px, 5vw, 48px);
+    max-width: 1120px;
+    margin-inline: auto;
+}
+
+/* HEADER ---------------------------------------------------------- */
+
+.garant-prax-statistics__header {
+    margin-bottom: 36px; // more space under header
+}
+
+.garant-prax-statistics__title {
+    font-size: clamp(24px, 3vw, 28px);
+    font-weight: 700;
+    color: var(--color-neutral-900);
+    margin: 0 0 16px 0; // more space before divider
+}
+
+.garant-prax-statistics__divider {
+    height: 2px;
+    width: 100%;
+    background: var(--color-primary-700);
+}
+
+/* STATES ---------------------------------------------------------- */
+
+.garant-prax-statistics__state {
+    text-align: center;
+    font-size: 15px;
+    color: var(--text-secondary);
+    padding-block: 32px;
+}
+
+/* GRID ------------------------------------------------------------ */
+/* Mobile-first: 1 column */
+
+.garant-prax-statistics__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(20px, 4vw, 32px);
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+/* ≥ md (768px): 2 columns */
+@include up($bp-md) {
+    .garant-prax-statistics__grid {
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
+    }
+}
+
+/* ≥ lg (1024px): 3 columns (3×2 layout) */
+@include up($bp-lg) {
+    .garant-prax-statistics__grid {
+        grid-template-columns: repeat(3, minmax(260px, 1fr));
+    }
+}
+
+/* TILE ------------------------------------------------------------ */
+
+.garant-prax-statistics__tile {
+    background: var(--bg-card, #fff);
+    border-radius: $default-border-radius;
+    padding: 28px 24px; // bigger cards
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    text-align: center;
+}
+
+.garant-prax-statistics__count {
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--color-primary-700);
+    margin: 0;
+}
+
+.garant-prax-statistics__label {
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 6px;
+    color: var(--color-neutral-800);
+}
+
+/* BACK BUTTON ----------------------------------------------------- */
+
+.garant-prax-statistics__back {
+    margin-top: 24px;
+}

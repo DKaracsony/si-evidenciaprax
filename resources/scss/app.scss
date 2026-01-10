@@ -21,7 +21,11 @@
 @use 'sections/dashboard/company-prax-list';
 @use 'sections/dashboard/reject-modal';
 @use 'sections/dashboard/company-prax-detail';
-
+@use 'sections/dashboard/garant-prax-list';
+@use 'sections/dashboard/garant-prax-statistics';
+@use 'sections/dashboard/garant-prax-detail-modal';
+@use 'sections/dashboard/garant-prax-edit-modal';
+@use 'sections/dashboard/student-auto-complete';
 
 @use 'pagestyles/first-login-page';
 @use 'pagestyles/register-page';

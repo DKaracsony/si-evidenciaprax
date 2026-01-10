@@ -28,6 +28,15 @@ class InternshipQueryBuilder{
             $query->whereIn('academic_year_id', $request->input('academic_year_ids'));
         }
 
+        // SEMESTER SEASON (winter / summer)
+        if ($request->filled('season')) {
+            $seasons = (array) $request->input('season');
+
+            $query->whereHas('academicYear', function ($q) use ($seasons) {
+                $q->whereIn('season', $seasons);
+            });
+        }
+
         // FIRMA
         if ($request->filled('company_ids')) {
             $query->whereIn('company_id', $request->input('company_ids'));
@@ -48,6 +57,25 @@ class InternshipQueryBuilder{
                 $q->whereIn('faculty_id', $facultyIds);
             });
         }
+
+        // STAV (current status)
+        if ($request->filled('status_names')) {
+            $statusNames = $request->input('status_names');
+
+            $query->whereHas('internshipStatusHistories', function ($q) use ($statusNames) {
+                $q->whereIn('status_id', function ($sub) use ($statusNames) {
+                    $sub->select('statuses.id')
+                        ->from('statuses')
+                        ->whereIn('statuses.name', $statusNames);
+                })
+                    ->whereRaw('internship_status_histories.status_changed_at = (
+            SELECT MAX(ish2.status_changed_at)
+            FROM internship_status_histories ish2
+            WHERE ish2.internship_id = internship_status_histories.internship_id
+        )');
+            });
+        }
+
 
         return $query;
     }
