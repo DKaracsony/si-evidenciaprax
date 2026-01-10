@@ -127,8 +127,8 @@ class InternshipController extends Controller
             ], 404);
 
         $company_profile = null;
-        if ($internship->company && $internship->company->id)
-            $company_profile = CompanyOwnerProfile::where('id', $internship->company->id)->with('user')->first();
+        if ($companyContactPerson = $internship->company->ownerProfiles->first())
+            $company_profile = $companyContactPerson;
 
         $data = [
             'id' => $internship->id,
@@ -143,13 +143,14 @@ class InternshipController extends Controller
                 'description' => $internship->company->description,
                 'website' => $internship->company->website,
                 'address' => $internship->company->address->with('country')->first(),
+                //'asd' => $company_profile,
                 'contact_person' => [
-                    'id' => $company_profile->user->id,
-                    'first_name' => $company_profile->user->first_name,
-                    'last_name' => $company_profile->user->last_name,
-                    'title_before' => $company_profile->user->title_before,
-                    'title_after' => $company_profile->user->title_after,
-                    'email' => $company_profile->user->email,
+                    'id' => $company_profile->user->id ?? null,
+                    'first_name' => $company_profile->user->first_name ?? null,
+                    'last_name' => $company_profile->user->last_name ?? null,
+                    'title_before' => $company_profile->user->title_before ?? null,
+                    'title_after' => $company_profile->user->title_after ?? null,
+                    'email' => $company_profile->user->email ?? null,
                 ]
             ] : null,
             'semester' => [
@@ -554,6 +555,8 @@ class InternshipController extends Controller
                 'company',
                 'academicYear',
                 'internshipStatusHistories.status',
+                'studentProfile.user',
+                'company.address.country',
             ])
             ->orderByDesc('created_at')
             ->get();
