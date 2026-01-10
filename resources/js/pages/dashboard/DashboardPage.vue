@@ -40,23 +40,25 @@
                             />
                         </template>
 
-                        <!-- 🏢 COMPANY DASHBOARD – will be implemented later -->
+                        <!-- 🏢 COMPANY DASHBOARD -->
                         <template v-else-if="role === ROLE_COMPANY">
-                            <!--
-                              TODO: sem neskôr príde firemný dashboard
-                              (napr. zoznam praxí firmy, prehľady atď.)
-                            -->
                             <CompanyPraxList />
                         </template>
 
-                        <!-- 👨‍🏫 GARANT DASHBOARD – will be implemented later -->
+                        <!-- 👨‍🏫 GARANT DASHBOARD -->
                         <template v-else-if="role === ROLE_GARANT">
-                            <!--
-                              TODO: sem neskôr príde garant dashboard
-                            -->
+                            <GarantPraxList
+                                v-if="view === 'list'"
+                                @open-statistics="view = 'stats'"
+                            />
+
+                            <GarantPraxStatistics
+                                v-else-if="view === 'stats'"
+                                @back="view = 'list'"
+                            />
                         </template>
 
-                        <!-- Fallback – neznáma rola alebo chýbajúce dáta -->
+                        <!-- Fallback -->
                         <template v-else>
                             <article class="dashboard-empty-card">
                                 <h2 class="dashboard-empty-card__title">
@@ -89,9 +91,13 @@ import NewPraxForm from '../../components/Dashboard/Student/NewPraxForm.vue';
 import EditPraxForm from '../../components/Dashboard/Student/EditPraxForm.vue';
 import NewPraxSuccess from '../../components/Dashboard/Student/NewPraxSuccess.vue';
 import StudentPraxDetail from '../../components/Dashboard/Student/StudentPraxDetail.vue';
+
 import CompanyPraxList from '../../components/Dashboard/Company/CompanyPraxList.vue';
+import GarantPraxList from '../../components/Dashboard/Garant/GarantPraxList.vue';
+import GarantPraxStatistics from '../../components/Dashboard/Garant/GarantPraxStatistics.vue';
 
 import { useInternshipStore } from '@/stores/internship.js';
+import { useGarantStatisticsStore } from '@/stores/garantStatistics';
 import { useAuthStore } from '@/stores/auth.js';
 import {
     ROLE_STUDENT,
@@ -99,23 +105,31 @@ import {
     ROLE_GARANT,
 } from '@/constants/roles.js';
 
+/* -------------------- STATE -------------------- */
+
 const view = ref('list');
 const selectedInternshipId = ref(null);
 const editingInternshipId = ref(null);
 
 const internshipStore = useInternshipStore();
+const garantStatisticsStore = useGarantStatisticsStore();
 
-// 🔐 Auth
+/* -------------------- AUTH -------------------- */
+
 const authStore = useAuthStore();
 const { role } = storeToRefs(authStore);
 
-// ✅ HARD SAFETY: reset prax data when user/role changes
+/* -------------------- HARD SAFETY -------------------- */
+/* Reset ALL role-specific cached data on role change */
+
 watch(role, () => {
     internshipStore.reset();
+    garantStatisticsStore.reset();
     view.value = 'list';
 });
 
-// Handlers
+/* -------------------- HANDLERS -------------------- */
+
 function handleNewInternship() {
     view.value = 'new';
 }
@@ -140,8 +154,10 @@ async function handleCreated({ internship, isDraft }) {
     try {
         await internshipStore.loadList({ force: true });
     } catch (error) {
-        console.error('[DashboardPage] Nepodarilo sa reloadnúť zoznam praxí', error);
+        console.error(
+            '[DashboardPage] Nepodarilo sa reloadnúť zoznam praxí',
+            error
+        );
     }
 }
 </script>
-

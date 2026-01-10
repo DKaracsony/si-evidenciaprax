@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
-use App\Models\User;
+use App\Models\StudentProfile;
 use App\Services\Cache\RoleService;
 use Illuminate\Http\Request;
 
@@ -11,10 +11,11 @@ class StudentController extends Controller
 {
     public function searchStudentByName(Request $request)
     {
-        if(!isGarant($request->user()))
+        if (!isGarant($request->user())) {
             return response()->json([
                 'message' => __('global_error.UNAUTHORIZED'),
             ], 403);
+        }
 
         $name = trim((string) $request->get('q', ''));
 
@@ -25,34 +26,45 @@ class StudentController extends Controller
         }
 
         $roleService = new RoleService();
-        $studentRoleId = $roleService->all()->firstWhere('name', Role::STUDENT)->id;
+        $studentRoleId = $roleService->all()
+            ->firstWhere('name', Role::STUDENT)
+            ->id;
 
         $parts = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
-        $students = User::query()
-            ->where('role_id', $studentRoleId)
-            ->where(function ($q) use ($name, $parts) {
 
-                $q->where('first_name', 'LIKE', "%{$name}%")
-                    ->orWhere('last_name', 'LIKE', "%{$name}%");
+        $students = StudentProfile::query()
+            ->whereHas('user', function ($q) use ($studentRoleId, $name, $parts) {
+                $q->where('role_id', $studentRoleId)
+                    ->where(function ($qq) use ($name, $parts) {
+                        $qq->where('first_name', 'LIKE', "%{$name}%")
+                            ->orWhere('last_name', 'LIKE', "%{$name}%");
 
-                if (count($parts) >= 2) {
-                    $first = $parts[0];
-                    $last  = $parts[1];
+                        if (count($parts) >= 2) {
+                            $first = $parts[0];
+                            $last  = $parts[1];
 
-                    $q->orWhere(function ($qq) use ($first, $last) {
-                        $qq->where('first_name', 'LIKE', "%{$first}%")
-                            ->where('last_name',  'LIKE', "%{$last}%");
-                    })
-                        ->orWhere(function ($qq) use ($first, $last) {
-                            $qq->where('first_name', 'LIKE', "%{$last}%")
-                                ->where('last_name',  'LIKE', "%{$first}%");
-                        });
-                }
+                            $qq->orWhere(function ($qqq) use ($first, $last) {
+                                $qqq->where('first_name', 'LIKE', "%{$first}%")
+                                    ->where('last_name', 'LIKE', "%{$last}%");
+                            })
+                                ->orWhere(function ($qqq) use ($first, $last) {
+                                    $qqq->where('first_name', 'LIKE', "%{$last}%")
+                                        ->where('last_name', 'LIKE', "%{$first}%");
+                                });
+                        }
+                    });
             })
-            ->select('id', 'first_name', 'last_name')
+            ->with('user:id,first_name,last_name')
             ->limit(20)
-            ->get();
+            ->get()
+            ->map(fn ($profile) => [
+                'id' => $profile->id, // ✅ student_profiles.id (IMPORTANT)
+                'first_name' => $profile->user->first_name,
+                'last_name'  => $profile->user->last_name,
+            ]);
 
-        return response()->json(['students' => $students], 200);
+        return response()->json([
+            'students' => $students,
+        ], 200);
     }
 }

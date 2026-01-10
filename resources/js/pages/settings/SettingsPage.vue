@@ -26,12 +26,22 @@
                         >
                             Zmena hesla účtu
                         </li>
+
+                        <!-- GARANT ONLY -->
+                        <li
+                            v-if="role === ROLE_GARANT"
+                            :class="{ active: activeSection === 'garant-faculties' }"
+                            @click="activeSection = 'garant-faculties'"
+                        >
+                            Predvolené odbory
+                        </li>
                     </ul>
                 </nav>
             </aside>
 
             <!-- MAIN CONTENT -->
             <section class="settings-content">
+                <!-- ================= PASSWORD ================= -->
                 <div v-if="activeSection === 'general'" class="password-section">
                     <div class="settings-title-wrap">
                         <h1 class="settings-title">
@@ -46,7 +56,6 @@
                             type="password"
                             v-model="currentPassword"
                             class="input"
-                            placeholder="Napíšte aktuálne heslo"
                         />
                         <p v-if="errors.current" class="error">
                             {{ errors.current }}
@@ -57,7 +66,6 @@
                             type="password"
                             v-model="newPassword"
                             class="input"
-                            placeholder="Napíšte nové heslo"
                         />
                         <p v-if="errors.new" class="error">
                             {{ errors.new }}
@@ -68,7 +76,6 @@
                             type="password"
                             v-model="newPasswordConfirm"
                             class="input"
-                            placeholder="Potvrďte nové heslo"
                         />
                         <p v-if="errors.confirm" class="error">
                             {{ errors.confirm }}
@@ -87,6 +94,56 @@
                         </button>
                     </form>
                 </div>
+
+                <!-- ================= GARANT FACULTIES ================= -->
+                <div
+                    v-if="activeSection === 'garant-faculties' && role === ROLE_GARANT"
+                    class="garant-faculties-section"
+                >
+                    <div class="settings-title-wrap">
+                        <h1 class="settings-title">
+                            Predvolené študijné odbory
+                        </h1>
+                        <div class="settings-title-divider"></div>
+                    </div>
+
+                    <p class="garant-faculties-note">
+                        Vyberte jeden alebo viac študijných odborov, ktoré budú
+                        predvolene použité pri zobrazovaní praxí.
+                    </p>
+
+                    <div class="garant-faculties-list">
+                        <label
+                            v-for="faculty in faculties"
+                            :key="faculty.id"
+                            class="faculty-checkbox"
+                        >
+                            <input
+                                type="checkbox"
+                                :value="faculty.id"
+                                v-model="selectedFacultyIds"
+                            />
+                            {{ faculty.name }}
+                        </label>
+                    </div>
+
+                    <p v-if="facultiesError" class="error">
+                        {{ facultiesError }}
+                    </p>
+
+                    <p v-if="facultiesSuccess" class="success">
+                        Predvolené odbory boli uložené.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="lp-first__btn-register submit-btn"
+                        :disabled="facultiesLoading"
+                        @click="saveFaculties"
+                    >
+                        {{ facultiesLoading ? 'Ukladám...' : 'Uložiť zmeny' }}
+                    </button>
+                </div>
             </section>
         </main>
 
@@ -94,35 +151,40 @@
     </div>
 </template>
 
-
-
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
+
 import AppHeader from '../../components/Navbar/Navbar.vue';
 import Footer from '../../components/Footer/Footer.vue';
-import { changePassword } from '../../services/auth.js';
 
-// sidebar state
+import { changePassword, fetchAndStoreUser } from '../../services/auth.js';
+import { fetchMyFaculties, saveMyFaculties } from '../../services/garantFaculties.js';
+
+import { useAuthStore } from '@/stores/auth.js';
+import { ROLE_GARANT } from '@/constants/roles.js';
+
+// ---------------- AUTH / ROLE ----------------
+const authStore = useAuthStore();
+const { role } = storeToRefs(authStore);
+
+// ---------------- SIDEBAR ----------------
 const isCollapsed = ref(false);
 const activeSection = ref('general');
 
-// form fields
+// ---------------- PASSWORD ----------------
 const currentPassword = ref('');
 const newPassword = ref('');
 const newPasswordConfirm = ref('');
-
-// flags
 const loading = ref(false);
 const success = ref(false);
 
-// error messages
 const errors = ref({
     current: '',
     new: '',
     confirm: '',
 });
 
-// FE validation
 function validate() {
     errors.value = { current: '', new: '', confirm: '' };
     let valid = true;
@@ -131,10 +193,7 @@ function validate() {
         errors.value.current = 'Prosím zadajte aktuálne heslo';
         valid = false;
     }
-    if (!newPassword.value) {
-        errors.value.new = 'Napíšte prosím nové heslo';
-        valid = false;
-    } else if (newPassword.value.length < 8) {
+    if (!newPassword.value || newPassword.value.length < 8) {
         errors.value.new = 'Heslo musí mať aspoň 8 znakov';
         valid = false;
     }
@@ -160,25 +219,47 @@ async function submitChange() {
         });
 
         success.value = true;
-
         currentPassword.value = '';
         newPassword.value = '';
         newPasswordConfirm.value = '';
-    } catch (err) {
-        if (err.response?.status === 422) {
-            const msg = err.response.data.message || '';
-
-            if (msg.includes('nesprávne')) {
-                errors.value.current =
-                    'Heslo, ktoré ste zadali, nie je správne.';
-            } else {
-                errors.value.new = 'Neplatné vstupy.';
-            }
-        } else {
-            alert('Nepodarilo sa zmeniť heslo, skúste znova.');
-        }
     } finally {
         loading.value = false;
+    }
+}
+
+// ---------------- GARANT FACULTIES ----------------
+const faculties = ref([]);
+const selectedFacultyIds = ref([]);
+const facultiesLoading = ref(false);
+const facultiesError = ref('');
+const facultiesSuccess = ref(false);
+
+onMounted(async () => {
+    if (role.value !== ROLE_GARANT) return;
+
+    try {
+        faculties.value = await fetchMyFaculties();
+        selectedFacultyIds.value = faculties.value
+            .filter(f => f.selected)
+            .map(f => f.id);
+    } catch {
+        facultiesError.value = 'Nepodarilo sa načítať odbory.';
+    }
+});
+
+async function saveFaculties() {
+    facultiesLoading.value = true;
+    facultiesError.value = '';
+    facultiesSuccess.value = false;
+
+    try {
+        await saveMyFaculties(selectedFacultyIds.value);
+        await fetchAndStoreUser(); // 🔥 CRITICAL – keep Pinia in sync
+        facultiesSuccess.value = true;
+    } catch {
+        facultiesError.value = 'Nepodarilo sa uložiť odbory.';
+    } finally {
+        facultiesLoading.value = false;
     }
 }
 </script>
