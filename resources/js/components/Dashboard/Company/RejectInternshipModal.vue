@@ -1,6 +1,14 @@
 <template>
-    <div class="reject-modal-overlay">
-        <div class="login-card reject-modal">
+    <!-- OVERLAY (click outside closes) -->
+    <div
+        class="reject-modal-overlay"
+        @click="!loading && $emit('close')"
+    >
+        <!-- CARD -->
+        <div
+            class="login-card reject-modal"
+            @click.stop
+        >
             <h2 class="login-form__title">
                 Odôvodnenie odmietnutia praxe
             </h2>
@@ -8,17 +16,19 @@
             <div class="login-form__divider"></div>
 
             <div class="login-form__body">
+                <!-- TEXTAREA -->
                 <div class="login-form__field">
                     <textarea
                         v-model.trim="note"
                         class="login-form__input reject-modal__textarea"
                         :class="{ 'login-form__input--error': showError }"
                         :disabled="loading"
-                        rows="5"
+                        rows="6"
                         placeholder="Zadajte dôvod odmietnutia praxe..."
                     ></textarea>
                 </div>
 
+                <!-- ACTIONS -->
                 <div class="login-form__actions">
                     <button
                         class="student-prax-item__cta-button student-prax-item__cta-button--reject"
@@ -38,6 +48,7 @@
                     </button>
                 </div>
 
+                <!-- ERROR -->
                 <p
                     v-if="showError"
                     class="login-form__error reject-modal__error"

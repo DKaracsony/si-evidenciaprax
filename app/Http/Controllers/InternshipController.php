@@ -116,19 +116,30 @@ class InternshipController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
+
         $internship = Internship::where('id', $id)
             ->where('student_profile_id', $user->studentProfile->id)
             ->with(['company', 'academicYear', 'internshipStatusHistories.status'])
             ->first();
 
-        if (!$internship)
+        if (!$internship) {
             return response()->json([
                 'message' => __('internship.INTERNSHIP_NOT_FOUND'),
             ], 404);
+        }
 
+        // latest status (same logic as index)
+        $latestStatusHistory = $internship->internshipStatusHistories
+            ? $internship->internshipStatusHistories
+                ->sortByDesc('status_changed_at')
+                ->first()
+            : null;
+
+        // contact person (keeps teammate change)
         $company_profile = null;
-        if ($companyContactPerson = $internship->company->ownerProfiles->first())
+        if ($companyContactPerson = $internship->company->ownerProfiles->first()) {
             $company_profile = $companyContactPerson;
+        }
 
         $data = [
             'id' => $internship->id,
@@ -137,13 +148,13 @@ class InternshipController extends Controller
             'description' => $internship->description,
             'is_draft' => $internship->is_draft,
             'submitted_at' => $internship->submitted_at,
+
             'company' => $internship->company ? [
                 'id' => $internship->company->id,
                 'name' => $internship->company->name,
                 'description' => $internship->company->description,
                 'website' => $internship->company->website,
                 'address' => $internship->company->address->with('country')->first(),
-                //'asd' => $company_profile,
                 'contact_person' => [
                     'id' => $company_profile->user->id ?? null,
                     'first_name' => $company_profile->user->first_name ?? null,
@@ -151,35 +162,47 @@ class InternshipController extends Controller
                     'title_before' => $company_profile->user->title_before ?? null,
                     'title_after' => $company_profile->user->title_after ?? null,
                     'email' => $company_profile->user->email ?? null,
-                ]
+                ],
             ] : null,
+
             'semester' => [
                 'id' => $internship->academicYear->id,
                 'season' => $internship->academicYear->season,
                 'start_date' => $internship->academicYear->start_date,
                 'end_date' => $internship->academicYear->end_date,
             ],
+
+            // ✅ FIX: top-level status for badge
+            'status' => $latestStatusHistory ? [
+                'name' => $latestStatusHistory->status?->name,
+                'changed_at' => $latestStatusHistory->status_changed_at,
+            ] : null,
+
             'status_history' => $internship->internshipStatusHistories ? [
-                $internship->internshipStatusHistories->sortByDesc('status_changed_at')->map(function ($history) {
-                    return [
-                        'status' => $history->status->name,
-                        'explanation' => $history->explanation,
-                        'status_changed_at' => $history->status_changed_at,
-                        'changed_by_user => ' => [
-                            'id' => $history->changedByUser->id,
-                            'first_name' => $history->changedByUser->first_name,
-                            'last_name' => $history->changedByUser->last_name,
-                            'title_before' => $history->changedByUser->title_before,
-                            'title_after' => $history->changedByUser->title_after,
-                            'email' => $history->changedByUser->email,
-                        ],
-                    ];
-                }),
-            ] : null
+                $internship->internshipStatusHistories
+                    ->sortByDesc('status_changed_at')
+                    ->map(function ($history) {
+                        return [
+                            'status' => $history->status->name,
+                            'explanation' => $history->explanation,
+                            'status_changed_at' => $history->status_changed_at,
+                            // ✅ FIX: corrected key name
+                            'changed_by_user' => [
+                                'id' => $history->changedByUser->id,
+                                'first_name' => $history->changedByUser->first_name,
+                                'last_name' => $history->changedByUser->last_name,
+                                'title_before' => $history->changedByUser->title_before,
+                                'title_after' => $history->changedByUser->title_after,
+                                'email' => $history->changedByUser->email,
+                            ],
+                        ];
+                    }),
+            ] : null,
         ];
 
         return response()->json($data);
     }
+
     public function downloadAgreementPdf(Request $request, Internship $internship)
     {
         $user = $request->user();
