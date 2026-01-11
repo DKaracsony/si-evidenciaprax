@@ -15,6 +15,7 @@ class InternshipStatusHistoryObserver
 
         $statuses   = new InternshipStatusService();
         $statusName = optional($statuses->all()->firstWhere('id', $statusHistory->status_id))->name;
+        $internshipNote = $statusHistory->explanation;
 
         if (!$statusName) {
             Log::warning("No status name found for history id {$statusHistory->id}");
@@ -28,7 +29,7 @@ class InternshipStatusHistoryObserver
             return;
         }
 
-        $notificationService = new NotificationService($statusHistory->internship, $rules, $statusName);
+        $notificationService = new NotificationService($statusHistory->internship, $rules, $statusName, $internshipNote);
     }
 
 }

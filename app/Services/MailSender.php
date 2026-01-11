@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\GenericTemplateMail;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\Mail;
 
@@ -26,10 +27,13 @@ class MailSender{
             throw new InvalidArgumentException("Invalid mail template key: {$this->templateKey}");
         }
 
-        Mail::send($config['view'], $this->variables, function ($message) use ($config) {
-            foreach ($this->sendTo as $addr) $message->to($addr);
-            if (!empty($this->replyTo)) $message->replyTo($this->replyTo);
-            $message->subject($config['subject']);
-        });
+        Mail::to($this->sendTo)->queue(
+            new GenericTemplateMail(
+                $config['view'],
+                $config['subject'],
+                $this->variables,
+                $this->replyTo
+            )
+        );
     }
 }
