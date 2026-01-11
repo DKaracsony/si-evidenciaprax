@@ -30,6 +30,23 @@
 
         <!-- CONTENT -->
         <div v-else-if="internship" class="student-prax-detail__content">
+            <!-- HIDDEN FILE INPUTS (required for upload buttons) -->
+            <input
+                ref="agreementInput"
+                type="file"
+                accept="application/pdf"
+                class="student-prax-detail__upload-input"
+                @change="onAgreementSelected"
+            />
+
+            <input
+                ref="reportInput"
+                type="file"
+                accept="application/pdf"
+                class="student-prax-detail__upload-input"
+                @change="onReportSelected"
+            />
+
             <!-- Firma + kontakt -->
             <section class="student-prax-detail__section">
                 <h3 class="student-prax-detail__section-title">
@@ -171,6 +188,125 @@
                 </div>
             </section>
 
+            <!-- DOKUMENTY -->
+            <section class="student-prax-detail__section student-prax-detail__section--documents">
+                <h3 class="student-prax-detail__section-title">
+                    Dokumenty
+                </h3>
+
+                <div class="student-prax-detail__documents">
+                    <!-- AGREEMENT -->
+                    <div class="student-prax-detail__document">
+                        <div class="student-prax-detail__document-info">
+                <span class="student-prax-detail__document-icon">
+                    📄
+                </span>
+
+                            <div class="student-prax-detail__document-meta">
+                                <strong>Dohoda o praxi</strong>
+
+                                <span v-if="agreementDocument" class="student-prax-detail__document-name">
+                        {{ agreementDocument.file_name }}
+                    </span>
+
+                                <span v-else class="student-prax-detail__document-muted">
+                        Dokument zatiaľ nebol nahraný
+                    </span>
+                            </div>
+                        </div>
+
+                        <div class="student-prax-detail__document-actions">
+                            <button
+                                v-if="agreementDocument"
+                                type="button"
+                                class="student-prax-detail__link"
+                                :disabled="isDownloadingUploadedAgreement"
+                                @click="downloadUploadedAgreement"
+                            >
+                                {{ isDownloadingUploadedAgreement ? 'Sťahujem…' : 'Stiahnuť' }}
+                            </button>
+
+                            <button
+                                type="button"
+                                class="student-prax-detail__button student-prax-detail__button--small"
+                                :disabled="isUploadingAgreement"
+                                @click="triggerAgreementSelect"
+                            >
+                                {{ hasAgreement ? 'Nahradiť' : 'Nahrať' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <p v-if="agreementError" class="student-prax-detail__upload-error">
+                        {{ agreementError }}
+                    </p>
+
+                    <p v-if="agreementSuccess" class="student-prax-detail__upload-success">
+                        {{ agreementSuccess }}
+                    </p>
+
+                    <!-- REPORT -->
+                    <div class="student-prax-detail__document">
+                        <div class="student-prax-detail__document-info">
+                <span class="student-prax-detail__document-icon">
+                    🧾
+                </span>
+
+                            <div class="student-prax-detail__document-meta">
+                                <strong>Výkaz o praxi</strong>
+
+                                <span v-if="reportDocument" class="student-prax-detail__document-name">
+                        {{ reportDocument.file_name }}
+                    </span>
+
+                                <span v-else class="student-prax-detail__document-muted">
+                        Dokument zatiaľ nebol nahraný
+                    </span>
+                            </div>
+
+                            <span
+                                v-if="reportDocument"
+                                class="student-prax-detail__report-status"
+                                :data-status="reportDocument.status?.decision"
+                            >
+                    {{ reportStatusLabel }}
+                </span>
+                        </div>
+
+                        <div class="student-prax-detail__document-actions">
+                            <button
+                                v-if="reportDocument"
+                                type="button"
+                                class="student-prax-detail__link"
+                                :disabled="isDownloadingReport"
+                                @click="downloadReport"
+                            >
+                                {{ isDownloadingReport ? 'Sťahujem…' : 'Stiahnuť' }}
+                            </button>
+
+                            <button
+                                type="button"
+                                class="student-prax-detail__button student-prax-detail__button--small"
+                                :disabled="isUploadingReport"
+                                @click="triggerReportSelect"
+                            >
+                                {{ hasReport ? 'Nahradiť' : 'Nahrať' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <p v-if="reportError" class="student-prax-detail__upload-error">
+                        {{ reportError }}
+                    </p>
+
+                    <p v-if="reportSuccess" class="student-prax-detail__upload-success">
+                        {{ reportSuccess }}
+                    </p>
+                </div>
+            </section>
+
+
+
             <!-- Akcie -->
             <section class="student-prax-detail__actions">
                 <button
@@ -203,6 +339,7 @@
 </template>
 
 <script setup>
+import axios from 'axios';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useInternshipStore } from '@/stores/internship';
 import {
@@ -229,10 +366,56 @@ const nonBlockingError = ref('');
 const isDownloading = ref(false);
 const pdfError = ref('');
 
+const agreementInput = ref(null);
+const isUploadingAgreement = ref(false);
+const agreementError = ref('');
+const agreementSuccess = ref('');
+const isDownloadingUploadedAgreement = ref(false);
+
+const reportInput = ref(null);
+const isUploadingReport = ref(false);
+const reportError = ref('');
+const reportSuccess = ref('');
+const isDownloadingReport = ref(false);
+
+
 const numericId = computed(() => {
     const n = Number(props.internshipId);
     return Number.isFinite(n) ? n : null;
 });
+
+const reportDocument = computed(() =>
+    Array.isArray(internship.value?.documents)
+        ? internship.value.documents.find(d => d.type === 'statement')
+        : null
+);
+
+const hasReport = computed(() => !!reportDocument.value);
+
+const reportStatusLabel = computed(() => {
+    const decision = reportDocument.value?.status?.decision;
+
+    switch (decision) {
+        case 'approved':
+            return 'Potvrdený firmou';
+        case 'rejected':
+            return 'Zamietnutý firmou';
+        case 'pending':
+        default:
+            return 'Čaká na potvrdenie firmy';
+    }
+});
+
+
+const agreementDocument = computed(() =>
+    Array.isArray(internship.value?.documents)
+        ? internship.value.documents.find(d => d.type === 'agreement')
+        : null
+);
+
+const hasAgreement = computed(() => !!agreementDocument.value);
+
+
 
 const contactPerson = computed(() =>
     internship.value?.company?.['contact_person'] ?? null
@@ -267,6 +450,8 @@ async function loadDetail() {
 
         // Primary data
         internship.value = data;
+        await loadDocuments();
+
 
         // Extract latest status safely (do not assume ordering)
         const historyRaw = Array.isArray(data?.['status_history'])
@@ -320,6 +505,114 @@ async function loadDetail() {
 function reload() {
     loadDetail();
 }
+
+function triggerAgreementSelect() {
+    agreementError.value = '';
+    agreementSuccess.value = '';
+    agreementInput.value?.click();
+}
+
+async function onAgreementSelected(event) {
+    const file = event.target.files?.[0];
+    if (!file || !numericId.value) return;
+
+    agreementError.value = '';
+    agreementSuccess.value = '';
+
+    if (file.type !== 'application/pdf') {
+        agreementError.value = 'Súbor musí byť vo formáte PDF.';
+        event.target.value = '';
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        agreementError.value = 'Maximálna veľkosť súboru je 10 MB.';
+        event.target.value = '';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('internship_id', numericId.value);
+    formData.append('document', file);
+
+    isUploadingAgreement.value = true;
+
+    try {
+        const response = await axios.post(
+            '/api/internship/document/upload-agreement',
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+
+        agreementSuccess.value = response.data?.message
+            ?? 'Dohoda bola úspešne nahraná.';
+
+        await loadDetail(); // refresh internship data
+    } catch (e) {
+        const status = e.response?.status;
+        const data = e.response?.data;
+
+        if (status === 422 && data?.errors) {
+            agreementError.value =
+                Object.values(data.errors).flat()[0]
+                ?? 'Neplatný súbor.';
+        } else if (status === 404) {
+            agreementError.value = 'Praxa nebola nájdená.';
+        } else {
+            agreementError.value =
+                data?.message ?? 'Nahratie dohody zlyhalo.';
+        }
+    } finally {
+        isUploadingAgreement.value = false;
+        event.target.value = '';
+    }
+}
+
+
+async function loadDocuments() {
+    if (!numericId.value) return;
+
+    try {
+        const response = await axios.get(
+            `/api/internship/documents/${numericId.value}`
+        );
+
+        internship.value.documents = response.data?.documents ?? [];
+    } catch (e) {
+        // Non-blocking: documents are optional for detail rendering
+        internship.value.documents = [];
+    }
+}
+
+
+async function downloadUploadedAgreement() {
+    if (!agreementDocument.value) return;
+
+    isDownloadingUploadedAgreement.value = true;
+
+    try {
+        const response = await axios.get(
+            `/api/internship/document/download/${agreementDocument.value.id}`,
+            { responseType: 'blob' }
+        );
+
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = agreementDocument.value.file_name;
+        a.click();
+
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error('[StudentPraxDetail] Failed to download uploaded agreement', e);
+        agreementError.value = 'Nepodarilo sa stiahnuť nahranú dohodu.';
+    } finally {
+        isDownloadingUploadedAgreement.value = false;
+    }
+}
+
 
 async function downloadPdf() {
     if (!numericId.value) return;
@@ -399,4 +692,93 @@ watch(
         loadDetail();
     }
 );
+
+function triggerReportSelect() {
+    reportError.value = '';
+    reportSuccess.value = '';
+    reportInput.value?.click();
+}
+
+async function onReportSelected(event) {
+    const file = event.target.files?.[0];
+    if (!file || !numericId.value) return;
+
+    reportError.value = '';
+    reportSuccess.value = '';
+
+    if (file.type !== 'application/pdf') {
+        reportError.value = 'Súbor musí byť vo formáte PDF.';
+        event.target.value = '';
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        reportError.value = 'Maximálna veľkosť súboru je 10 MB.';
+        event.target.value = '';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('document', file);
+
+    isUploadingReport.value = true;
+
+    try {
+        const response = await axios.post(
+            `/api/internship/document/upload-report/${numericId.value}`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+
+        reportSuccess.value =
+            response.data?.message ?? 'Výkaz bol úspešne nahraný.';
+
+        await loadDocuments();
+    } catch (e) {
+        const status = e.response?.status;
+        const data = e.response?.data;
+
+        if (status === 422 && data?.errors) {
+            reportError.value =
+                Object.values(data.errors).flat()[0] ?? 'Neplatný súbor.';
+        } else if (status === 404) {
+            reportError.value = 'Praxa nebola nájdená.';
+        } else {
+            reportError.value =
+                data?.message ?? 'Nahratie výkazu zlyhalo.';
+        }
+    } finally {
+        isUploadingReport.value = false;
+        event.target.value = '';
+    }
+}
+
+async function downloadReport() {
+    if (!reportDocument.value) return;
+
+    isDownloadingReport.value = true;
+
+    try {
+        const response = await axios.get(
+            `/api/internship/document/download/${reportDocument.value.id}`,
+            { responseType: 'blob' }
+        );
+
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = reportDocument.value.file_name;
+        a.click();
+
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        reportError.value = 'Nepodarilo sa stiahnuť výkaz.';
+    } finally {
+        isDownloadingReport.value = false;
+    }
+}
+
+
 </script>

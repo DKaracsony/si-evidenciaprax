@@ -140,6 +140,47 @@
                 </p>
             </section>
 
+            <!-- REPORT DOCUMENT -->
+            <section
+                v-if="reportDocument"
+                class="company-prax-detail__section"
+            >
+                <h3 class="company-prax-detail__section-title">
+                    Výkaz o praxi
+                </h3>
+
+                <p class="company-prax-detail__row">
+                    <strong>{{ reportDocument.file_name }}</strong>
+                </p>
+
+                <span
+                    class="company-prax-detail__report-status"
+                    :data-status="reportDocument.status?.decision"
+                >
+        {{ reportStatusLabel }}
+    </span>
+
+                <div
+                    v-if="canReviewReport"
+                    class="company-prax-detail__actions"
+                >
+                    <button
+                        class="company-prax-detail__button"
+                        @click="openReview('approved')"
+                    >
+                        Potvrdiť
+                    </button>
+
+                    <button
+                        class="company-prax-detail__button company-prax-detail__button--outline"
+                        @click="openReview('rejected')"
+                    >
+                        Zamietnuť
+                    </button>
+                </div>
+            </section>
+
+
             <!-- ACTIONS -->
             <section class="company-prax-detail__actions">
                 <button
@@ -152,9 +193,53 @@
             </section>
         </div>
     </section>
+
+    <!-- REVIEW DIALOG -->
+    <div
+        v-if="showReviewDialog"
+        class="company-prax-detail__dialog-backdrop"
+    >
+        <div class="company-prax-detail__dialog">
+            <h3>
+                {{ reviewDecision === 'approved'
+                ? 'Potvrdenie výkazu'
+                : 'Zamietnutie výkazu'
+                }}
+            </h3>
+
+            <textarea
+                v-model="reviewNote"
+                placeholder="Vyjadrenie firmy (povinné)"
+                maxlength="1000"
+            />
+
+            <p v-if="reviewError" class="company-prax-detail__dialog-error">
+                {{ reviewError }}
+            </p>
+
+            <div class="company-prax-detail__actions">
+                <button
+                    class="company-prax-detail__button"
+                    :disabled="isReviewing"
+                    @click="submitReview"
+                >
+                    Potvrdiť
+                </button>
+
+                <button
+                    class="company-prax-detail__button company-prax-detail__button--outline"
+                    @click="closeReview"
+                >
+                    Zrušiť
+                </button>
+            </div>
+        </div>
+    </div>
+
 </template>
 
 <script setup>
+import axios from 'axios';
 import { ref, computed, onMounted, watch } from 'vue';
 import InternshipStatusBadge from '@/components/Dashboard/General/InternshipStatusBadge.vue';
 import { fetchCompanyInternships } from '@/services/companyInternships';
@@ -174,10 +259,39 @@ const isLoading = ref(false);
 const error = ref('');
 const nonBlockingError = ref('');
 
+const documents = ref([]);
+const isReviewing = ref(false);
+
+const showReviewDialog = ref(false);
+const reviewDecision = ref(null); // 'approved' | 'rejected'
+const reviewNote = ref('');
+const reviewError = ref('');
+
+
 const numericId = computed(() => {
     const n = Number(props.internshipId);
     return Number.isFinite(n) ? n : null;
 });
+
+const reportDocument = computed(() =>
+    documents.value.find(d => d.type === 'statement') ?? null
+);
+
+const canReviewReport = computed(() =>
+    reportDocument.value?.status?.decision === 'pending'
+);
+
+const reportStatusLabel = computed(() => {
+    switch (reportDocument.value?.status?.decision) {
+        case 'approved':
+            return 'Potvrdený';
+        case 'rejected':
+            return 'Zamietnutý';
+        default:
+            return 'Čaká na potvrdenie';
+    }
+});
+
 
 async function loadDetail() {
     isLoading.value = true;
@@ -253,6 +367,20 @@ async function loadDetail() {
     } finally {
         isLoading.value = false;
     }
+    await loadDocuments();
+    async function loadDocuments() {
+        if (!numericId.value) return;
+
+        try {
+            const res = await axios.get(
+                `/api/internship/documents/${numericId.value}`
+            );
+            documents.value = res.data?.documents ?? [];
+        } catch {
+            documents.value = [];
+        }
+    }
+
 }
 
 function reload() {
@@ -280,6 +408,45 @@ function formatSemester(semester) {
         sy && ey && sy !== ey ? `${sy}/${String(ey).slice(-2)}` : sy || '';
     return [range, mapSeasonLabel(semester.season)].filter(Boolean).join(' – ');
 }
+
+function openReview(decision) {
+    reviewDecision.value = decision;
+    reviewNote.value = '';
+    reviewError.value = '';
+    showReviewDialog.value = true;
+}
+
+function closeReview() {
+    showReviewDialog.value = false;
+}
+
+async function submitReview() {
+    if (!reviewNote.value.trim()) {
+        reviewError.value = 'Vyjadrenie je povinné.';
+        return;
+    }
+
+    isReviewing.value = true;
+
+    try {
+        await axios.patch(
+            `/api/internship/document/review-report/${reportDocument.value.id}`,
+            {
+                decision: reviewDecision.value,
+                note: reviewNote.value,
+            }
+        );
+
+        showReviewDialog.value = false;
+        await loadDocuments(); // refresh status
+    } catch (e) {
+        reviewError.value =
+            e.response?.data?.message ?? 'Akcia zlyhala.';
+    } finally {
+        isReviewing.value = false;
+    }
+}
+
 
 onMounted(loadDetail);
 watch(() => props.internshipId, loadDetail);
