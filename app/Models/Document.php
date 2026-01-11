@@ -8,6 +8,7 @@ class Document extends Model
 {
     public const TYPE_AGREEMENT = 'agreement';
     public const TYPE_STATEMENT = 'statement';
+    public const TYPE_SALARY = 'salary_statement';
     protected $fillable = [
         'file_name',
         'type',

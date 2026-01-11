@@ -12,8 +12,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Internship extends Model
 {
+    public const PRACTICE_TYPE_STANDARD = 'standard';
+    public const PRACTICE_TYPE_PAID = 'paid_employment';
+
     protected $table = 'internships';
-    protected $fillable = ['student_profile_id', 'company_id', 'academic_year_id', 'start_date', 'date_to', 'description', 'is_draft', 'submitted_at'];
+    protected $fillable = ['student_profile_id', 'company_id', 'academic_year_id', 'start_date', 'date_to', 'description', 'is_draft', 'submitted_at', 'practice_type'];
 
     public function studentProfile()
     {
