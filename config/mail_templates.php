@@ -20,16 +20,16 @@ return [
 
     'internship_confirmed_to_approved' => [
         'view'    => 'emails.internship_confirmed_to_approved',
-        'subject' => 'Praxe bola schválená',
+        'subject' => 'Prax bola schválená',
     ],
 
     'internship_approved_to_defended' => [
         'view'    => 'emails.internship_approved_to_defended',
-        'subject' => 'Praxe bola úspešne obhájená',
+        'subject' => 'Prax bola úspešne obhájená',
     ],
 
     'internship_approved_to_not_defended' => [
         'view'    => 'emails.internship_approved_to_not_defended',
-        'subject' => 'Praxe nebola obhájená',
+        'subject' => 'Prax nebola obhájená',
     ],
 ];

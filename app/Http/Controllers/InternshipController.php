@@ -128,14 +128,12 @@ class InternshipController extends Controller
             ], 404);
         }
 
-        // latest status (same logic as index)
         $latestStatusHistory = $internship->internshipStatusHistories
             ? $internship->internshipStatusHistories
                 ->sortByDesc('status_changed_at')
                 ->first()
             : null;
 
-        // contact person (keeps teammate change)
         $company_profile = null;
         if ($companyContactPerson = $internship->company->ownerProfiles->first()) {
             $company_profile = $companyContactPerson;
@@ -172,7 +170,6 @@ class InternshipController extends Controller
                 'end_date' => $internship->academicYear->end_date,
             ],
 
-            // ✅ FIX: top-level status for badge
             'status' => $latestStatusHistory ? [
                 'name' => $latestStatusHistory->status?->name,
                 'changed_at' => $latestStatusHistory->status_changed_at,
@@ -186,7 +183,6 @@ class InternshipController extends Controller
                             'status' => $history->status->name,
                             'explanation' => $history->explanation,
                             'status_changed_at' => $history->status_changed_at,
-                            // ✅ FIX: corrected key name
                             'changed_by_user' => [
                                 'id' => $history->changedByUser->id,
                                 'first_name' => $history->changedByUser->first_name,
@@ -549,15 +545,6 @@ class InternshipController extends Controller
 
             $newStatus = $statusService->all()->where('id', (int) $statusId)->first();
 
-            if ($oldStatus && $newStatus) {
-                $statusChangeService->sendEmailsForTransition(
-                    $internship,
-                    $oldStatus,
-                    $newStatus,
-                    $request->input('note')
-                );
-            }
-
             $internship = Internship::with(['internshipStatusHistories.status', 'studentProfile.user', 'company.ownerProfiles.user'])
                 ->find($id);
             $updated[] = $internship;
@@ -647,9 +634,25 @@ class InternshipController extends Controller
             }
 
             if ((int) $newStatusId !== (int) $currentStatusId) {
-                $rule = $internshipStatusService->getTransitionRuleByIds((int) $currentStatusId, (int) $newStatusId);
+                //$rule = $internshipStatusService->getTransitionRuleByIds((int) $currentStatusId, (int) $newStatusId);
+                $statusChangeService = new StatusChangeService();
+                $statusChangeService->setInternshipId($internship->id);
+                $statusChangeService->setNewStatusId((int) $newStatusId);
+                $rule = $statusChangeService->transitionAllowed();
 
-                if (!$rule) {
+                if($rule !== '') {
+                    return response()->json([
+                        'message' => $rule,
+                    ], 422);
+                }
+
+                if($statusChangeService->requiresNote() && empty($data['note'])) {
+                    return response()->json([
+                        'message' => 'Pre túto zmenu stavu je potrebné zdôvodnenie.',
+                    ], 422);
+                }
+
+                /*if (!$rule) {
                     return response()->json([
                         'message' => 'Zmena stavu nie je povolená.',
                     ], 422);
@@ -659,7 +662,7 @@ class InternshipController extends Controller
                     return response()->json([
                         'message' => 'Pre túto zmenu stavu je potrebné zdôvodnenie.',
                     ], 422);
-                }
+                }*/
             }
         }
 
@@ -696,23 +699,6 @@ class InternshipController extends Controller
                 'message' => __('global_error.SERVER_ERROR'),
                 'error'   => $e->getMessage(),
             ], 500);
-        }
-
-        if ($newStatusId !== null
-            && $currentStatusId !== null
-            && (int)$newStatusId !== (int)$currentStatusId
-            && $oldStatus
-            && $newStatus
-        ) {
-            $internship->loadMissing(['studentProfile.user', 'company.ownerProfiles.user']);
-
-            app(\App\Services\StatusChangeService::class)
-                ->sendEmailsForTransition(
-                    $internship,
-                    $oldStatus,
-                    $newStatus,
-                    $data['note'] ?? null
-                );
         }
 
         $internship->load(['company', 'academicYear', 'internshipStatusHistories.status']);

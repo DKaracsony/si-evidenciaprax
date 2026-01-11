@@ -14,13 +14,15 @@ class NotificationService
     private $internship;
     private $rules;
     private $statusName;
+    private $internshipNote;
     private $emails = [];
 
-    public function __construct($internship,$rules,$statusName)
+    public function __construct($internship,$rules,$statusName,$internshipNote = null)
     {
         $this->internship = $internship;
         $this->rules = $rules;
         $this->statusName = $statusName;
+        $this->internshipNote = $internshipNote;
 
         $this->sendStatusChangeNotification();
     }
@@ -77,6 +79,7 @@ class NotificationService
             $this->emails[] = [
                 'to' => $this->internship->studentProfile->user->email,
                 'user_type' => Role::STUDENT,
+                'email_key' => $this->rules['email_key']
             ];
         }
 
@@ -138,6 +141,7 @@ class NotificationService
                 $this->emails[] = [
                     'to' => $garantUser['email'],
                     'user_type' => Role::GARANT,
+                    'email_key' => $this->rules['email_key']
                 ];
             }
         }
@@ -168,6 +172,7 @@ class NotificationService
             $this->emails[] = [
                 'to' => $this->internship->company->ownerProfiles->user->email,
                 'user_type' => Role::COMPANY,
+                'email_key' => $this->rules['email_key']
             ];
         }
 
@@ -175,15 +180,23 @@ class NotificationService
     }
 
     private function sendNotificationEmail(){
-        //TODO: Atus doplnit emailovu notifikaciu, v subore internship_notification_rules.php vidis pre každy status ci sa ma posielať email alebo nie
-        //TODO: $emails strukturu pozri vyssie
-        //TODO: teda tvoja uloha iba vytvorit mail sablon(i) a poslat emaily pomocou MailSender triedy + otestovat cele
-        //TODO: + logiku vies vytvorit podla $statusName, \App\Models\Status mas tam const premenne na hodnoty statusov a $statusName bude sediet s tymi hodnotami
-        //TODO: a v $emails budes mat emaily komu sa maju poslat, emailovu adresu + typ uzivatela. V \App\Models\Role mas zase const premenne s typmi uzivatelov
-        /*foreach ($this->emails as $email){
+        foreach ($this->emails as $email){
             $mailService = new MailSender(
-
+                $email['email_key'],
+                [$email['to']],
+                [
+                    'to_role'               => $email['user_type'],
+                    'student_name'          => $this->internship->studentProfile->user->first_name . ' ' . $this->internship->studentProfile->user->last_name,
+                    'company_profile_name'  => $this->internship->company->ownerProfiles->user->first_name . ' ' . $this->internship->company->ownerProfiles->user->last_name,
+                    'company_name'          => $this->internship->company->name ?? '',
+                    'academic_year'         => $this->internship->academicYear->season ?? '',
+                    'start_date'            => optional($this->internship->start_date)->format('d.m.Y') ?: '',
+                    'end_date'              => optional($this->internship->date_to)->format('d.m.Y') ?: '',
+                    'note'                  => $this->internshipNote ?? '',
+                ]
                 );
-        }*/
+
+            $mailService->send();
+        }
     }
 }
