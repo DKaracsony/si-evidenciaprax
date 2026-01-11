@@ -219,6 +219,18 @@ class InternshipController extends Controller
             ], Response::HTTP_FORBIDDEN);
         }
 
+        if ($internship->is_draft) {
+            return response()->json([
+                'message' => 'PDF dohody nie je dostupné pre koncept praxe.',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        if ($internship->practice_type === Internship::PRACTICE_TYPE_PAID) {
+            return response()->json([
+                'message' => 'PDF dohody nie je dostupné pre platenú prax.',
+            ], Response::HTTP_CONFLICT);
+        }
+
         try {
             $pdfContent = $this->pdfService->generateFor($internship);
         } catch (\RuntimeException $e) {
