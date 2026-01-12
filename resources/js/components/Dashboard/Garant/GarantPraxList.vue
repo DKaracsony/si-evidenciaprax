@@ -21,22 +21,34 @@
                 Zoznam všetkých odborných praxí
             </h2>
 
-            <button
-                type="button"
-                class="garant-prax-list__stats-btn"
-                aria-label="Štatistiky praxí"
-                @click="emit('open-statistics')"
-            >
-                <img
-                    class="garant-prax-list__stats-icon"
-                    :src="iconPath('Statistics.svg')"
-                    data-name="Statistics.svg"
-                    data-base-index="0"
-                    alt=""
-                    @error="onImgError"
-                />
-            </button>
+            <div class="garant-prax-list__header-actions">
+                <button
+                    type="button"
+                    class="garant-prax-list__export-btn"
+                    :disabled="isExporting"
+                    @click="exportCsv"
+                >
+                    {{ isExporting ? 'Exportujem…' : 'Export do CSV' }}
+                </button>
+
+                <button
+                    type="button"
+                    class="garant-prax-list__stats-btn"
+                    aria-label="Štatistiky praxí"
+                    @click="emit('open-statistics')"
+                >
+                    <img
+                        class="garant-prax-list__stats-icon"
+                        :src="iconPath('Statistics.svg')"
+                        data-name="Statistics.svg"
+                        data-base-index="0"
+                        alt=""
+                        @error="onImgError"
+                    />
+                </button>
+            </div>
         </header>
+
 
         <div class="garant-prax-list__divider"></div>
 
@@ -464,6 +476,9 @@ const statusNote = ref('');
 
 const isStatusChanging = ref(false);
 
+const isExporting = ref(false);
+
+
 const toast = ref({
     visible: false,
     type: 'success', // 'success' | 'error'
@@ -755,6 +770,74 @@ async function changeStatus(type, isPositive) {
     }
 }
 
+async function exportCsv() {
+    if (isExporting.value) return;
+
+    try {
+        isExporting.value = true;
+
+        const res = await axios.post(
+            '/api/internship/export-csv',
+            buildExportPayload(),
+            {
+                responseType: 'blob',
+            }
+        );
+
+        const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+
+        const disposition = res.headers['content-disposition'];
+        const fileNameMatch = disposition?.match(/filename="(.+)"/);
+        link.download = fileNameMatch?.[1] ?? 'internships.csv';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.URL.revokeObjectURL(url);
+
+        showToast('success', 'Export do CSV bol úspešne spustený.');
+    } catch (e) {
+        console.error('CSV export failed', e);
+
+        if (e?.response?.status === 404) {
+            showToast('error', 'Nie sú dostupné žiadne dáta na export.');
+        } else {
+            showToast('error', extractApiErrorMessage(e));
+        }
+    } finally {
+        isExporting.value = false;
+    }
+}
+
+
+function buildExportPayload() {
+    const payload = {};
+
+    if (filters.value.academic_year_ids.length)
+        payload.academic_year_ids = filters.value.academic_year_ids;
+
+    if (filters.value.seasons.length)
+        payload.season = filters.value.seasons;
+
+    if (filters.value.faculty_ids.length)
+        payload.faculty_ids = filters.value.faculty_ids;
+
+    if (filters.value.company_ids.length)
+        payload.company_ids = filters.value.company_ids;
+
+    if (filters.value.student_ids.length)
+        payload.student_ids = filters.value.student_ids;
+
+    if (filters.value.status_names.length)
+        payload.status_names = filters.value.status_names;
+
+    return payload;
+}
 
 
 /* FORMATTERS */

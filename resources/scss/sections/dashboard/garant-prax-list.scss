@@ -23,6 +23,50 @@
     margin: 0;
 }
 
+.garant-prax-list__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.garant-prax-list__export-btn {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 8px;
+
+    border: 1px solid var(--color-primary-700);
+    background: var(--color-primary-700);
+    color: #fff;
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        transform 0.12s ease,
+        box-shadow 0.15s ease;
+
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+
+    &:hover:not(:disabled) {
+        background: var(--color-primary-800);
+        transform: scale(1.04);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.96);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: default;
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+
 /* STATISTICS ICON ------------------------------------------------- */
 
 .garant-prax-list__stats-btn {
