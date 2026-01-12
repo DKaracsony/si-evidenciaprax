@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Models\AcademicYear;
 use Carbon\Carbon;
 use App\Http\Requests\UpdateInternshipRequest;
+use App\Models\Document;
 
 class InternshipController extends Controller
 {
@@ -527,6 +528,26 @@ class InternshipController extends Controller
                 continue;
             }
 
+            if (
+                $internship->practice_type === Internship::PRACTICE_TYPE_PAID_INVOICES
+                && in_array($to, ['acceptance','approval'], true)
+                && $isPositive
+            ) {
+                $invoiceMonths = $internship->documents()
+                    ->where('type', Document::TYPE_INVOICE)
+                    ->whereNotNull('invoice_month')
+                    ->pluck('invoice_month')
+                    ->toArray();
+
+                if (!$this->hasThreeConsecutiveInvoiceMonths($invoiceMonths)) {
+                    $failed[] = [
+                        'internship' => $internship,
+                        'reason' => 'Paid practice without employment contract requires at least 3 consecutive invoices.',
+                    ];
+                    continue;
+                }
+            }
+
             //TRANSITION IS ALLOWED?
             $statusChangeService->setInternshipId($id);
             $statusChangeService->setNewStatusId($statusId);
@@ -714,5 +735,32 @@ class InternshipController extends Controller
             'message'    => 'Internship updated successfully.',
             'internship' => $internship,
         ], 200);
+    }
+
+    private function hasThreeConsecutiveInvoiceMonths(array $invoiceMonths): bool
+    {
+        $months = collect($invoiceMonths)
+            ->filter()
+            ->map(fn($d) => date('Y-m-01', strtotime($d)))
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ($months->count() < 3) return false;
+
+        $run = 1;
+        for ($i = 1; $i < $months->count(); $i++) {
+            $prev = strtotime($months[$i - 1]);
+            $curr = strtotime($months[$i]);
+
+            if ($curr === strtotime('+1 month', $prev)) {
+                $run++;
+                if ($run >= 3) return true;
+            } else {
+                $run = 1;
+            }
+        }
+
+        return false;
     }
 }

@@ -14,6 +14,7 @@ class Document extends Model
         'file_name',
         'file_path',
         'type',
+        'invoice_month',
         'internship_id',
         'uploaded_by_user_id',
         'document_status_id',

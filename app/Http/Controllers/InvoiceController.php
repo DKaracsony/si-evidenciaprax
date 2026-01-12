@@ -23,7 +23,19 @@ class InvoiceController extends Controller
         $validator = Validator::make($request->all(), [
             'files'   => ['required','array','min:1'],
             'files.*' => ['required','file','mimes:pdf,jpg,jpeg,png','max:10240'],
+
+            'invoice_months'   => ['required','array'],
+            'invoice_months.*' => ['required','date_format:Y-m'],
         ]);
+
+        $validator->after(function ($v) use ($request) {
+            if (count($request->file('files', [])) !== count($request->input('invoice_months', []))) {
+                $v->errors()->add(
+                    'invoice_months',
+                    'invoice_months count must match files count.'
+                );
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json([
@@ -33,11 +45,12 @@ class InvoiceController extends Controller
         }
 
         $files = $request->file('files');
+        $months = $request->input('invoice_months');
         $created = [];
 
         DB::beginTransaction();
         try {
-            foreach ($files as $file) {
+            foreach ($files as $i => $file) {
                 $storedPath = $file->store(
                     (string) $internship->id,
                     'internship_salary_statements'
@@ -54,6 +67,7 @@ class InvoiceController extends Controller
                     'file_name'           => $file->getClientOriginalName(),
                     'file_path'           => $storedPath,
                     'type'                => Document::TYPE_INVOICE,
+                    'invoice_month' => $months[$i] . '-01',
                     'internship_id'       => $internship->id,
                     'uploaded_by_user_id' => $user->id,
                     'document_status_id'  => $status->id,
