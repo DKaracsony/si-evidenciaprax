@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Storage;
+
 
 class InvoiceController extends Controller
 {
@@ -21,21 +23,9 @@ class InvoiceController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'files'   => ['required','array','min:1'],
-            'files.*' => ['required','file','mimes:pdf,jpg,jpeg,png','max:10240'],
-
-            'invoice_months'   => ['required','array'],
-            'invoice_months.*' => ['required','date_format:Y-m'],
+            'document' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'replace_document_id' => ['nullable', 'integer', 'exists:documents,id'],
         ]);
-
-        $validator->after(function ($v) use ($request) {
-            if (count($request->file('files', [])) !== count($request->input('invoice_months', []))) {
-                $v->errors()->add(
-                    'invoice_months',
-                    'invoice_months count must match files count.'
-                );
-            }
-        });
 
         if ($validator->fails()) {
             return response()->json([
@@ -44,37 +34,46 @@ class InvoiceController extends Controller
             ], 422);
         }
 
-        $files = $request->file('files');
-        $months = $request->input('invoice_months');
-        $created = [];
+        $file = $request->file('document');
 
         DB::beginTransaction();
         try {
-            foreach ($files as $i => $file) {
-                $storedPath = $file->store(
-                    (string) $internship->id,
-                    'internship_salary_statements'
-                );
+            // ak ide o nahradenie
+            if ($request->filled('replace_document_id')) {
+                $old = Document::where('id', $request->integer('replace_document_id'))
+                    ->where('internship_id', $internship->id)
+                    ->where('type', Document::TYPE_INVOICE)
+                    ->first();
 
-                $status = DocumentStatus::create([
-                    'decision' => 'pending',
-                    'note' => null,
-                    'reviewer_user_id' => null,
-                    'created_at' => now(),
-                ]);
-
-                $doc = Document::create([
-                    'file_name'           => $file->getClientOriginalName(),
-                    'file_path'           => $storedPath,
-                    'type'                => Document::TYPE_INVOICE,
-                    'invoice_month' => $months[$i] . '-01',
-                    'internship_id'       => $internship->id,
-                    'uploaded_by_user_id' => $user->id,
-                    'document_status_id'  => $status->id,
-                ]);
-
-                $created[] = $doc;
+                if ($old) {
+                    // zmažeme starý súbor
+                    Storage::disk('internship_salary_statements')->delete($old->file_path);
+                    $old->delete();
+                }
             }
+
+            $storedPath = $file->store(
+                (string) $internship->id,
+                'internship_salary_statements'
+            );
+
+            $status = DocumentStatus::create([
+                'decision' => 'pending',
+                'note' => null,
+                'reviewer_user_id' => null,
+                'created_at' => now(),
+            ]);
+
+            $document = Document::create([
+                'file_name'           => $file->getClientOriginalName(),
+                'file_path'           => $storedPath,
+                'type'                => Document::TYPE_INVOICE,
+                // uložíme mesiac automaticky (YYYY-MM-01)
+                'invoice_month'       => now()->startOfMonth(),
+                'internship_id'       => $internship->id,
+                'uploaded_by_user_id' => $user->id,
+                'document_status_id'  => $status->id,
+            ]);
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -82,13 +81,13 @@ class InvoiceController extends Controller
 
             return response()->json([
                 'message' => 'Server error during upload.',
-                'error'   => $e->getMessage(),
             ], 500);
         }
 
         return response()->json([
-            'message' => 'Invoices uploaded.',
-            'documents' => $created,
+            'message'  => 'Faktúra bola úspešne nahraná.',
+            'document' => $document->load(['status', 'uploadedByUser']),
         ], 201);
     }
+
 }

@@ -153,8 +153,10 @@ class DocumentController extends Controller
         $disk = match ($document->type) {
             Document::TYPE_AGREEMENT => 'internship_agreement',
             Document::TYPE_STATEMENT => 'reports',
+            Document::TYPE_INVOICE   => 'internship_salary_statements',
             default => null,
         };
+
 
         if ($disk === null) {
             return response()->json([
@@ -162,7 +164,11 @@ class DocumentController extends Controller
             ], 400);
         }
 
-        $relativePath = $document->internship_id . '/' . $document->file_name;
+        $relativePath = match ($document->type) {
+            Document::TYPE_INVOICE => $document->file_path,
+            default => $document->internship_id . '/' . $document->file_name,
+        };
+
 
         if (!Storage::disk($disk)->exists($relativePath)) {
             return response()->json([
