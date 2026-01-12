@@ -66,16 +66,22 @@
 <html lang="sk">
 <head>
     <title>Dohoda o odbornej praxi študenta</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="utf-8">
     <style>
         @page { margin: 25mm 25mm; }
 
         body {
+            margin: 0;
             font-family: "DejaVu Serif", serif;
             font-size: 11pt;
             line-height: 1.15;
             color: #000;
-            hyphens: auto;
+        }
+
+        p, td, div {
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         p { margin: 0 0 4pt 0; }
@@ -107,46 +113,34 @@
             margin: 18pt auto 6pt auto;
         }
 
-        .numtbl{
+        .wrap-15 { margin-left: 15mm; }
+        .wrap-30 { margin-left: 30mm; }
+        .wrap-45 { margin-left: 45mm; }
+
+        .numtbl, .subtbl{
             width: 100%;
             border-collapse: collapse;
-            margin-left: 15mm;
+            margin-left: 0;
             margin-top: 2pt;
         }
-        .numtbl td{
+
+        .numtbl td, .subtbl td{
             padding: 0 0 4pt 0;
             vertical-align: top;
         }
+
         .numtbl .n{
             width: 14mm;
             white-space: nowrap;
         }
-        .numtbl .t{
-            width: auto;
-        }
 
-        .subtbl{
-            width: 100%;
-            border-collapse: collapse;
-            margin-left: 30mm;
-            margin-top: 2pt;
-        }
-        .subtbl td{
-            padding: 0 0 4pt 0;
-            vertical-align: top;
-        }
         .subtbl .n{
             width: 10mm;
             white-space: nowrap;
         }
-        .subtbl .t{
-            width: auto;
-        }
 
         .dash{
-            margin-left: 45mm;
-            margin-top: 0;
-            margin-bottom: 4pt;
+            margin: 0 0 4pt 0;
         }
     </style>
 </head>
@@ -182,24 +176,26 @@
 
 <p class="bold" style="margin-top:12pt;">Študent:</p>
 
-<table style="margin-top:4pt; margin-left:15mm;">
-    <tr>
-        <td style="width:40%;">Meno a priezvisko:</td>
-        <td>{{ $studentFullName }}</td>
-    </tr>
-    <tr>
-        <td>Adresa trvalého bydliska:</td>
-        <td>{{ $studentAddress }}</td>
-    </tr>
-    <tr>
-        <td>Kontakt študenta FPVaI UKF v Nitre:</td>
-        <td>{{ $studentEmail }}@if($studentPhone), tel. {{ $studentPhone }}@endif</td>
-    </tr>
-    <tr>
-        <td>Študijný program:</td>
-        <td>{{ $studyProgram }}</td>
-    </tr>
-</table>
+<div class="wrap-15">
+    <table style="margin-top:4pt;">
+        <tr>
+            <td style="width:40%;">Meno a priezvisko:</td>
+            <td>{{ $studentFullName }}</td>
+        </tr>
+        <tr>
+            <td>Adresa trvalého bydliska:</td>
+            <td>{{ $studentAddress }}</td>
+        </tr>
+        <tr>
+            <td>Kontakt študenta FPVaI UKF v Nitre:</td>
+            <td>{{ $studentEmail }}@if($studentPhone), tel. {{ $studentPhone }}@endif</td>
+        </tr>
+        <tr>
+            <td>Študijný program:</td>
+            <td>{{ $studyProgram }}</td>
+        </tr>
+    </table>
+</div>
 
 <p style="margin-top:10pt;">uzatvárajú túto dohodu o odbornej praxi študenta.</p>
 
@@ -216,132 +212,146 @@
     1. Fakulta prírodných vied a informatiky Univerzity Konštantína Filozofa v Nitre:
 </p>
 
-<table class="numtbl">
-    <tr>
-        <td class="n">1.1</td>
-        <td class="t">
-            Poverí svojho zamestnanca: Mgr. Martin Vozár, PhD. (mvozar@ukf.sk) za 1. stupeň,
-            PaedDr. Peter Švec, Ph.D. (psvec@ukf.sk) za 2. stupeň
-        </td>
-    </tr>
-    <tr>
-        <td class="n"></td>
-        <td class="t">(ďalej garant odbornej praxe) garanciou odbornej praxe.</td>
-    </tr>
-    <tr>
-        <td class="n">1.2</td>
-        <td class="t">Prostredníctvom garanta odbornej praxe:</td>
-    </tr>
-</table>
+<div class="wrap-15">
+    <table class="numtbl">
+        <tr>
+            <td class="n">1.1</td>
+            <td class="t">
+                Poverí svojho zamestnanca: Mgr. Martin Vozár, PhD. (mvozar@ukf.sk) za 1. stupeň,
+                PaedDr. Peter Švec, Ph.D. (psvec@ukf.sk) za 2. stupeň
+            </td>
+        </tr>
+        <tr>
+            <td class="n"></td>
+            <td class="t">(ďalej garant odbornej praxe) garanciou odbornej praxe.</td>
+        </tr>
+        <tr>
+            <td class="n">1.2</td>
+            <td class="t">Prostredníctvom garanta odbornej praxe:</td>
+        </tr>
+    </table>
+</div>
 
-<table class="subtbl">
-    <tr>
-        <td class="n">a)</td>
-        <td class="t">poskytne študentovi:</td>
-    </tr>
-</table>
+<div class="wrap-30">
+    <table class="subtbl">
+        <tr>
+            <td class="n">a)</td>
+            <td class="t">poskytne študentovi:</td>
+        </tr>
+    </table>
+</div>
 
-<p class="dash">
-    - informácie o organizácii praxe, o podmienkach dojednania dohody o odbornej praxi, o obsahovom zameraní odbornej praxe
-    a o požiadavkách na obsahovú náplň správy z odbornej praxe,
-</p>
-<p class="dash">- návrh dohody o odbornej praxi študenta,</p>
+<div class="wrap-45">
+    <p class="dash">
+        - informácie o organizácii praxe, o podmienkach dojednania dohody o odbornej praxi, o obsahovom zameraní odbornej praxe
+        a o požiadavkách na obsahovú náplň správy z odbornej praxe,
+    </p>
+    <p class="dash">- návrh dohody o odbornej praxi študenta,</p>
+</div>
 
-<table class="subtbl">
-    <tr>
-        <td class="n">b)</td>
-        <td class="t">
-            rozhodne o udelení hodnotenia „ABS" (absolvoval) študentovi na základe dokladu „Výkaz o vykonanej odbornej praxi",
-            vydaného poskytovateľom odbornej praxe a na základe študentom vypracovanej správy o odbornej praxi,
-            ktorej súčasťou je verejná obhajoba výsledkov odbornej praxe,
-        </td>
-    </tr>
-    <tr>
-        <td class="n">c)</td>
-        <td class="t">spravuje vyplnenú a účastníkmi podpísanú dohodu o odbornej praxi.</td>
-    </tr>
-</table>
+<div class="wrap-30">
+    <table class="subtbl">
+        <tr>
+            <td class="n">b)</td>
+            <td class="t">
+                rozhodne o udelení hodnotenia „ABS" (absolvoval) študentovi na základe dokladu „Výkaz o vykonanej odbornej praxi",
+                vydaného poskytovateľom odbornej praxe a na základe študentom vypracovanej správy o odbornej praxi,
+                ktorej súčasťou je verejná obhajoba výsledkov odbornej praxe,
+            </td>
+        </tr>
+        <tr>
+            <td class="n">c)</td>
+            <td class="t">spravuje vyplnenú a účastníkmi podpísanú dohodu o odbornej praxi.</td>
+        </tr>
+    </table>
+</div>
 
 <p class="bold" style="margin-top:10pt;">2. Poskytovateľ odbornej praxe:</p>
 
-<table class="numtbl">
-    <tr>
-        <td class="n">2.1</td>
-        <td class="t">
-            poverí svojho zamestnanca (tútor – zodpovedný za odbornú prax v organizácii)
-            {{ $companyRepFullName }}, ktorý bude dohliadať na dodržiavanie dohody o odbornej praxi,
-            plnenie obsahovej náplne odbornej praxe a bude nápomocný pri získavaní potrebných údajov pre vypracovanie správy z odbornej praxe,
-        </td>
-    </tr>
-    <tr>
-        <td class="n">2.2</td>
-        <td class="t">
-            na začiatku praxe vykoná poučenie o bezpečnosti a ochrane zdravia pri práci v zmysle platných predpisov,
-        </td>
-    </tr>
-    <tr>
-        <td class="n">2.3</td>
-        <td class="t">
-            vzniknuté organizačné problémy súvisiace s plnením dohody rieši spolu s garantom odbornej praxe,
-        </td>
-    </tr>
-    <tr>
-        <td class="n">2.4</td>
-        <td class="t">
-            po ukončení odbornej praxe vydá študentovi „Výkaz o vykonanej odbornej praxi",
-            ktorý obsahuje popis vykonávaných činností a stručné hodnotenie študenta a je jedným z predpokladov úspešného ukončenia predmetu Odborná prax,
-        </td>
-    </tr>
-    <tr>
-        <td class="n">2.5</td>
-        <td class="t">
-            umožní garantovi odbornej praxe a garantovi študijného predmetu kontrolu študentom plnených úloh.
-        </td>
-    </tr>
-</table>
+<div class="wrap-15">
+    <table class="numtbl">
+        <tr>
+            <td class="n">2.1</td>
+            <td class="t">
+                poverí svojho zamestnanca (tútor – zodpovedný za odbornú prax v organizácii)
+                {{ $companyRepFullName }}, ktorý bude dohliadať na dodržiavanie dohody o odbornej praxi,
+                plnenie obsahovej náplne odbornej praxe a bude nápomocný pri získavaní potrebných údajov pre vypracovanie správy z odbornej praxe,
+            </td>
+        </tr>
+        <tr>
+            <td class="n">2.2</td>
+            <td class="t">
+                na začiatku praxe vykoná poučenie o bezpečnosti a ochrane zdravia pri práci v zmysle platných predpisov,
+            </td>
+        </tr>
+        <tr>
+            <td class="n">2.3</td>
+            <td class="t">
+                vzniknuté organizačné problémy súvisiace s plnením dohody rieši spolu s garantom odbornej praxe,
+            </td>
+        </tr>
+        <tr>
+            <td class="n">2.4</td>
+            <td class="t">
+                po ukončení odbornej praxe vydá študentovi „Výkaz o vykonanej odbornej praxi",
+                ktorý obsahuje popis vykonávaných činností a stručné hodnotenie študenta a je jedným z predpokladov úspešného ukončenia predmetu Odborná prax,
+            </td>
+        </tr>
+        <tr>
+            <td class="n">2.5</td>
+            <td class="t">
+                umožní garantovi odbornej praxe a garantovi študijného predmetu kontrolu študentom plnených úloh.
+            </td>
+        </tr>
+    </table>
+</div>
 
 <p class="bold" style="margin-top:10pt;">3. Študent FPVaI UKF v Nitre:</p>
 
-<table class="numtbl">
-    <tr>
-        <td class="n">3.1</td>
-        <td class="t">osobne zabezpečí podpísanie tejto dohody o odbornej praxi študenta,</td>
-    </tr>
-    <tr>
-        <td class="n">3.2</td>
-        <td class="t">zodpovedne vykonáva činnosti pridelené tútorom odbornej praxe,</td>
-    </tr>
-    <tr>
-        <td class="n">3.3</td>
-        <td class="t">
-            zabezpečí doručenie dokladu „Výkaz o vykonanej odbornej praxi" najneskôr v termínoch predpísaných garantom pre daný semester,
-        </td>
-    </tr>
-    <tr>
-        <td class="n">3.4</td>
-        <td class="t">
-            okamžite, bez zbytočného odkladu informuje garanta odbornej praxe o problémoch, ktoré bránia plneniu odbornej praxe.
-        </td>
-    </tr>
-</table>
+<div class="wrap-15">
+    <table class="numtbl">
+        <tr>
+            <td class="n">3.1</td>
+            <td class="t">osobne zabezpečí podpísanie tejto dohody o odbornej praxi študenta,</td>
+        </tr>
+        <tr>
+            <td class="n">3.2</td>
+            <td class="t">zodpovedne vykonáva činnosti pridelené tútorom odbornej praxe,</td>
+        </tr>
+        <tr>
+            <td class="n">3.3</td>
+            <td class="t">
+                zabezpečí doručenie dokladu „Výkaz o vykonanej odbornej praxi" najneskôr v termínoch predpísaných garantom pre daný semester,
+            </td>
+        </tr>
+        <tr>
+            <td class="n">3.4</td>
+            <td class="t">
+                okamžite, bez zbytočného odkladu informuje garanta odbornej praxe o problémoch, ktoré bránia plneniu odbornej praxe.
+            </td>
+        </tr>
+    </table>
+</div>
 
 <p class="section">III. Všeobecné a záverečné ustanovenia</p>
 
-<table class="numtbl" style="margin-left:15mm;">
-    <tr>
-        <td class="n">1.</td>
-        <td class="t">
-            Dohoda sa uzatvára na dobu určitú. Dohoda nadobúda platnosť a účinnosť dňom podpísania obidvomi zmluvnými stranami.
-            Obsah dohody sa môže meniť písomne len po súhlase jej zmluvných strán.
-        </td>
-    </tr>
-    <tr>
-        <td class="n">2.</td>
-        <td class="t">
-            Dohoda sa uzatvára v 3 vyhotoveniach, každá zmluvná strana obdrží jedno vyhotovenie dohody.
-        </td>
-    </tr>
-</table>
+<div class="wrap-15">
+    <table class="numtbl">
+        <tr>
+            <td class="n">1.</td>
+            <td class="t">
+                Dohoda sa uzatvára na dobu určitú. Dohoda nadobúda platnosť a účinnosť dňom podpísania obidvomi zmluvnými stranami.
+                Obsah dohody sa môže meniť písomne len po súhlase jej zmluvných strán.
+            </td>
+        </tr>
+        <tr>
+            <td class="n">2.</td>
+            <td class="t">
+                Dohoda sa uzatvára v 3 vyhotoveniach, každá zmluvná strana obdrží jedno vyhotovenie dohody.
+            </td>
+        </tr>
+    </table>
+</div>
 
 <table style="margin-top:25pt;">
     <tr>
