@@ -17,4 +17,12 @@ class AcademicYear extends Model
     {
         return $this->hasMany(Internship::class, 'academic_year_id', 'id');
     }
+    public function getSeasonAttribute($value): ?string
+    {
+        return match ($value) {
+            'winter' => 'zimný',
+            'summer' => 'letný',
+            default  => $value,
+        };
+    }
 }
