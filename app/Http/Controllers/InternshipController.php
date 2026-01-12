@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Models\AcademicYear;
 use Carbon\Carbon;
 use App\Http\Requests\UpdateInternshipRequest;
+use App\Models\Document;
 
 class InternshipController extends Controller
 {
@@ -51,6 +52,7 @@ class InternshipController extends Controller
 
                 return [
                     'id'           => $internship->id,
+                    'practice_type' => $internship->practice_type,
                     'start_date'   => $internship->start_date,
                     'date_to'      => $internship->date_to,
                     'description'  => $internship->description,
@@ -141,6 +143,7 @@ class InternshipController extends Controller
 
         $data = [
             'id' => $internship->id,
+            'practice_type' => $internship->practice_type,
             'start_date' => $internship->start_date,
             'date_to' => $internship->date_to,
             'description' => $internship->description,
@@ -221,7 +224,7 @@ class InternshipController extends Controller
             ], Response::HTTP_CONFLICT);
         }
 
-        if ($internship->practice_type === Internship::PRACTICE_TYPE_PAID) {
+        if ($internship->practice_type !== 'standard') {
             return response()->json([
                 'message' => 'PDF dohody nie je dostupné pre platenú prax.',
             ], Response::HTTP_CONFLICT);
@@ -279,6 +282,7 @@ class InternshipController extends Controller
             'company_id' => 'required|integer|exists:companies,id',
             'academic_year_id' => 'required|integer|exists:academic_years,id',
             'student_profile_id' => 'required|integer|exists:student_profiles,id',
+            'practice_type' => 'required|string|in:standard,paid_employment_contract,paid_invoices',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -299,6 +303,7 @@ class InternshipController extends Controller
             'is_draft'         => $request->boolean('is_draft', true),
             'company_id'       => $request->input('company_id'),
             'academic_year_id' => $request->input('academic_year_id'),
+            'practice_type' => $request->input('practice_type', 'standard'),
         ];
 
         // najprv zistime ci request obsahuje internship_id, ak ano, tak sa jedna o update existujuceho draftu
@@ -364,6 +369,7 @@ class InternshipController extends Controller
             'company_id'       => $request->input('company_id'),
             'academic_year_id' => $request->input('academic_year_id'),
             'submitted_at'     => now(),
+            'practice_type' => $request->input('practice_type', 'standard'),
         ];
 
         $isUpdate = $request->filled('internship_id');
@@ -406,9 +412,11 @@ class InternshipController extends Controller
                 'changed_by_user_id' => $user->id,
             ]);
 
-            $pdfBinary = $this->pdfService->generateFor($internship);
-            $pdfBase64 = base64_encode($pdfBinary);
-            $pdfFileName = 'dohoda-o-praxi-' . $internship->id . '.pdf';
+            if ($internship->practice_type === Internship::PRACTICE_TYPE_STANDARD) {
+                $pdfBinary = $this->pdfService->generateFor($internship);
+                $pdfBase64 = base64_encode($pdfBinary);
+                $pdfFileName = 'dohoda-o-praxi-' . $internship->id . '.pdf';
+            }
 
             DB::commit();
         } catch (\Exception $e) {
@@ -518,6 +526,26 @@ class InternshipController extends Controller
             if (!$internship) {
                 $failed[] = ['internship' => $internships->get($id), 'reason' => __('internship.INTERNSHIP_NOT_FOUND'),];
                 continue;
+            }
+
+            if (
+                $internship->practice_type === Internship::PRACTICE_TYPE_PAID_INVOICES
+                && in_array($to, ['acceptance','approval'], true)
+                && $isPositive
+            ) {
+                $invoiceMonths = $internship->documents()
+                    ->where('type', Document::TYPE_INVOICE)
+                    ->whereNotNull('invoice_month')
+                    ->pluck('invoice_month')
+                    ->toArray();
+
+                if (!$this->hasThreeConsecutiveInvoiceMonths($invoiceMonths)) {
+                    $failed[] = [
+                        'internship' => $internship,
+                        'reason' => 'Paid practice without employment contract requires at least 3 consecutive invoices.',
+                    ];
+                    continue;
+                }
             }
 
             //TRANSITION IS ALLOWED?
@@ -707,5 +735,32 @@ class InternshipController extends Controller
             'message'    => 'Internship updated successfully.',
             'internship' => $internship,
         ], 200);
+    }
+
+    private function hasThreeConsecutiveInvoiceMonths(array $invoiceMonths): bool
+    {
+        $months = collect($invoiceMonths)
+            ->filter()
+            ->map(fn($d) => date('Y-m-01', strtotime($d)))
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ($months->count() < 3) return false;
+
+        $run = 1;
+        for ($i = 1; $i < $months->count(); $i++) {
+            $prev = strtotime($months[$i - 1]);
+            $curr = strtotime($months[$i]);
+
+            if ($curr === strtotime('+1 month', $prev)) {
+                $run++;
+                if ($run >= 3) return true;
+            } else {
+                $run = 1;
+            }
+        }
+
+        return false;
     }
 }

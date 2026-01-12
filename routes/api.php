@@ -18,6 +18,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\InternshipStatsController;
 use App\Http\Controllers\ExternalInternshipStatusController;
+use App\Http\Controllers\InvoiceController;
 
 // REGISTRATION FORM ENDPOINTS
 Route::get('/faculties', [FacultyController::class, 'index']);
@@ -68,6 +69,7 @@ Route::middleware('auth:api')->group(function () {
         Route::prefix('/document')->group(function () {
            Route::post('/upload-agreement', [DocumentController::class, 'uploadAgreement'])->middleware(['permission:practice.upload_agreement']);
            Route::post('/upload-report/{internship}', [DocumentController::class, 'uploadReport'])->name('documents.reports.upload');
+            Route::post('/upload-invoices/{internship}', [InvoiceController::class, 'upload']);
            Route::get('/download/{document}', [DocumentController::class, 'downloadDocument']);
            Route::patch('/review-report/{document}', [DocumentController::class, 'reviewReport'])->name('documents.reports.review');    });
         Route::post('/export-csv', [ExportController::class, 'exportInternshipsCsv'])->middleware(['permission:practice.generate_export']);
