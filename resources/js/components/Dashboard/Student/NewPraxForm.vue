@@ -115,6 +115,59 @@
                 </div>
             </div>
 
+            <!-- Typ praxe -->
+            <div class="new-prax-form__field">
+                <label class="new-prax-form__label">
+                    Typ odbornej praxe <span class="new-prax-form__required">*</span>
+                </label>
+
+                <div class="new-prax-form__radio-group new-prax-form__radio-group--boxed">
+                <!-- Štandardná prax -->
+                    <label class="new-prax-form__radio">
+                        <input
+                            type="radio"
+                            value="standard"
+                            v-model="form.practiceType"
+                        />
+                        <span>
+                <strong>Štandardná prax</strong><br />
+                <small>Dohoda o odbornej praxi</small>
+            </span>
+                    </label>
+
+                    <!-- Platená – pracovná zmluva -->
+                    <label class="new-prax-form__radio">
+                        <input
+                            type="radio"
+                            value="paid_employment_contract"
+                            v-model="form.practiceType"
+                        />
+                        <span>
+                <strong>Platená prax – pracovná zmluva</strong><br />
+                <small>Pracovný pomer alebo zamestnanecká zmluva</small>
+            </span>
+                    </label>
+
+                    <!-- Platená – fakturácia -->
+                    <label class="new-prax-form__radio">
+                        <input
+                            type="radio"
+                            value="paid_invoices"
+                            v-model="form.practiceType"
+                        />
+                        <span>
+                <strong>Platená prax – fakturácia</strong><br />
+                <small>Minimálne 3 po sebe idúce faktúry</small>
+            </span>
+                    </label>
+                </div>
+
+                <p v-if="errors.practiceType" class="new-prax-form__error">
+                    {{ errors.practiceType }}
+                </p>
+            </div>
+
+
             <!-- Akademický rok -->
             <div class="new-prax-form__field">
                 <label class="new-prax-form__label">
@@ -239,6 +292,7 @@ const form = reactive({
     endDate: '',
     academicYearId: '',
     description: '',
+    practiceType: 'standard',
 });
 
 const errors = reactive({
@@ -247,6 +301,7 @@ const errors = reactive({
     endDate: '',
     academicYearId: '',
     description: '',
+    practiceType: '',
 });
 
 onMounted(async () => {
@@ -292,6 +347,10 @@ function validateForFinalSubmit() {
     resetErrors();
     let ok = true;
 
+    if (!form.practiceType) {
+        errors.practiceType = 'Zvoľte typ odbornej praxe.';
+        ok = false;
+    }
     if (!form.company) {
         errors.company = 'Zvoľte firmu.';
         ok = false;
@@ -338,6 +397,7 @@ async function submit(asDraft) {
         description: form.description || null,
         company_id: form.company?.['id'] || null,
         academic_year_id: form.academicYearId || null,
+        practice_type: form.practiceType || 'standard',
         // internship_id by sa tu doplnilo pri editácii draftu
     };
 

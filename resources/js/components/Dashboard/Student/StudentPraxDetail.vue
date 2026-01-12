@@ -1,12 +1,23 @@
 <template>
     <section class="student-prax-detail">
         <header class="student-prax-detail__header">
-            <h2 class="student-prax-detail__title">
-                Detail odbornej praxe
-            </h2>
+            <div class="student-prax-detail__title-row">
+                <h2 class="student-prax-detail__title">
+                    Detail odbornej praxe
+                </h2>
+
+                <span
+                    v-if="isPaidPractice"
+                    class="student-prax-detail__practice-badge student-prax-detail__practice-badge--paid"
+                >
+    Platená prax
+</span>
+
+            </div>
 
             <div class="student-prax-list__divider student-prax-detail__divider"></div>
         </header>
+
 
         <!-- LOADING -->
         <div v-if="isLoading" class="student-prax-detail__state">
@@ -45,6 +56,13 @@
                 accept="application/pdf"
                 class="student-prax-detail__upload-input"
                 @change="onReportSelected"
+            />
+            <input
+                ref="invoiceInput"
+                type="file"
+                accept="application/pdf"
+                class="student-prax-detail__upload-input"
+                @change="onInvoiceSelected"
             />
 
             <!-- Firma + kontakt -->
@@ -195,23 +213,31 @@
                 </h3>
 
                 <div class="student-prax-detail__documents">
-                    <!-- AGREEMENT -->
-                    <div class="student-prax-detail__document">
+                    <!-- AGREEMENT (only for standard practice) -->
+                    <!-- AGREEMENT (standard + paid employment contract) -->
+                    <div
+                        v-if="needsAgreementDocument"
+                        class="student-prax-detail__document"
+                    >
                         <div class="student-prax-detail__document-info">
-                <span class="student-prax-detail__document-icon">
-                    📄
-                </span>
+                            <span class="student-prax-detail__document-icon">📄</span>
 
                             <div class="student-prax-detail__document-meta">
-                                <strong>Dohoda o praxi</strong>
+                                <strong>{{ agreementTitle }}</strong>
 
-                                <span v-if="agreementDocument" class="student-prax-detail__document-name">
-                        {{ agreementDocument.file_name }}
-                    </span>
+                                <span
+                                    v-if="agreementDocument"
+                                    class="student-prax-detail__document-name"
+                                >
+                {{ agreementDocument.file_name }}
+            </span>
 
-                                <span v-else class="student-prax-detail__document-muted">
-                        Dokument zatiaľ nebol nahraný
-                    </span>
+                                <span
+                                    v-else
+                                    class="student-prax-detail__document-muted"
+                                >
+                Dokument zatiaľ nebol nahraný
+            </span>
                             </div>
                         </div>
 
@@ -237,29 +263,41 @@
                         </div>
                     </div>
 
-                    <p v-if="agreementError" class="student-prax-detail__upload-error">
+
+                    <p
+                        v-if="agreementError && needsAgreementDocument"
+                        class="student-prax-detail__upload-error"
+                    >
                         {{ agreementError }}
                     </p>
 
-                    <p v-if="agreementSuccess" class="student-prax-detail__upload-success">
+                    <p
+                        v-if="agreementSuccess && needsAgreementDocument"
+                        class="student-prax-detail__upload-success"
+                    >
                         {{ agreementSuccess }}
                     </p>
 
-                    <!-- REPORT -->
+
+                    <!-- REPORT (always required) -->
                     <div class="student-prax-detail__document">
                         <div class="student-prax-detail__document-info">
-                <span class="student-prax-detail__document-icon">
-                    🧾
-                </span>
+                            <span class="student-prax-detail__document-icon">🧾</span>
 
                             <div class="student-prax-detail__document-meta">
                                 <strong>Výkaz o praxi</strong>
 
-                                <span v-if="reportDocument" class="student-prax-detail__document-name">
+                                <span
+                                    v-if="reportDocument"
+                                    class="student-prax-detail__document-name"
+                                >
                         {{ reportDocument.file_name }}
                     </span>
 
-                                <span v-else class="student-prax-detail__document-muted">
+                                <span
+                                    v-else
+                                    class="student-prax-detail__document-muted"
+                                >
                         Dokument zatiaľ nebol nahraný
                     </span>
                             </div>
@@ -302,9 +340,99 @@
                     <p v-if="reportSuccess" class="student-prax-detail__upload-success">
                         {{ reportSuccess }}
                     </p>
+
+                    <!-- INVOICES SUMMARY (paid invoices practice) -->
+                    <div
+                        v-if="isPaidInvoicesPractice"
+                        class="student-prax-detail__document"
+                    >
+                        <div class="student-prax-detail__document-info">
+                            <span class="student-prax-detail__document-icon">🧾</span>
+
+                            <div class="student-prax-detail__document-meta">
+                                <strong>Faktúry</strong>
+
+                                <span class="student-prax-detail__document-name">
+                Nahrané faktúry: {{ invoiceCount }}
+            </span>
+
+                                <span
+                                    v-if="invoiceCount < 3"
+                                    class="student-prax-detail__document-muted"
+                                >
+                Minimálne 3 po sebe idúce faktúry sú povinné
+            </span>
+                            </div>
+                        </div>
+
+                        <div class="student-prax-detail__document-actions">
+                            <button
+                                v-if="invoiceCount < 3"
+                                type="button"
+                                class="student-prax-detail__button student-prax-detail__button--small"
+                                :disabled="isUploadingInvoice"
+                                @click="triggerInvoiceSelect()"
+                            >
+                                {{ isUploadingInvoice ? 'Nahrávam…' : 'Nahrať faktúru' }}
+                            </button>
+                        </div>
+                    </div>
+
+
+                    <!-- INVOICE LIST -->
+                    <div
+                        v-if="isPaidInvoicesPractice && invoiceDocuments.length"
+                        class="student-prax-detail__documents"
+                    >
+                        <div
+                            v-for="invoice in invoiceDocuments"
+                            :key="invoice.id"
+                            class="student-prax-detail__document"
+                        >
+                            <div class="student-prax-detail__document-info">
+                                <span class="student-prax-detail__document-icon">📄</span>
+
+                                <div class="student-prax-detail__document-meta">
+                                    <strong>
+                                        Faktúra – {{ invoice.invoice_month ?? 'bez mesiaca' }}
+                                    </strong>
+
+                                    <span class="student-prax-detail__document-name">
+                            {{ invoice.file_name }}
+                        </span>
+                                </div>
+                            </div>
+
+                            <div class="student-prax-detail__document-actions">
+                                <button
+                                    type="button"
+                                    class="student-prax-detail__link"
+                                    @click="downloadInvoice(invoice)"
+                                >
+                                    Stiahnuť
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="student-prax-detail__button student-prax-detail__button--small"
+                                    :disabled="isUploadingInvoice"
+                                    @click="triggerInvoiceSelect(invoice)"
+                                >
+                                    Nahradiť
+                                </button>
+                            </div>
+                            <p v-if="invoiceError" class="student-prax-detail__upload-error">
+                                {{ invoiceError }}
+                            </p>
+
+                            <p v-if="invoiceSuccess" class="student-prax-detail__upload-success">
+                                {{ invoiceSuccess }}
+                            </p>
+
+                        </div>
+                    </div>
                 </div>
             </section>
-
 
 
             <!-- Akcie -->
@@ -378,6 +506,100 @@ const reportError = ref('');
 const reportSuccess = ref('');
 const isDownloadingReport = ref(false);
 
+const invoiceInput = ref(null);
+const isUploadingInvoice = ref(false);
+const invoiceError = ref('');
+const invoiceSuccess = ref('');
+const replacingInvoice = ref(null); // invoice being replaced (or null)
+
+function triggerInvoiceSelect(invoice = null) {
+    invoiceError.value = '';
+    invoiceSuccess.value = '';
+    replacingInvoice.value = invoice; // null = new upload
+    invoiceInput.value?.click();
+}
+
+async function onInvoiceSelected(event) {
+    const file = event.target.files?.[0];
+    if (!file || !numericId.value) return;
+
+    invoiceError.value = '';
+    invoiceSuccess.value = '';
+
+    if (file.type !== 'application/pdf') {
+        invoiceError.value = 'Súbor musí byť vo formáte PDF.';
+        event.target.value = '';
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        invoiceError.value = 'Maximálna veľkosť súboru je 10 MB.';
+        event.target.value = '';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('internship_id', numericId.value);
+    formData.append('document', file);
+
+    // optional: backend may detect replace by ID
+    if (replacingInvoice.value?.id) {
+        formData.append('replace_document_id', replacingInvoice.value.id);
+    }
+
+    isUploadingInvoice.value = true;
+
+    try {
+        const response = await axios.post(
+            `/api/internship/document/upload-invoices/${numericId.value}`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+
+        invoiceSuccess.value =
+            response.data?.message ?? 'Faktúra bola úspešne nahraná.';
+
+        await loadDocuments();
+    } catch (e) {
+        const status = e.response?.status;
+        const data = e.response?.data;
+
+        if (status === 422 && data?.errors) {
+            invoiceError.value =
+                Object.values(data.errors).flat()[0] ?? 'Neplatný súbor.';
+        } else {
+            invoiceError.value =
+                data?.message ?? 'Nahratie faktúry zlyhalo.';
+        }
+    } finally {
+        isUploadingInvoice.value = false;
+        replacingInvoice.value = null;
+        event.target.value = '';
+    }
+}
+
+
+const practiceType = computed(() => internship.value?.practice_type ?? 'standard');
+
+const isStandardPractice = computed(
+    () => practiceType.value === 'standard'
+);
+
+const isPaidPractice = computed(() =>
+    practiceType.value === 'paid_invoices' ||
+    practiceType.value === 'paid_employment_contract'
+);
+
+
+// All invoices
+const invoiceDocuments = computed(() =>
+    Array.isArray(internship.value?.documents)
+        ? internship.value.documents.filter(d => d.type === 'invoice')
+        : []
+);
+
+const invoiceCount = computed(() => invoiceDocuments.value.length);
+
 
 const numericId = computed(() => {
     const n = Number(props.internshipId);
@@ -415,6 +637,16 @@ const agreementDocument = computed(() =>
 
 const hasAgreement = computed(() => !!agreementDocument.value);
 
+const needsAgreementDocument = computed(() =>
+    practiceType.value === 'standard' ||
+    practiceType.value === 'paid_employment_contract'
+);
+
+const agreementTitle = computed(() =>
+    practiceType.value === 'paid_employment_contract'
+        ? 'Pracovná zmluva'
+        : 'Dohoda o praxi'
+);
 
 
 const contactPerson = computed(() =>
@@ -657,6 +889,28 @@ function formatDate(value) {
     if (!year || !month || !day) return value;
     return `${day}.${month}.${year}`;
 }
+
+async function downloadInvoice(invoice) {
+    try {
+        const response = await axios.get(
+            `/api/internship/document/download/${invoice.id}`,
+            { responseType: 'blob' }
+        );
+
+        const blob = new Blob([response.data]);
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = invoice.file_name;
+        a.click();
+
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error('Failed to download invoice', e);
+    }
+}
+
 
 function mapSeasonLabel(seasonRaw) {
     if (!seasonRaw) return '';
