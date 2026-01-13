@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\InternshipResource;
+use App\Models\Address;
 use App\Models\CompanyOwnerProfile;
 use App\Models\Internship;
 use App\Models\InternshipStatusHistory;
@@ -136,10 +137,13 @@ class InternshipController extends Controller
                 ->first()
             : null;
 
-        $company_profile = null;
-        if ($companyContactPerson = $internship->company->ownerProfiles->first()) {
-            $company_profile = $companyContactPerson;
-        }
+        $company_profile = CompanyOwnerProfile::where('company_id', $internship->company_id)
+            ->with('user')
+            ->first();
+
+        $companyAddress = Address::where('id', $internship->company->address_id)
+            ->with('country')
+            ->first();
 
         $data = [
             'id' => $internship->id,
@@ -155,7 +159,7 @@ class InternshipController extends Controller
                 'name' => $internship->company->name,
                 'description' => $internship->company->description,
                 'website' => $internship->company->website,
-                'address' => $internship->company->address->with('country')->first(),
+                'address' => $companyAddress ?? null,
                 'contact_person' => [
                     'id' => $company_profile->user->id ?? null,
                     'first_name' => $company_profile->user->first_name ?? null,
@@ -608,6 +612,7 @@ class InternshipController extends Controller
                 'studentProfile.user',
                 'company.address.country',
             ])
+            ->active()
             ->orderByDesc('created_at')
             ->get();
 

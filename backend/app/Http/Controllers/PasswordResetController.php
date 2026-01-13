@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Services\PasswordResetService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -43,7 +44,6 @@ class PasswordResetController extends Controller
     {
         $user = $r->user();
 
-        // základné pravidlá – nové heslo
         $rules = [
             'new_password' => 'required|string|min:8|confirmed',
             // v requeste musí byť new_password_confirmation
@@ -52,6 +52,10 @@ class PasswordResetController extends Controller
         // ak nejde o povinnú prvú zmenu hesla, vyžadujeme current_password
         if (!$user->password_reset_needed) {
             $rules['current_password'] = 'required|string';
+        }
+
+        if ($user->role->name === Role::STUDENT && $user->active === false) {
+            $user->active = true;
         }
 
         $validator = Validator::make($r->all(), $rules);

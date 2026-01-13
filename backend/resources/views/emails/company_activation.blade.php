@@ -17,7 +17,7 @@
                 <p style="margin: 15px 0; color: #333; font-size: 16px; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
                     Dobrý deň,
                     @if(isset($user))
-                        <strong>{{ $user->first_name }} z firmy{{ $company->name }}</strong>
+                        <strong>{{ $user->first_name }} z firmy {{ $company->name }}</strong>
                     @else
                         <strong>vážený používateľ</strong>
                     @endif

@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Status;
 use App\Models\User;
 use App\Services\Cache\RoleService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
@@ -67,6 +68,7 @@ class NotificationService
             'text' => $this->rules['notification_text_key']
                 ? __($this->rules['notification_text_key'], [
                     'company'  => optional($this->internship->company)->name,
+                    'reason'   => $this->internshipNote ?? '-',
                 ])
                 : '',
             'type' => Notification::STATUS_CHANGED,
@@ -190,8 +192,13 @@ class NotificationService
                     'company_profile_name'  => $this->internship->company->ownerProfiles->user->first_name . ' ' . $this->internship->company->ownerProfiles->user->last_name,
                     'company_name'          => $this->internship->company->name ?? '',
                     'academic_year'         => $this->internship->academicYear->season ?? '',
-                    'start_date'            => optional($this->internship->start_date)->format('d.m.Y') ?: '',
-                    'end_date'              => optional($this->internship->date_to)->format('d.m.Y') ?: '',
+                    'start_date' => $this->internship->start_date
+                        ? Carbon::parse($this->internship->start_date)->format('d.m.Y')
+                        : '',
+
+                    'end_date' => $this->internship->date_to
+                        ? Carbon::parse($this->internship->date_to)->format('d.m.Y')
+                        : '',
                     'note'                  => $this->internshipNote ?? '',
                 ]
                 );
