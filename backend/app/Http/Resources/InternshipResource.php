@@ -14,10 +14,7 @@ class InternshipResource extends JsonResource
             'id' => $this->id,
 
             'student' => [
-                // IMPORTANT: this MUST be student_profiles.id
                 'id' => $this->studentProfile?->id,
-
-                // user data stays the same
                 'first_name' => $this->studentProfile?->user?->first_name,
                 'last_name' => $this->studentProfile?->user?->last_name,
                 'title_before' => $this->studentProfile?->user?->title_before,

@@ -67,23 +67,24 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/status-counts', [InternshipStatsController::class, 'statusCounts'])->middleware(['permission:practice.view_detail_other']);
         Route::get('/documents/{id}', [DocumentController::class, 'getInternshipDocuments']);
         Route::prefix('/document')->group(function () {
-           Route::post('/upload-agreement', [DocumentController::class, 'uploadAgreement'])->middleware(['permission:practice.upload_agreement']);
-           Route::post('/upload-report/{internship}', [DocumentController::class, 'uploadReport'])->name('documents.reports.upload');
+            Route::post('/upload-agreement', [DocumentController::class, 'uploadAgreement'])->middleware(['permission:practice.upload_agreement']);
+            Route::post('/upload-report/{internship}', [DocumentController::class, 'uploadReport'])->name('documents.reports.upload');
             Route::post('/upload-invoices/{internship}', [InvoiceController::class, 'upload']);
-           Route::get('/download/{document}', [DocumentController::class, 'downloadDocument']);
-           Route::patch('/review-report/{document}', [DocumentController::class, 'reviewReport'])->name('documents.reports.review');    });
+            Route::get('/download/{document}', [DocumentController::class, 'downloadDocument']);
+            Route::patch('/review-report/{document}', [DocumentController::class, 'reviewReport'])->name('documents.reports.review');
+        });
         Route::post('/export-csv', [ExportController::class, 'exportInternshipsCsv'])->middleware(['permission:practice.generate_export']);
         Route::put('/{internship}', [InternshipController::class, 'garantUpdateInternship'])->middleware(['permission:practice.update_fields_any']);
     });
 
     Route::prefix('internship/change-status')->group(function () {
         Route::post('/acceptance', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_accepted'])->defaults('to', 'acceptance'); // POTVRDENIE
-        Route::post('/approval',   [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_approved'])->defaults('to', 'approval'); // SCHVÁLENIE
-        Route::post('/defense',    [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_defended'])->defaults('to', 'defense');  // OBHÁJENIE
+        Route::post('/approval', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_approved'])->defaults('to', 'approval'); // SCHVÁLENIE
+        Route::post('/defense', [InternshipController::class, 'changeStatus'])->middleware(['permission:practice.change_status_to_defended'])->defaults('to', 'defense');  // OBHÁJENIE
     });
 });
 
 // EXTERNAL SYSTEM
 Route::prefix('external')->middleware(['auth:api', 'external.ip_allowlist'])->group(function () {
-        Route::post('/internships/{internship}/change-status', [ExternalInternshipStatusController::class, 'changeStatus']);
-    });
+    Route::post('/internships/{internship}/change-status', [ExternalInternshipStatusController::class, 'changeStatus']);
+});

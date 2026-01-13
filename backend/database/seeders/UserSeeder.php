@@ -43,7 +43,5 @@ class UserSeeder extends Seeder
         ];
 
         User::insert($users);
-
-        //TODO: next add student_profiles + company_profiles seeders
     }
 }
