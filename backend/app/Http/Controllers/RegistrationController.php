@@ -124,7 +124,7 @@ class RegistrationController extends Controller
             [
                 'user'             => $user,
                 'temporaryPassword'=> $random_password,
-                'loginURL'         => rtrim(url('/login'), '/'),
+                'loginURL' => config('frontend.url') . '/login',
             ]
         );
 

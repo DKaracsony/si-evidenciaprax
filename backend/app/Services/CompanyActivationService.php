@@ -35,7 +35,7 @@ class CompanyActivationService
 
     private function buildActivationUrl(string $token, string $email): string
     {
-        $baseUrl = rtrim(url('/'), '/');
+        $baseUrl = config('frontend.url');
 
         return $baseUrl . '/company/activate?' . http_build_query([
                 'token' => $token,

@@ -54,7 +54,7 @@ class PasswordResetService
 
     private function makeResetUrl(string $plainToken, string $email): string
     {
-        $base = rtrim(url('/'), '/');
+        $base = config('frontend.url');
         $query = http_build_query([
             'token' => $plainToken,
             'email' => $email,
