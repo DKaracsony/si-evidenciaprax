@@ -55,7 +55,11 @@ class StatusChangeService
         // ak ideme uzatvarat prax, cize menit jej status na obhajena, musime skontrolovat ci existuje zmluva (dokument)
         if($this->newStatusId == $this->finalStatusId) {
             $agreementDocumentExists = Document::where('internship_id', $this->intenshipId)
-                ->where('type', Document::TYPE_AGREEMENT)
+                ->whereIn('type', [
+                    Document::TYPE_AGREEMENT,
+                    Document::TYPE_INVOICE,
+                    Document::TYPE_SALARY,
+                ])
                 ->exists();
 
             if(!$agreementDocumentExists)
