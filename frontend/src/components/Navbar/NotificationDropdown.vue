@@ -31,8 +31,8 @@
                     {{ iconFor(n.type) }}
                 </span>
 
-                <span class="notification-item__text">
-                    {{ n.text }}
+                <span class="notification-item__text"
+                    v-html="n.text">
                 </span>
 
                 <button
