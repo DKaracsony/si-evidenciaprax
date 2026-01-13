@@ -115,7 +115,60 @@
                 </div>
             </div>
 
-            <!-- Akademický rok -->
+          <!-- Typ praxe -->
+          <div class="edit-prax-form__field">
+            <label class="edit-prax-form__label">
+              Typ odbornej praxe <span class="edit-prax-form__required">*</span>
+            </label>
+
+            <div class="edit-prax-form__radio-group edit-prax-form__radio-group--boxed">
+              <!-- Štandardná prax -->
+              <label class="edit-prax-form__radio">
+                <input
+                    type="radio"
+                    value="standard"
+                    v-model="form.practiceType"
+                />
+                <span>
+                <strong>Štandardná prax</strong><br />
+                <small>Dohoda o odbornej praxi</small>
+            </span>
+              </label>
+
+              <!-- Platená – pracovná zmluva -->
+              <label class="edit-prax-form__radio">
+                <input
+                    type="radio"
+                    value="paid_employment_contract"
+                    v-model="form.practiceType"
+                />
+                <span>
+                <strong>Platená prax – pracovná zmluva</strong><br />
+                <small>Pracovný pomer alebo zamestnanecká zmluva</small>
+            </span>
+              </label>
+
+              <!-- Platená – fakturácia -->
+              <label class="edit-prax-form__radio">
+                <input
+                    type="radio"
+                    value="paid_invoices"
+                    v-model="form.practiceType"
+                />
+                <span>
+                <strong>Platená prax – fakturácia</strong><br />
+                <small>Minimálne 3 po sebe idúce faktúry</small>
+            </span>
+              </label>
+            </div>
+
+            <p v-if="errors.practiceType" class="edit-prax-form__error">
+              {{ errors.practiceType }}
+            </p>
+          </div>
+
+
+          <!-- Akademický rok -->
             <div class="edit-prax-form__field">
                 <label class="edit-prax-form__label">
                     Akademický rok / semester <span class="edit-prax-form__required">*</span>
@@ -241,12 +294,14 @@ const contactPerson = computed(() =>
 );
 
 const form = reactive({
-    company: null, // { id, name }
-    startDate: '',
-    endDate: '',
-    academicYearId: '',
-    description: '',
+  company: null,
+  startDate: '',
+  endDate: '',
+  academicYearId: '',
+  description: '',
+  practiceType: 'standard',
 });
+
 
 /**
  * @type {{
@@ -258,27 +313,31 @@ const form = reactive({
  * }}
  */
 const errors = reactive({
-    company: '',
-    startDate: '',
-    endDate: '',
-    academicYearId: '',
-    description: '',
+  company: '',
+  startDate: '',
+  endDate: '',
+  academicYearId: '',
+  description: '',
+  practiceType: '',
 });
+
 
 const editingInternshipId = ref(props.internship?.id ?? null);
 
 function hydrateFormFromInternship(internship) {
-    if (!internship) return;
+  if (!internship) return;
 
-    form.company = internship.company
-        ? { id: internship.company.id, name: internship.company.name }
-        : null;
+  form.company = internship.company
+      ? { id: internship.company.id, name: internship.company.name }
+      : null;
 
-    form.startDate = internship.start_date ?? '';
-    form.endDate = internship.date_to ?? '';
-    form.academicYearId = internship.semester?.id ?? '';
-    form.description = internship.description ?? '';
+  form.startDate = internship.start_date ?? '';
+  form.endDate = internship.date_to ?? '';
+  form.academicYearId = internship.semester?.id ?? '';
+  form.description = internship.description ?? '';
+  form.practiceType = internship.practice_type ?? 'standard';
 }
+
 
 onMounted(async () => {
     try {
@@ -349,7 +408,12 @@ function validateForFinalSubmit() {
         errors.endDate = 'Dátum ukončenia musí byť neskôr alebo rovnaký ako začiatok.';
         ok = false;
     }
-    if (!form.academicYearId) {
+  if (!form.practiceType) {
+    errors.practiceType = 'Zvoľte typ odbornej praxe.';
+    ok = false;
+  }
+
+  if (!form.academicYearId) {
         errors.academicYearId = 'Vyberte akademický rok / semester.';
         ok = false;
     }
@@ -373,17 +437,19 @@ async function submit(asDraft) {
 
     isSubmitting.value = true;
 
-    const payload = {
-        is_draft: asDraft,
-        start_date: form.startDate || null,
-        date_to: form.endDate || null,
-        description: form.description || null,
-        company_id: form.company?.id || null,
-        academic_year_id: form.academicYearId || null,
-        internship_id: editingInternshipId.value || null,
-    };
+  const payload = {
+    is_draft: asDraft,
+    start_date: form.startDate || null,
+    date_to: form.endDate || null,
+    description: form.description || null,
+    company_id: form.company?.id || null,
+    academic_year_id: form.academicYearId || null,
+    practice_type: form.practiceType || 'standard',
+    internship_id: editingInternshipId.value || null,
+  };
 
-    try {
+
+  try {
         const data = await createOrUpdateStudentInternship(payload);
         const internship = data.internship ?? null;
 

@@ -63,7 +63,26 @@
                             {{ formatDate(internship.date_to) }}
                         </p>
 
-                        <p
+                      <div
+                          v-if="internship.student"
+                          class="student-prax-item__student"
+                      >
+    <span class="student-prax-item__student-label">
+        Študent:
+    </span>
+
+                        <p class="student-prax-item__student-name">
+                          {{ internship.student.first_name }}
+                          {{ internship.student.last_name }}
+                        </p>
+
+                        <p class="student-prax-item__student-email">
+                          {{ internship.student.email }}
+                        </p>
+                      </div>
+
+
+                      <p
                             v-if="internship.semester"
                             class="student-prax-item__semester"
                         >
@@ -219,28 +238,39 @@ async function load() {
                         new Date(a.status_changed_at)
                 )[0] ?? null;
 
-            return {
-                id: internship.id,
-                start_date: internship.start_date,
-                date_to: internship.date_to,
-                description: internship.description ?? null,
-                company: internship.company ?? null,
-                company_city: null,
-                semester: internship.academic_year
-                    ? {
-                        id: internship.academic_year.id,
-                        season: internship.academic_year.season,
-                        start_date: internship.academic_year.start_date,
-                        end_date: internship.academic_year.end_date,
-                    }
-                    : null,
-                status: latestHistory
-                    ? {
-                        name: latestHistory.status?.name ?? null,
-                        changed_at: latestHistory.status_changed_at,
-                    }
-                    : null,
-            };
+          return {
+            id: internship.id,
+            start_date: internship.start_date,
+            date_to: internship.date_to,
+            description: internship.description ?? null,
+            company: internship.company ?? null,
+            company_city: null,
+
+            student: internship.student_profile?.user
+                ? {
+                  first_name: internship.student_profile.user.first_name,
+                  last_name: internship.student_profile.user.last_name,
+                  email: internship.student_profile.user.email,
+                }
+                : null,
+
+            semester: internship.academic_year
+                ? {
+                  id: internship.academic_year.id,
+                  season: internship.academic_year.season,
+                  start_date: internship.academic_year.start_date,
+                  end_date: internship.academic_year.end_date,
+                }
+                : null,
+
+            status: latestHistory
+                ? {
+                  name: latestHistory.status?.name ?? null,
+                  changed_at: latestHistory.status_changed_at,
+                }
+                : null,
+          };
+
         });
 
         await loadCompanyCities();

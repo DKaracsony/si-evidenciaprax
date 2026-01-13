@@ -206,26 +206,39 @@ function validate() {
 }
 
 async function submitChange() {
-    if (!validate()) return;
+  if (!validate()) return;
 
-    loading.value = true;
-    success.value = false;
+  loading.value = true;
+  success.value = false;
 
-    try {
-        await changePassword({
-            currentPassword: currentPassword.value,
-            newPassword: newPassword.value,
-            newPasswordConfirmation: newPasswordConfirm.value,
-        });
+  // reset backend errors
+  errors.value.current = '';
 
-        success.value = true;
-        currentPassword.value = '';
-        newPassword.value = '';
-        newPasswordConfirm.value = '';
-    } finally {
-        loading.value = false;
+  try {
+    await changePassword({
+      currentPassword: currentPassword.value,
+      newPassword: newPassword.value,
+      newPasswordConfirmation: newPasswordConfirm.value,
+    });
+
+    success.value = true;
+    currentPassword.value = '';
+    newPassword.value = '';
+    newPasswordConfirm.value = '';
+  } catch (e) {
+    const response = e?.response;
+
+    // backend: wrong current password
+    if (response?.status === 422 && response.data?.message) {
+      errors.value.current = response.data.message;
+    } else {
+      errors.value.current = 'Nastala chyba pri zmene hesla.';
     }
+  } finally {
+    loading.value = false;
+  }
 }
+
 
 // ---------------- GARANT FACULTIES ----------------
 const faculties = ref([]);

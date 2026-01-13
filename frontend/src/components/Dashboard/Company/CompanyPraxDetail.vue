@@ -1,5 +1,15 @@
 <template>
-    <section class="company-prax-detail">
+
+  <input
+      ref="reportInput"
+      type="file"
+      accept="application/pdf"
+      class="company-prax-detail__upload-input"
+      @change="onReportSelected"
+  />
+
+
+  <section class="company-prax-detail">
         <header class="company-prax-detail__header">
             <h2 class="company-prax-detail__title">
                 Detail odbornej praxe
@@ -86,7 +96,27 @@
                 </p>
             </section>
 
-            <!-- Termín + semester -->
+          <!-- Študent -->
+          <section
+              v-if="internship.student"
+              class="company-prax-detail__section"
+          >
+            <h3 class="company-prax-detail__section-title">
+              Študent
+            </h3>
+
+            <p class="company-prax-detail__student-name">
+              {{ internship.student.first_name }}
+              {{ internship.student.last_name }}
+            </p>
+
+            <p class="company-prax-detail__student-email">
+              {{ internship.student.email }}
+            </p>
+          </section>
+
+
+          <!-- Termín + semester -->
             <section class="company-prax-detail__section">
                 <h3 class="company-prax-detail__section-title">
                     Termín a semester
@@ -140,48 +170,96 @@
                 </p>
             </section>
 
-            <!-- REPORT DOCUMENT -->
-            <section
-                v-if="reportDocument"
-                class="company-prax-detail__section"
-            >
-                <h3 class="company-prax-detail__section-title">
-                    Výkaz o praxi
-                </h3>
+          <section class="company-prax-detail__section company-prax-detail__section--documents">
+            <h3 class="company-prax-detail__section-title">
+              Dokumenty
+            </h3>
 
-                <p class="company-prax-detail__row">
-                    <strong>{{ reportDocument.file_name }}</strong>
-                </p>
+            <div class="company-prax-detail__documents">
+              <div class="company-prax-detail__document">
+                <div class="company-prax-detail__document-info">
+                  <span class="company-prax-detail__document-icon">🧾</span>
 
-                <span
-                    class="company-prax-detail__report-status"
-                    :data-status="reportDocument.status?.decision"
-                >
-        {{ reportStatusLabel }}
-    </span>
+                  <div class="company-prax-detail__document-meta">
+                    <strong>Výkaz o praxi</strong>
 
-                <div
-                    v-if="canReviewReport"
-                    class="company-prax-detail__actions"
-                >
-                    <button
-                        class="company-prax-detail__button"
-                        @click="openReview('approved')"
+                    <span
+                        v-if="reportDocument"
+                        class="company-prax-detail__document-name"
                     >
-                        Potvrdiť
-                    </button>
+            {{ reportDocument.file_name }}
+          </span>
 
-                    <button
-                        class="company-prax-detail__button company-prax-detail__button--outline"
-                        @click="openReview('rejected')"
+                    <span
+                        v-else
+                        class="company-prax-detail__document-muted"
                     >
-                        Zamietnuť
-                    </button>
+            Dokument zatiaľ nebol nahraný
+          </span>
+                  </div>
+
+                  <span
+                      v-if="reportDocument"
+                      class="company-prax-detail__report-status"
+                      :data-status="reportDocument.status?.decision"
+                  >
+          {{ reportStatusLabel }}
+        </span>
                 </div>
-            </section>
+
+                <div class="company-prax-detail__document-actions">
+                  <button
+                      v-if="reportDocument"
+                      type="button"
+                      class="company-prax-detail__link"
+                      :disabled="isDownloadingReport"
+                      @click="downloadReport"
+                  >
+                    {{ isDownloadingReport ? 'Sťahujem…' : 'Stiahnuť' }}
+                  </button>
+
+                  <button
+                      v-if="canUploadReport"
+                      type="button"
+                      class="company-prax-detail__button company-prax-detail__button--small"
+                      :disabled="isUploadingReport"
+                      @click="triggerReportSelect"
+                  >
+                    {{ reportDocument ? 'Nahradiť' : 'Nahrať' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- REVIEW ACTIONS -->
+            <div
+                v-if="canReviewReport"
+                class="company-prax-detail__actions"
+            >
+              <button
+                  class="company-prax-detail__button"
+                  @click="openReview('approved')"
+              >
+                Potvrdiť
+              </button>
+
+              <button
+                  class="company-prax-detail__button company-prax-detail__button--outline"
+                  @click="openReview('rejected')"
+              >
+                Zamietnuť
+              </button>
+            </div>
+
+            <p v-if="reportError" class="company-prax-detail__dialog-error">
+              {{ reportError }}
+            </p>
+          </section>
 
 
-            <!-- ACTIONS -->
+
+
+          <!-- ACTIONS -->
             <section class="company-prax-detail__actions">
                 <button
                     type="button"
@@ -267,6 +345,14 @@ const reviewDecision = ref(null); // 'approved' | 'rejected'
 const reviewNote = ref('');
 const reviewError = ref('');
 
+const reportInput = ref(null);
+const isUploadingReport = ref(false);
+const reportError = ref('');
+const isDownloadingReport = ref(false);
+
+const canUploadReport = computed(() => true);
+
+
 
 const numericId = computed(() => {
     const n = Number(props.internshipId);
@@ -337,29 +423,40 @@ async function loadDetail() {
             }
         }
 
-        internship.value = {
-            id: raw.id,
-            start_date: raw.start_date,
-            date_to: raw.date_to,
-            description: raw.description ?? null,
-            company,
-            semester: raw.academic_year
-                ? {
-                    id: raw.academic_year.id,
-                    season: raw.academic_year.season,
-                    start_date: raw.academic_year.start_date,
-                    end_date: raw.academic_year.end_date,
-                }
-                : null,
-            status: latestHistory
-                ? {
-                    name: latestHistory.status?.name ?? null,
-                    changed_at: latestHistory.status_changed_at,
-                }
-                : null,
-        };
+      internship.value = {
+        id: raw.id,
+        start_date: raw.start_date,
+        date_to: raw.date_to,
+        description: raw.description ?? null,
+        company,
 
-        nonBlockingError.value =
+        student: raw.student_profile?.user
+            ? {
+              first_name: raw.student_profile.user.first_name,
+              last_name: raw.student_profile.user.last_name,
+              email: raw.student_profile.user.email,
+            }
+            : null,
+
+        semester: raw.academic_year
+            ? {
+              id: raw.academic_year.id,
+              season: raw.academic_year.season,
+              start_date: raw.academic_year.start_date,
+              end_date: raw.academic_year.end_date,
+            }
+            : null,
+
+        status: latestHistory
+            ? {
+              name: latestHistory.status?.name ?? null,
+              changed_at: latestHistory.status_changed_at,
+            }
+            : null,
+      };
+
+
+      nonBlockingError.value =
             'Detail praxe sa nepodarilo načítať. Zobrazujú sa údaje zo zoznamu.';
     } catch (e) {
         console.error('[CompanyPraxDetail] Failed to load detail', e);
@@ -367,20 +464,23 @@ async function loadDetail() {
     } finally {
         isLoading.value = false;
     }
-    await loadDocuments();
-    async function loadDocuments() {
-        if (!numericId.value) return;
+  await loadDocuments();
+  showReviewDialog.value =false;
+  reviewNote.value = '';
 
-        try {
-            const res = await axios.get(
-                `/api/internship/documents/${numericId.value}`
-            );
-            documents.value = res.data?.documents ?? [];
-        } catch {
-            documents.value = [];
-        }
-    }
+}
 
+async function loadDocuments() {
+  if (!numericId.value) return;
+
+  try {
+    const res = await axios.get(
+        `/api/internship/documents/${numericId.value}`
+    );
+    documents.value = res.data?.documents ?? [];
+  } catch {
+    documents.value = [];
+  }
 }
 
 function reload() {
@@ -447,7 +547,80 @@ async function submitReview() {
     }
 }
 
+function triggerReportSelect() {
+  reportError.value = '';
+  reportInput.value?.click();
+}
+
+async function onReportSelected(event) {
+  const file = event.target.files?.[0];
+  if (!file || !numericId.value) return;
+
+  reportError.value = '';
+
+  if (file.type !== 'application/pdf') {
+    reportError.value = 'Súbor musí byť vo formáte PDF.';
+    event.target.value = '';
+    return;
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    reportError.value = 'Maximálna veľkosť súboru je 10 MB.';
+    event.target.value = '';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('document', file);
+
+  isUploadingReport.value = true;
+
+  try {
+    await axios.post(
+        `/api/internship/document/upload-report/${numericId.value}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+
+    await loadDocuments();
+  } catch (e) {
+    reportError.value =
+        e.response?.data?.message ?? 'Nahratie výkazu zlyhalo.';
+  } finally {
+    isUploadingReport.value = false;
+    event.target.value = '';
+  }
+}
+
+async function downloadReport() {
+  if (!reportDocument.value) return;
+
+  isDownloadingReport.value = true;
+
+  try {
+    const res = await axios.get(
+        `/api/internship/document/download/${reportDocument.value.id}`,
+        { responseType: 'blob' }
+    );
+
+    const blob = new Blob([res.data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = reportDocument.value.file_name;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  } catch {
+    reportError.value = 'Nepodarilo sa stiahnuť výkaz.';
+  } finally {
+    isDownloadingReport.value = false;
+  }
+}
+
 
 onMounted(loadDetail);
 watch(() => props.internshipId, loadDetail);
 </script>
+

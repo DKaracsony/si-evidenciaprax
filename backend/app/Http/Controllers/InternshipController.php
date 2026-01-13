@@ -447,7 +447,7 @@ class InternshipController extends Controller
         return response()->json($responseData, $statusCode);
     }
 
-    public function changeStatus(Request $request, $to) //bulk and single supported
+    public function changeStatus(Request $request, $to) // bulk and single supported
     {
         $rules = [
             'is_positive'   => 'required|boolean',
@@ -463,35 +463,42 @@ class InternshipController extends Controller
             $hasSingle = $request->filled('internship_id');
             $hasBulk   = is_array($request->input('internship_ids')) && count($request->input('internship_ids')) > 0;
 
-            if (!$hasSingle && !$hasBulk)
+            if (!$hasSingle && !$hasBulk) {
                 $v->errors()->add('internship_id', __('internship.INVALID_STATUS_CHANGE_DATA'));
+            }
 
-            if ($hasSingle && $hasBulk)
+            if ($hasSingle && $hasBulk) {
                 $v->errors()->add('internship_ids', __('internship.INVALID_STATUS_CHANGE_DATA'));
+            }
         });
 
-
-        if ($validator->fails())
+        if ($validator->fails()) {
             return response()->json([
                 'message' => __('internship.INVALID_STATUS_CHANGE_DATA'),
                 'errors'  => $validator->errors(),
             ], 422);
-
+        }
 
         $isPositive = $request->boolean('is_positive');
 
-        switch($to){
+        switch ($to) {
             case 'acceptance':
                 $statusChangeTo = $isPositive ? Status::ACCEPTED : Status::REJECTED;
                 break;
+
             case 'approval':
-                if(!$isPositive)
-                    return response()->json(['message' => __('internship.INVALID_STATUS_CHANGE_DATA'),], 422);
+                if (!$isPositive) {
+                    return response()->json([
+                        'message' => __('internship.INVALID_STATUS_CHANGE_DATA'),
+                    ], 422);
+                }
                 $statusChangeTo = Status::APPROVED;
                 break;
+
             case 'defense':
                 $statusChangeTo = $isPositive ? Status::DEFENDED : Status::UNDEFENDED;
                 break;
+
             default:
                 return response()->json([
                     'message' => __('global_error.SERVER_ERROR'),
@@ -504,7 +511,7 @@ class InternshipController extends Controller
             ->pluck('id')
             ->first();
 
-        if(!$statusId){
+        if (!$statusId) {
             return response()->json([
                 'message' => __('global_error.SERVER_ERROR'),
             ], 500);
@@ -528,13 +535,16 @@ class InternshipController extends Controller
             $internship = $internships->get($id);
 
             if (!$internship) {
-                $failed[] = ['internship' => $internships->get($id), 'reason' => __('internship.INTERNSHIP_NOT_FOUND'),];
+                $failed[] = [
+                    'internship' => null,
+                    'reason' => __('internship.INTERNSHIP_NOT_FOUND'),
+                ];
                 continue;
             }
 
             if (
                 $internship->practice_type === Internship::PRACTICE_TYPE_PAID_INVOICES
-                && in_array($to, ['acceptance','approval'], true)
+                && in_array($to, ['acceptance', 'approval'], true)
                 && $isPositive
             ) {
                 $invoiceMonths = $internship->documents()
@@ -552,20 +562,17 @@ class InternshipController extends Controller
                 }
             }
 
-            //TRANSITION IS ALLOWED?
             $statusChangeService->setInternshipId($id);
             $statusChangeService->setNewStatusId($statusId);
-            $transitionCheck = $statusChangeService->transitionAllowed();
 
+            $transitionCheck = $statusChangeService->transitionAllowed();
             if ($transitionCheck !== '') {
-                $failed[] = ['internship' => $internships->get($id), 'reason' => $transitionCheck];
+                $failed[] = [
+                    'internship' => $internship,
+                    'reason' => $transitionCheck,
+                ];
                 continue;
             }
-
-            $oldStatus = $internship->internshipStatusHistories
-                ->sortByDesc('status_changed_at')
-                ->first()
-                ?->status;
 
             InternshipStatusHistory::create([
                 'internship_id'      => $id,
@@ -575,21 +582,40 @@ class InternshipController extends Controller
                 'changed_by_user_id' => $request->user()->id,
             ]);
 
-            $newStatus = $statusService->all()->where('id', (int) $statusId)->first();
+            $updated[] = Internship::with([
+                'internshipStatusHistories.status',
+                'studentProfile.user',
+                'company.ownerProfiles.user'
+            ])->find($id);
+        }
 
-            $internship = Internship::with(['internshipStatusHistories.status', 'studentProfile.user', 'company.ownerProfiles.user'])
-                ->find($id);
-            $updated[] = $internship;
+        $isSingle = $request->filled('internship_id');
+
+        // ❗ SINGLE → full failure = 422
+        if ($isSingle && count($updated) === 0 && count($failed) === 1) {
+            return response()->json([
+                'message' => $failed[0]['reason'],
+                'failed'  => $failed,
+            ], 422);
+        }
+
+        // ❗ BULK → all failed = 422
+        if (!$isSingle && count($updated) === 0 && count($failed) > 0) {
+            return response()->json([
+                'message' => __('internship.STATUS_CHANGE_FAILED'),
+                'failed'  => $failed,
+            ], 422);
         }
 
         return response()->json([
-            'message' => $failed === []
+            'message' => empty($failed)
                 ? __('internship.INTERNSHIP_STATUS_UPDATED_SUCCESSFULLY')
                 : __('internship.STATUS_CHANGED_PARTIALLY_SUCCESSFULLY'),
             'updated' => $updated,
             'failed'  => $failed,
         ], empty($failed) ? 200 : 207);
     }
+
 
     public function companyCreatedInternships(Request $request)
     {

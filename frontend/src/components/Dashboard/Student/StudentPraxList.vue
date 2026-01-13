@@ -206,52 +206,35 @@
                                 </button>
                             </div>
 
-                            <!-- Schválená → 4 tlačidlá vedľa seba -->
-                            <div
-                                v-else-if="hasStatus(internship, ['APPROVED', 'SCHVALENA'])"
-                                class="student-prax-item__actions-row"
+                          <!-- Schválená → len povolené akcie pre študenta -->
+                          <div
+                              v-else-if="hasStatus(internship, ['APPROVED', 'SCHVALENA'])"
+                              class="student-prax-item__actions-row"
+                          >
+                            <!-- Vygenerovať dohodu -->
+                            <button
+                                type="button"
+                                class="student-prax-item__cta-button"
+                                :disabled="generatingId === internship.id"
+                                @click="handleGenerateAgreement(internship.id)"
                             >
-                                <!-- 1. Vygenerovať dohodu -->
-                                <button
-                                    type="button"
-                                    class="student-prax-item__cta-button"
-                                    :disabled="generatingId === internship.id"
-                                    @click="handleGenerateAgreement(internship.id)"
-                                >
-                                    <span v-if="generatingId === internship.id">Generujem dohodu...</span>
-                                    <span v-else>Vygenerovať dohodu</span>
-                                </button>
+                              <span v-if="generatingId === internship.id">Generujem dohodu...</span>
+                              <span v-else>Vygenerovať dohodu</span>
+                            </button>
 
-                                <!-- 2. Nahrať výkaz -->
-                                <button
-                                    type="button"
-                                    class="student-prax-item__cta-button"
-                                    @click="handleUploadNotImplemented(internship, 'vykaz')"
-                                >
-                                    Nahrať výkaz
-                                </button>
-
-                                <!-- 3. Nahrať dohodu -->
-                                <button
-                                    type="button"
-                                    class="student-prax-item__cta-button"
-                                    @click="handleUploadNotImplemented(internship, 'dohoda')"
-                                >
-                                    Nahrať dohodu
-                                </button>
-
-                                <!-- 4. Zobraziť detail -->
-                                <button
-                                    type="button"
-                                    class="student-prax-item__cta-button"
-                                    @click="$emit('open-detail', internship.id)"
-                                >
-                                    Zobraziť detail
-                                </button>
-                            </div>
+                            <!-- Zobraziť detail -->
+                            <button
+                                type="button"
+                                class="student-prax-item__cta-button"
+                                @click="$emit('open-detail', internship.id)"
+                            >
+                              Zobraziť detail
+                            </button>
+                          </div>
 
 
-                            <!-- fallback: len Zobraziť detail -->
+
+                          <!-- fallback: len Zobraziť detail -->
                             <button
                                 v-else
                                 type="button"

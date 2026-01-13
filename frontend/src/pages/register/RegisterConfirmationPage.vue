@@ -12,7 +12,7 @@
                 </header>
 
                 <p v-if="resolvedType === 'student'" class="sent__text">
-                    Vaše dočasné heslo sme vám poslali na váš študentský e-mail. Po prihláseni prosím používajte svoj osobný mail.
+                    Vaše dočasné heslo sme vám poslali na váš študentský e-mail. Po prihláseni prosím používajte svoj študentský mail.
                     Po prvom prihlásení budete vyzvaní na zmenu hesla!
                 </p>
 

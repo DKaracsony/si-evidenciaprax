@@ -723,52 +723,68 @@ function toggleSelectAll(e) {
 }
 
 async function changeStatus(type, isPositive) {
-    try {
-        if (hasMixedStatuses.value) {
-            showToast('error', 'Vybrané praxe majú rôzne stavy. Hromadná zmena stavu nie je možná.');
-            return;
-        }
+  try {
+    if (hasMixedStatuses.value) {
+      showToast(
+          'error',
+          'Vybrané praxe majú rôzne stavy. Hromadná zmena stavu nie je možná.'
+      );
+      return;
+    }
 
-        if (!selectedIds.value.length) {
-            showToast('error', 'Nie je vybraná žiadna prax.');
-            return;
-        }
+    if (!selectedIds.value.length) {
+      showToast('error', 'Nie je vybraná žiadna prax.');
+      return;
+    }
 
-        isStatusChanging.value = true;
+    isStatusChanging.value = true;
 
-        await axios.post(`/api/internship/change-status/${type}`, {
-            is_positive: isPositive,
-            note: statusNote.value || null,
+    const res = await axios.post(`/api/internship/change-status/${type}`, {
+      is_positive: isPositive,
+      note: statusNote.value || null,
 
-            internship_id:
-                selectedIds.value.length === 1
-                    ? selectedIds.value[0]
-                    : undefined,
+      internship_id:
+          selectedIds.value.length === 1
+              ? selectedIds.value[0]
+              : undefined,
 
-            internship_ids:
-                selectedIds.value.length > 1
-                    ? selectedIds.value
-                    : undefined,
-        });
+      internship_ids:
+          selectedIds.value.length > 1
+              ? selectedIds.value
+              : undefined,
+    });
 
-        const count = selectedIds.value.length;
+    // 🔴 IMPORTANT: backend can return 207 with failed items
+    if (res.data?.failed?.length) {
+      showToast(
+          'error',
+          res.data.failed[0]?.reason ||
+          'Zmena stavu praxe sa nepodarila.'
+      );
+      return;
+    }
 
-        statusNote.value = '';
-        selectedIds.value = [];
+    const count = selectedIds.value.length;
 
-        showToast('success', count === 1
+    statusNote.value = '';
+    selectedIds.value = [];
+
+    showToast(
+        'success',
+        count === 1
             ? 'Stav praxe bol úspešne zmenený.'
             : `Stav bol úspešne zmenený pre ${count} praxí.`
-        );
+    );
 
-        await load(); // refresh list
-    } catch (e) {
-        console.error('Status change failed', e);
-        showToast('error', extractApiErrorMessage(e));
-    } finally {
-        isStatusChanging.value = false;
-    }
+    await load(); // refresh list
+  } catch (e) {
+    console.error('Status change failed', e);
+    showToast('error', extractApiErrorMessage(e));
+  } finally {
+    isStatusChanging.value = false;
+  }
 }
+
 
 async function exportCsv() {
     if (isExporting.value) return;
@@ -849,8 +865,19 @@ const formatAcademicYear = s =>
         ? `${new Date(s.start_date).getFullYear()}/${new Date(s.end_date).getFullYear()}`
         : '—';
 
-const formatSemesterName = s =>
-    ({ winter: 'Zimný', summer: 'Letný' }[s?.season] ?? '—');
+const formatSemesterName = s => {
+  if (!s?.season) return '—';
+
+  const map = {
+    winter: 'Zimný',
+    summer: 'Letný',
+    zimný: 'Zimný',
+    letný: 'Letný',
+  };
+
+  return map[s.season.toLowerCase()] ?? '—';
+};
+
 
 const formatAcademicYearLabel = y =>
     `${new Date(y.start_date).getFullYear()}/${new Date(y.end_date).getFullYear()}`;
