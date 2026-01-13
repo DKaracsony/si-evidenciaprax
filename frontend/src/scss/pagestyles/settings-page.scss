@@ -161,3 +161,10 @@
         cursor: pointer;
     }
 }
+
+.password-form {
+  .error {
+    color: #d32f2f; /* jasná červená */
+    font-weight: 500;
+  }
+}

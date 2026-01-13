@@ -341,7 +341,23 @@
                         {{ reportSuccess }}
                     </p>
 
-                    <!-- INVOICES SUMMARY (paid invoices practice) -->
+                  <!-- INVOICE MONTH PICKER (paid invoices practice) -->
+                  <div
+                      v-if="isPaidInvoicesPractice && invoiceCount < 3"
+                      class="student-prax-detail__upload"
+                  >
+                    <label class="student-prax-detail__row-label">
+                      Mesiac faktúry:
+                    </label>
+
+                    <input
+                        type="month"
+                        v-model="selectedInvoiceMonth"
+                    />
+                  </div>
+
+
+                  <!-- INVOICES SUMMARY (paid invoices practice) -->
                     <div
                         v-if="isPaidInvoicesPractice"
                         class="student-prax-detail__document"
@@ -366,14 +382,15 @@
                         </div>
 
                         <div class="student-prax-detail__document-actions">
-                            <button
-                                v-if="invoiceCount < 3"
-                                type="button"
-                                class="student-prax-detail__button student-prax-detail__button--small"
-                                :disabled="isUploadingInvoice"
-                                @click="triggerInvoiceSelect()"
-                            >
-                                {{ isUploadingInvoice ? 'Nahrávam…' : 'Nahrať faktúru' }}
+                          <button
+                              v-if="invoiceCount < 3"
+                              type="button"
+                              class="student-prax-detail__button student-prax-detail__button--small"
+                              :disabled="isUploadingInvoice || !selectedInvoiceMonth"
+                              @click="triggerInvoiceSelect()"
+                          >
+
+                          {{ isUploadingInvoice ? 'Nahrávam…' : 'Nahrať faktúru' }}
                             </button>
                         </div>
                     </div>
@@ -393,11 +410,12 @@
                                 <span class="student-prax-detail__document-icon">📄</span>
 
                                 <div class="student-prax-detail__document-meta">
-                                    <strong>
-                                        Faktúra – {{ invoice.invoice_month ?? 'bez mesiaca' }}
-                                    </strong>
+                                  <strong>
+                                    Faktúra – {{ formatInvoiceMonth(invoice.invoice_month) }}
+                                  </strong>
 
-                                    <span class="student-prax-detail__document-name">
+
+                                  <span class="student-prax-detail__document-name">
                             {{ invoice.file_name }}
                         </span>
                                 </div>
@@ -512,6 +530,8 @@ const invoiceError = ref('');
 const invoiceSuccess = ref('');
 const replacingInvoice = ref(null); // invoice being replaced (or null)
 
+const selectedInvoiceMonth = ref(null); // YYYY-MM
+
 function triggerInvoiceSelect(invoice = null) {
     invoiceError.value = '';
     invoiceSuccess.value = '';
@@ -523,10 +543,17 @@ async function onInvoiceSelected(event) {
     const file = event.target.files?.[0];
     if (!file || !numericId.value) return;
 
+
     invoiceError.value = '';
     invoiceSuccess.value = '';
 
-    if (file.type !== 'application/pdf') {
+  if (!selectedInvoiceMonth.value) {
+    invoiceError.value = 'Vyberte mesiac faktúry.';
+    return;
+  }
+
+
+  if (file.type !== 'application/pdf') {
         invoiceError.value = 'Súbor musí byť vo formáte PDF.';
         event.target.value = '';
         return;
@@ -541,6 +568,7 @@ async function onInvoiceSelected(event) {
     const formData = new FormData();
     formData.append('internship_id', numericId.value);
     formData.append('document', file);
+  formData.append('invoice_month', selectedInvoiceMonth.value);
 
     // optional: backend may detect replace by ID
     if (replacingInvoice.value?.id) {
@@ -574,6 +602,7 @@ async function onInvoiceSelected(event) {
     } finally {
         isUploadingInvoice.value = false;
         replacingInvoice.value = null;
+      selectedInvoiceMonth.value = null;
         event.target.value = '';
     }
 }
@@ -742,6 +771,12 @@ function triggerAgreementSelect() {
     agreementError.value = '';
     agreementSuccess.value = '';
     agreementInput.value?.click();
+}
+
+function formatInvoiceMonth(value) {
+  if (!value) return 'bez mesiaca';
+  const [y, m] = String(value).split('-');
+  return `${m}.${y}`;
 }
 
 async function onAgreementSelected(event) {
@@ -1034,5 +1069,9 @@ async function downloadReport() {
     }
 }
 
+const isPaidInvoicesPractice = computed(
+    () => practiceType.value === 'paid_invoices'
+);
 
 </script>
+

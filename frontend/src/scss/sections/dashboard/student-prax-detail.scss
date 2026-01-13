@@ -208,8 +208,13 @@
 }
 
 .student-prax-detail__upload-input {
-    display: none;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
 }
+
 
 .student-prax-detail__upload-error {
     margin-top: 6px;

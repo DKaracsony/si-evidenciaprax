@@ -187,6 +187,7 @@
                     </p>
                 </section>
 
+
                 <!-- ACTIONS -->
                 <section class="garant-prax-detail-modal__actions">
                     <button

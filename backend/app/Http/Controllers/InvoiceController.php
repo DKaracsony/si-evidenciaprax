@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 
 class InvoiceController extends Controller
@@ -24,8 +25,11 @@ class InvoiceController extends Controller
 
         $validator = Validator::make($request->all(), [
             'document' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'invoice_month' => ['required', 'date_format:Y-m'],
             'replace_document_id' => ['nullable', 'integer', 'exists:documents,id'],
         ]);
+
+
 
         if ($validator->fails()) {
             return response()->json([
@@ -69,7 +73,7 @@ class InvoiceController extends Controller
                 'file_path'           => $storedPath,
                 'type'                => Document::TYPE_INVOICE,
                 // uložíme mesiac automaticky (YYYY-MM-01)
-                'invoice_month'       => now()->startOfMonth(),
+                'invoice_month' => Carbon::createFromFormat('Y-m', $request->invoice_month)->startOfMonth(),
                 'internship_id'       => $internship->id,
                 'uploaded_by_user_id' => $user->id,
                 'document_status_id'  => $status->id,
