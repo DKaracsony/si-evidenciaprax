@@ -10,14 +10,26 @@ class InternshipResource extends JsonResource
 
     public function toArray($request): array
     {
+
+        $u = $this->studentProfile?->user;
+
+        $studentFullName = trim(
+            ($u?->title_before ? $u->title_before . ' ' : '') .
+            ($u?->first_name ?? '') . ' ' .
+            ($u?->last_name ?? '') .
+            ($u?->title_after ? ', ' . $u->title_after : '')
+        );
+
         return [
             'id' => $this->id,
 
             'student' => [
                 'id' => $this->studentProfile?->id,
-                'first_name' => $this->studentProfile?->user?->first_name,
-                'last_name' => $this->studentProfile?->user?->last_name,
-                'title_before' => $this->studentProfile?->user?->title_before,
+                'first_name' => $u?->first_name,
+                'last_name' => $u?->last_name,
+                'title_before' => $u?->title_before,
+                'title_after' => $u?->title_after,
+                'full_name' => $studentFullName,
             ],
 
 

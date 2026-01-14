@@ -44,10 +44,9 @@ class InternshipQueryBuilder{
 
         // STUDENT
         if ($request->filled('student_ids')) {
-            $studentUserIds = $request->input('student_ids');
-            $query->whereHas('studentProfile', function ($q) use ($studentUserIds) {
-                $q->whereIn('student_user_id', $studentUserIds);
-            });
+            $studentProfileIds = (array) $request->input('student_ids');
+
+            $query->whereIn('student_profile_id', $studentProfileIds);
         }
 
         // ODBOR
@@ -69,9 +68,9 @@ class InternshipQueryBuilder{
                         ->whereIn('statuses.name', $statusNames);
                 })
                     ->whereRaw('internship_status_histories.status_changed_at = (
-            SELECT MAX(ish2.status_changed_at)
-            FROM internship_status_histories ish2
-            WHERE ish2.internship_id = internship_status_histories.internship_id
+             SELECT MAX(ish2.status_changed_at)
+             FROM internship_status_histories ish2
+             WHERE ish2.internship_id = internship_status_histories.internship_id
         )');
             });
         }
