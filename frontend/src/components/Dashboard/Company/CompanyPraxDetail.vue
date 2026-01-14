@@ -455,12 +455,11 @@ async function loadDetail() {
             : null,
       };
 
-
-      nonBlockingError.value =
-            'Detail praxe sa nepodarilo načítať. Zobrazujú sa údaje zo zoznamu.';
     } catch (e) {
         console.error('[CompanyPraxDetail] Failed to load detail', e);
         error.value = 'Nepodarilo sa načítať detail praxe.';
+        nonBlockingError.value =
+          'Detail praxe sa nepodarilo načítať. Zobrazujú sa údaje zo zoznamu.';
     } finally {
         isLoading.value = false;
     }

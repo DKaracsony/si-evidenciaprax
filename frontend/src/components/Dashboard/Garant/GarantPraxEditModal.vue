@@ -215,11 +215,23 @@ const form = reactive({
 const academicYears = ref([]);
 
 function formatAcademicYear(y) {
-    const s = new Date(y.start_date).getFullYear();
-    const e = new Date(y.end_date).getFullYear();
-    const season = y.season === 'winter' ? 'Zimný' : 'Letný';
-    return `${s}/${e} – ${season}`;
+  const s = new Date(y.start_date).getFullYear();
+  const e = new Date(y.end_date).getFullYear();
+
+  const seasonRaw = (y.season || '').toLowerCase().trim();
+
+  let season;
+  if (seasonRaw === 'winter' || seasonRaw === 'zimny') {
+    season = 'Zimný';
+  } else if (seasonRaw === 'summer' || seasonRaw === 'letny') {
+    season = 'Letný';
+  } else {
+    season = seasonRaw;
+  }
+
+  return `${s}/${e} – ${season}`;
 }
+
 
 /* SUBMIT */
 async function submit() {

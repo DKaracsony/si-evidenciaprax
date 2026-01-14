@@ -187,8 +187,65 @@
                     </p>
                 </section>
 
+              <!-- DOCUMENTS -->
+              <section class="garant-prax-detail-modal__section">
+                <h3 class="garant-prax-detail-modal__section-title">
+                  Dokumenty
+                </h3>
 
-                <!-- ACTIONS -->
+                <div v-if="docError" class="garant-prax-detail-modal__state garant-prax-detail-modal__state--error">
+                  {{ docError }}
+                </div>
+
+                <ul class="garant-prax-detail-modal__documents-list">
+                  <li
+                      v-for="doc in documents"
+                      :key="doc.id"
+                      class="garant-prax-detail-modal__documents-item"
+                      style="margin-bottom: 1.5em;"
+                  >
+                    <b>{{ doc.file_name }}</b>
+                    <span v-if="doc.uploaded_by_user">
+                      – nahraté používateľom {{ doc.uploaded_by_user.first_name }} {{ doc.uploaded_by_user.last_name }} ({{ doc.uploaded_by_user.email }})
+                    </span>
+                    <br>
+                    <span v-if="doc.created_at">
+                      <i>dňa {{ formatDate(doc.created_at) }}</i>
+                    </span>
+                    <span v-if="doc.status != null && doc.type != 'invoice'">
+                      <br><br>
+                      {{ translateDocumentStatus(doc.status.decision) }} <br>
+                      <i>Vyjadrenie:</i>
+                      <i v-if="doc.status.note">
+                      <br>
+                        {{ doc.status.note }}
+                      </i>
+                      <i v-else>
+                        Žiadne
+                      </i>
+                    </span>
+                    <br><br>
+                    <button
+                        type="button"
+                        class="garant-prax-detail-modal__button garant-prax-detail-modal__button--small"
+                        @click="downloadDocument(doc.id, doc.file_name)"
+                    >
+                      Stiahnuť dokument -  {{ translateDocType(doc.type) }}
+                    </button>
+                  </li>
+
+                  <li
+                      v-if="!documents || documents.length === 0"
+                      class="garant-prax-detail-modal__documents-item"
+                  >
+                    Žiadne dokumenty
+                  </li>
+                </ul>
+              </section>
+
+
+
+              <!-- ACTIONS -->
                 <section class="garant-prax-detail-modal__actions">
                     <button
                         type="button"
@@ -218,6 +275,8 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const internship = computed(() => props.internship);
+const documents = ref([]);
+const docError = ref('');
 const company = ref(null);
 const isLoading = ref(false);
 const error = ref('');
@@ -244,6 +303,17 @@ async function loadDetail() {
         company.value = props.internship.company ?? null;
     } finally {
         isLoading.value = false;
+    }
+
+    try {
+        const docsRes = await axios.get(
+            `/api/internship/documents/${props.internship.id}`
+        );
+        documents.value = docsRes.data.documents ?? [];
+
+    } catch (e) {
+        console.warn('[GarantPraxDetailModal] Documents load failed', e);
+        documents.value = [];
     }
 }
 
@@ -276,6 +346,56 @@ function formatSemester(semester) {
     return [range, mapSeasonLabel(semester.season)]
         .filter(Boolean)
         .join(' – ');
+}
+
+async function downloadDocument(docId, fileName) {
+  try {
+    const response = await axios.get(
+        `/api/internship/document/download/${docId}`,
+        { responseType: 'blob' }
+    );
+
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || `document_${docId}.pdf`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    docError.value = 'Nepodarilo sa stiahnuť nahratú dohodu.';
+    console.error('[StudentPraxDetail] Failed to download uploaded agreement', e);
+  }
+}
+
+function translateDocumentStatus(status) {
+  switch (status) {
+    case 'pending':
+      return 'Dokument je v stave čakania na schválenie.';
+    case 'approved':
+      return 'Dokument bol schválený.';
+    case 'rejected':
+      return 'Dokument bol zamietnutý.';
+    default:
+      return 'Neznámy stav dokumentu.';
+  }
+}
+
+function translateDocType(type) {
+  switch (type) {
+    case 'agreement':
+      return 'dohoda o praxi';
+    case 'statement':
+      return 'výkaz o praxi';
+    case 'salary_statement':
+      return 'potvrdenie o mzde';
+    case 'invoice':
+      return 'faktúra';
+    default:
+      return 'Neznámy typ dokumentu';
+  }
 }
 
 onMounted(loadDetail);
