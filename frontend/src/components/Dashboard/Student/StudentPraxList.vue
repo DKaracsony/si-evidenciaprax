@@ -189,13 +189,13 @@
                                 "
                                 class="student-prax-item__actions-row"
                             >
-                                <button
+                                <!--<button
                                     type="button"
                                     class="student-prax-item__cta-button"
                                     @click="handleDeleteNotImplemented(internship)"
                                 >
                                     Odstrániť prax
-                                </button>
+                                </button>-->
 
                                 <button
                                     type="button"

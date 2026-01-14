@@ -779,7 +779,7 @@ class InternshipController extends Controller
 
         if ($months->count() < 3) return false;
 
-        $run = 1;
+        /*$run = 1;
         for ($i = 1; $i < $months->count(); $i++) {
             $prev = strtotime($months[$i - 1]);
             $curr = strtotime($months[$i]);
@@ -790,8 +790,8 @@ class InternshipController extends Controller
             } else {
                 $run = 1;
             }
-        }
+        }*/
 
-        return false;
+        return true;
     }
 }

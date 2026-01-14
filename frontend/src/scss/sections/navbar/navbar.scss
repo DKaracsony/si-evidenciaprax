@@ -74,6 +74,13 @@
     }
 }
 
+
+.lp-nav__link:hover{
+    color: #cfe2ff !important;
+    transform: translateX(1.5px);
+    text-decoration: none !important;
+}
+
 /* =============================================================================
    Notifications (bell + dropdown)
    ========================================================================== */
@@ -307,7 +314,8 @@
 }
 
 .lp-nav__profile-card-link:hover {
-    color: #cfe2ff;
+    color: #cfe2ff !important;
+    text-decoration: none !important;
     transform: translateX(1px);
 }
 

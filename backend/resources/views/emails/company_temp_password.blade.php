@@ -37,7 +37,7 @@
                 </div>
 
                 <p style="margin-top: 25px;">
-                    <a href="{{ $loginUrl ?? '' }}" style="display: inline-block; padding: 12px 24px; background-color: #1868DB; border: 4px solid #a9c9ff; color: white; text-decoration: none; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30); font-weight: 700; border-radius: 12px; margin: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px;">
+                    <a href="{{ $loginURL ?? '' }}" style="display: inline-block; padding: 12px 24px; background-color: #1868DB; border: 4px solid #a9c9ff; color: white; text-decoration: none; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30); font-weight: 700; border-radius: 12px; margin: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px;">
                         Prihlásiť sa
                     </a>
                 </p>
