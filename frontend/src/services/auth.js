@@ -94,7 +94,7 @@ export async function logout() {
     }
 
     authStore.clearAuth();
-    internshipStore.reset(); // ✅ CRITICAL FIX
+    internshipStore.reset(); // CRITICAL FIX
 }
 
 /**

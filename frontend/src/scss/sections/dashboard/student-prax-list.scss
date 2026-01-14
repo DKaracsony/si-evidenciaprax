@@ -45,7 +45,7 @@
     width: 100%;
     max-width: 1120px;
     margin-inline: auto;
-    margin-top: 20px; /* ✅ pushes divider below the button */
+    margin-top: 20px; /* pushes divider below the button */
     background: var(--color-primary-700);
 }
 
@@ -90,7 +90,7 @@
     color: var(--text-secondary);
     line-height: 1.5;
 
-    /* ✅ prevent ultra-long words from breaking layout */
+    /* prevent ultra-long words from breaking layout */
     overflow-wrap: anywhere;   // modern + best behavior
     word-break: break-word;    // fallback for older engines
     hyphens: auto;             // nicer breaks for normal words
@@ -98,7 +98,7 @@
 
 
 /* PRIMARY BUTTON (Pridať prax / Skúsiť znova / header) -------------------- */
-/* ⛔️ DO NOT CHANGE – stays as-is */
+/* DO NOT CHANGE – stays as-is */
 
 .student-prax-list__primary-button {
     display: inline-flex;
@@ -238,7 +238,7 @@
     }
 }
 
-/* ✅ INTERACTION BUTTONS – UPDATED STYLE ONLY ----------------------------- */
+/* INTERACTION BUTTONS – UPDATED STYLE ONLY ----------------------------- */
 /* Same visual language as Login/Register primary button, scaled down */
 
 .student-prax-item__cta-button {

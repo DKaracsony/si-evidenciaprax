@@ -31,12 +31,12 @@ export const useGarantStatisticsStore = defineStore('garantStatistics', {
             this.error = false;
 
             try {
-                // 1️⃣ current academic year
+                // current academic year
                 const yearsRes = await axios.get('/api/academic-years');
                 const currentYear = yearsRes.data?.data?.[0];
                 this.academicYearId = currentYear?.id ?? null;
 
-                // 2️⃣ stats
+                // stats
                 const statsRes = await axios.get(
                     '/api/internship/status-counts',
                     {

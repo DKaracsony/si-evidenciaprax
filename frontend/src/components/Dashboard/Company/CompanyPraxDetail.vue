@@ -256,9 +256,6 @@
             </p>
           </section>
 
-
-
-
           <!-- ACTIONS -->
             <section class="company-prax-detail__actions">
                 <button
@@ -409,7 +406,7 @@ async function loadDetail() {
 
         let company = raw.company ?? null;
 
-        // 🔑 CONDITIONAL enrichment (fallback only)
+        // CONDITIONAL enrichment (fallback only)
         if (company?.id) {
             try {
                 const fullCompany = await fetchCompanyDetail(company.id);
