@@ -15,7 +15,7 @@
     justify-content: center;
     padding-block: 60px;
     background: var(--color-primary-200, #e5f0ff);
-    border-bottom: 4px solid #155cc4; // 🔹 separator line like login page
+    border-bottom: 4px solid #155cc4; // separator line like login page
 
     @include up($bp-md) {
         padding-block: 100px;

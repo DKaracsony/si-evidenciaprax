@@ -267,7 +267,7 @@ async function saveFaculties() {
 
     try {
         await saveMyFaculties(selectedFacultyIds.value);
-        await fetchAndStoreUser(); // 🔥 CRITICAL – keep Pinia in sync
+        await fetchAndStoreUser(); // CRITICAL – keep Pinia in sync
         facultiesSuccess.value = true;
     } catch {
         facultiesError.value = 'Nepodarilo sa uložiť odbory.';

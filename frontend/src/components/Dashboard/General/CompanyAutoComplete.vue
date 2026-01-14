@@ -144,7 +144,7 @@ const isOpen = ref(false);
 const internalError = ref('');
 let debounceTimer = null;
 
-// 🔒 request versioning to prevent race conditions
+// request versioning to prevent race conditions
 let lastRequestId = 0;
 
 const displayError = computed(() => props.error || internalError.value);
@@ -203,7 +203,7 @@ async function loadOptions(term) {
     try {
         const result = await searchCompaniesByName(term);
 
-        // ❗ ignore stale responses
+        // ignore stale responses
         if (requestId !== lastRequestId) return;
 
         if (Array.isArray(result)) {

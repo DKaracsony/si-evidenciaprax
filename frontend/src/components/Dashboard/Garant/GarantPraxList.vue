@@ -754,7 +754,7 @@ async function changeStatus(type, isPositive) {
               : undefined,
     });
 
-    // 🔴 IMPORTANT: backend can return 207 with failed items
+    // IMPORTANT: backend can return 207 with failed items
     if (res.data?.failed?.length) {
       showToast(
           'error',
@@ -932,9 +932,6 @@ function hydrateStatusesFromItems() {
         a.localeCompare(b, 'sk')
     );
 }
-
-
-
 
 async function loadAcademicYears() {
     const res = await axios.get('/api/academic-years');

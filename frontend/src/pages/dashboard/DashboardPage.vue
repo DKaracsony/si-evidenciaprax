@@ -6,7 +6,7 @@
             <div class="container">
                 <section class="dashboard-page__inner">
                     <section class="dashboard-page__content">
-                        <!-- 👨‍🎓 STUDENT DASHBOARD -->
+                        <!-- STUDENT DASHBOARD -->
                         <template v-if="role === ROLE_STUDENT">
                             <StudentPraxList
                                 v-if="view === 'list'"
@@ -40,12 +40,12 @@
                             />
                         </template>
 
-                        <!-- 🏢 COMPANY DASHBOARD -->
+                        <!-- COMPANY DASHBOARD -->
                         <template v-else-if="role === ROLE_COMPANY">
                             <CompanyPraxList />
                         </template>
 
-                        <!-- 👨‍🏫 GARANT DASHBOARD -->
+                        <!-- GARANT DASHBOARD -->
                         <template v-else-if="role === ROLE_GARANT">
                             <GarantPraxList
                                 v-if="view === 'list'"

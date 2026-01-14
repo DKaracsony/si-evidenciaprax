@@ -99,7 +99,7 @@
 .company-prax-detail__section--status {
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* ✅ prevent badge stretching */
+    align-items: flex-start; /* prevent badge stretching */
     gap: 6px;
 }
 
@@ -117,7 +117,7 @@
     margin-top: 8px;
 }
 
-/* ✅ PRIMARY BUTTON – identical to StudentPraxDetail */
+/* PRIMARY BUTTON – identical to StudentPraxDetail */
 .company-prax-detail__button {
     display: inline-flex;
     align-items: center;

@@ -272,7 +272,7 @@ onMounted(async () => {
     const res = await axios.get('/api/academic-years');
     academicYears.value = res.data.data ?? res.data ?? [];
 
-    /* ✅ PRELOAD COMPANY */
+    /* PRELOAD COMPANY */
     if (props.internship.company) {
         form.company = {
             id: props.internship.company.id,
@@ -280,7 +280,7 @@ onMounted(async () => {
         };
     }
 
-    /* ✅ PRELOAD STUDENT */
+    /* PRELOAD STUDENT */
     if (props.internship.student) {
         form.student = {
             id: props.internship.student.id,
@@ -292,7 +292,7 @@ onMounted(async () => {
         };
     }
 
-    /* ✅ FETCH FULL INTERNSHIP DETAIL (for description) */
+    /* FETCH FULL INTERNSHIP DETAIL (for description) */
     try {
         const detail = await axios.get(
             `/api/internship/${props.internship.id}`

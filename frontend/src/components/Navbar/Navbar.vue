@@ -33,7 +33,7 @@
                         Úvod
                     </RouterLink>
 
-                    <!-- 🔔 Notifications -->
+                    <!-- Notifications -->
                     <div class="lp-nav__notifications">
                         <NotificationBell @toggle="toggleNotifications" />
 

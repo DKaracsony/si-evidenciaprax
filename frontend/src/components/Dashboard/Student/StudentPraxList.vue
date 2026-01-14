@@ -389,6 +389,7 @@ async function handleGenerateAgreement(id) {
         generatingId.value = null;
     }
 }
+// I left this here to maybe correct if we have time!!
 
 // placeholdery – BE ešte nemáme
 function handleDeleteNotImplemented(internship) {
