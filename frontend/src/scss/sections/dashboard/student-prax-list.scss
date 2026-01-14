@@ -1,0 +1,344 @@
+// resources/scss/components/internships/student-prax-list.scss
+@use '../../settings/breakpoints' as *;
+@use '../../settings/colors' as *;
+
+.student-prax-list {
+    padding-block: clamp(32px, 5vw, 48px);
+
+    /* mirror register-card button height behaviour for MAIN CTA (empty state) */
+    --btn-h: 50px;
+
+    @include up($bp-md) {
+        --btn-h: 48px;
+    }
+
+    @include up($bp-xl) {
+        --btn-h: 55px;
+    }
+}
+
+/* HEADER + LINES ---------------------------------------------------------- */
+
+.student-prax-list__header {
+    position: relative; /* anchor for absolute button */
+    margin-bottom: clamp(16px, 3vw, 24px);
+}
+
+
+.student-prax-list__header-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+
+
+.student-prax-list__title {
+    font-size: clamp(24px, 3vw, 28px);
+    font-weight: 700;
+    color: var(--color-neutral-900);
+    margin: 0;
+}
+
+.student-prax-list__divider {
+    height: 2px;
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    margin-top: 20px; /* pushes divider below the button */
+    background: var(--color-primary-700);
+}
+
+
+.student-prax-list__divider--bottom {
+    display: none;
+}
+
+/* COMMON STATES ----------------------------------------------------------- */
+
+.student-prax-list__state {
+    text-align: center;
+    font-size: 15px;
+    color: var(--text-secondary);
+}
+
+.student-prax-list__state--error {
+    color: var(--color-danger-700);
+}
+
+/* EMPTY STATE ------------------------------------------------------------- */
+
+.student-prax-list__empty {
+    max-width: 720px;
+    margin-inline: auto;
+    padding-block: clamp(48px, 10vw, 80px);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.student-prax-list__empty-text {
+    font-size: clamp(16px, 2vw, 18px);
+    line-height: 1.6;
+    color: var(--color-neutral-900);
+}
+
+.student-prax-item__description-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+
+    /* prevent ultra-long words from breaking layout */
+    overflow-wrap: anywhere;   // modern + best behavior
+    word-break: break-word;    // fallback for older engines
+    hyphens: auto;             // nicer breaks for normal words
+}
+
+
+/* PRIMARY BUTTON (Pridať prax / Skúsiť znova / header) -------------------- */
+/* DO NOT CHANGE – stays as-is */
+
+.student-prax-list__primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+
+    border: 4px solid #a9c9ff;
+    background: #1868DB !important;
+    color: var(--text-inverse) !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    text-decoration: none;
+
+    min-width: 220px;
+    padding: 0 40px;
+    line-height: 1;
+    height: var(--btn-h);
+    min-height: var(--btn-h);
+    max-height: var(--btn-h);
+
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: calc(var(--radius, 16px) - 2px);
+
+    will-change: transform;
+    backface-visibility: hidden;
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms ease;
+
+    &:hover {
+        background: #155CC4 !important;
+        color: var(--text-inverse) !important;
+        border-color: var(--color-primary-700);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+    }
+
+    &:active {
+        background: #134FAA !important;
+        transform: translateY(0.5px);
+    }
+
+    &:focus-visible {
+        outline: 3px solid #a9c9ff;
+        outline-offset: 2px;
+    }
+
+    &[disabled],
+    &:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    }
+}
+
+.student-prax-list__primary-button--inline {
+    font-size: 15px;
+    min-width: 0;
+    padding: 0 28px;
+}
+
+@include up($bp-md) {
+    .student-prax-list__primary-button--inline {
+        height: 44px;
+        min-height: 44px;
+        max-height: 44px;
+        padding-inline: 32px;
+    }
+}
+
+.student-prax-list__primary-button--outline {
+    background: transparent !important;
+    color: var(--color-danger-700) !important;
+    border-color: var(--color-danger-400);
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+        background: var(--color-danger-50) !important;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .student-prax-list__primary-button:hover {
+        transform: scale(1.03);
+    }
+}
+
+/* LIST VIEW --------------------------------------------------------------- */
+
+.student-prax-list__items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-width: 1120px;
+    margin-inline: auto;
+}
+
+.student-prax-item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-block: 16px;
+    border-bottom: 1px solid var(--border-subtle, #d1d5db);
+
+    @include up($bp-md) {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+    }
+}
+
+.student-prax-item__side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    @include up($bp-md) {
+        align-items: flex-end;
+        min-width: 220px;
+        align-self: stretch;
+    }
+}
+
+.student-prax-item__status-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: left;
+
+    @include up($bp-md) {
+        text-align: right;
+    }
+}
+
+/* INTERACTION BUTTONS – UPDATED STYLE ONLY ----------------------------- */
+/* Same visual language as Login/Register primary button, scaled down */
+
+.student-prax-item__cta-button {
+    margin-top: 4px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+
+    padding: 8px 20px;
+    min-height: 40px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    border-radius: calc(var(--radius, 16px) - 6px);
+    border: 3px solid #a9c9ff;
+
+    background: #1868DB;
+    color: var(--text-inverse);
+
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+
+    cursor: pointer;
+    will-change: transform;
+    backface-visibility: hidden;
+
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms ease;
+
+    &:hover:not(:disabled) {
+        background: #155CC4;
+        border-color: var(--color-primary-700);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+        transform: scale(1.03);
+    }
+
+    &:active:not(:disabled) {
+        background: #134FAA;
+        transform: translateY(0.5px);
+    }
+
+    &:focus-visible {
+        outline: 3px solid #a9c9ff;
+        outline-offset: 2px;
+    }
+
+    &[disabled],
+    &:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    }
+
+    @include up($bp-md) {
+        margin-top: auto;
+    }
+}
+
+/* ROW FOR MULTIPLE ACTION BUTTONS ---------------------------------------- */
+
+.student-prax-item__actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+
+    @include up($bp-md) {
+        justify-content: flex-end;
+        margin-top: auto;
+    }
+
+    .student-prax-item__cta-button {
+        margin-top: 0;
+    }
+}
+
+/* ERROR STATE – retry button should look like PRIMARY (Login/Register style) */
+.student-prax-list__state--error {
+    .student-prax-list__primary-button--outline {
+        background: #1868DB !important;
+        color: var(--text-inverse) !important;
+        border-color: #a9c9ff;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+
+        &:hover:not(:disabled) {
+            background: #155CC4 !important;
+            border-color: var(--color-primary-700);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+            transform: scale(1.03);
+        }
+
+        &:active:not(:disabled) {
+            background: #134FAA !important;
+            transform: translateY(0.5px);
+        }
+    }
+}

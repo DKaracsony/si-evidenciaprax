@@ -1,0 +1,170 @@
+/* LAYOUT */
+.settings-layout {
+    display: flex;
+    min-height: calc(100vh - 160px);
+    border-bottom: 4px solid #155cc4; /* blue divider above footer */
+}
+
+/* SIDEBAR */
+.settings-sidebar {
+    width: 260px;
+    background: var(--color-primary-50);
+    border-right: 2px solid var(--color-primary-300);
+    padding: 20px;
+    position: relative;
+    transition: width 0.25s ease;
+
+    &.collapsed {
+        width: 55px;
+        padding-inline: 8px;
+    }
+}
+
+/* toggle arrow */
+.sidebar-toggle {
+    position: absolute;
+    top: 20px;
+    right: -18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-primary-400);
+    border: 3px solid var(--color-primary-700);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.25);
+}
+
+/* Sidebar menu */
+.sidebar-menu {
+    margin-top: 30px;
+}
+
+.menu-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--color-primary-900);
+}
+
+.sidebar-menu ul {
+    list-style: none;
+    padding: 0;
+
+    li {
+        padding: 10px 8px;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 4px;
+        transition: background 0.2s ease;
+
+        &:hover {
+            background: var(--color-primary-100);
+        }
+
+        &.active {
+            background: var(--color-primary-300);
+            color: var(--color-primary-900);
+            font-weight: 600;
+        }
+    }
+}
+
+/* MAIN CONTENT */
+.settings-content {
+    flex: 1;
+    padding: 40px;
+    background: var(--color-neutral-100);
+}
+
+/* TITLE + DIVIDER */
+.settings-title-wrap {
+    display: inline-block;
+    margin-bottom: 24px;
+}
+
+.settings-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-primary-900);
+}
+
+.settings-title-divider {
+    height: 2px; /* thinner */
+    width: calc(100% + 24px); /* slight overhang */
+    margin-top: 6px;
+    margin-left: -12px; /* center the overhang */
+    background: var(--color-primary-300);
+    border-radius: 9999px;
+}
+
+/* FORM */
+.password-form {
+    width: min(600px, 100%);
+    display: flex;
+    flex-direction: column;
+}
+
+.label {
+    font-weight: 600;
+    margin-top: 18px;
+}
+
+.error {
+    color: var(--danger);
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.success {
+    color: var(--success);
+    font-size: 15px;
+    margin-top: 10px;
+}
+
+/* Button sizing only – visuals come from lp-first__btn-register */
+.submit-btn {
+    margin-top: 25px;
+    min-height: 56px;
+    font-size: 18px;
+}
+
+/* ================= GARANT FACULTIES ================= */
+
+.garant-faculties-note {
+    margin-bottom: 20px;
+    max-width: 700px;
+}
+
+.garant-faculties-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.faculty-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    cursor: pointer;
+
+    input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+}
+
+.password-form {
+  .error {
+    color: #d32f2f; /* jasná červená */
+    font-weight: 500;
+  }
+}

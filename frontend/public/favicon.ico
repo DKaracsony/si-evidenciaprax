@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="297mm"
+   height="210mm"
+   viewBox="1 0 1122.5197 793.70081"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   sodipodi:docname="lp-nav-1.svg"
+   inkscape:export-filename="lp-nav-1_black.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#1868db"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.76171815"
+     inkscape:cx="576.98507"
+     inkscape:cy="374.81055"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="352"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     showguides="false"
+     inkscape:export-bgcolor="#1868db00" />
+  <defs
+     id="defs1">
+    <rect
+       x="727.30313"
+       y="305.88742"
+       width="343.95924"
+       height="202.17452"
+       id="rect4" />
+    <rect
+       x="551.41321"
+       y="319.33691"
+       width="222.38135"
+       height="126.15619"
+       id="rect3" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect2"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <rect
+       x="551.41321"
+       y="319.33691"
+       width="222.38135"
+       height="126.15619"
+       id="rect3-4" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g4"
+       transform="translate(28.777456,1.8566101)"
+       inkscape:export-filename="g4.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96">
+      <circle
+         style="fill:#7cadfa;fill-opacity:1;stroke:#0f418a;stroke-width:2.49133;stroke-dasharray:none;stroke-opacity:1"
+         id="path1"
+         cx="354.16437"
+         cy="389.16006"
+         r="92.16835" />
+      <path
+         style="fill:#f2f7ff;fill-opacity:1;stroke:#0f418a;stroke-width:3.02362;stroke-dasharray:none;stroke-opacity:1"
+         d="m 301.23498,344.16909 56.39452,-20.42271 54.30586,20.42271 c 0,0 0.33416,48.77994 0.23208,71.01534 -0.10704,23.31503 -46.87223,35.3936 -55.23324,35.0895 -8.3764,-0.30466 -56.31168,-11.47752 -56.00121,-35.1216 0.26683,-20.3206 0.30199,-70.98324 0.30199,-70.98324 z"
+         id="path2"
+         sodipodi:nodetypes="cccsssc" />
+      <path
+         style="fill:#0f418a;fill-opacity:1;stroke:#0f418a;stroke-width:4.47735;stroke-dasharray:none;stroke-opacity:1"
+         d="m 319.48264,392.98714 6.91125,-10.11346 25.15813,15.64503 37.34931,-46.2549 9.96604,5.84216 -44.84722,54.98509 z"
+         id="path3"
+         sodipodi:nodetypes="ccccccc" />
+    </g>
+    <text
+       xml:space="preserve"
+       id="text3"
+       style="font-size:96px;text-align:start;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect3);display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.02362;stroke-dasharray:none;stroke-opacity:1"
+       transform="translate(-59.411522,17.637796)"><tspan
+         x="551.41406"
+         y="406.68396"
+         id="tspan3">Prax</tspan></text>
+    <text
+       xml:space="preserve"
+       id="text3-2"
+       style="font-size:96px;text-align:start;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect3-4);display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.02362;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.2049428,0,0,1.2049428,27.941465,-64.544884)"
+       inkscape:label="text4"><tspan
+         x="551.41406"
+         y="406.68396"
+         id="tspan6"><tspan
+           style="font-weight:bold"
+           id="tspan4">SI</tspan></tspan></text>
+  </g>
+</svg>

@@ -1,0 +1,70 @@
+<template>
+    <!--
+      Section: Hero / Introduction (lp-first)
+      Purpose:
+      - Present the value prop and a quick visual of the product.
+      - Three short bullet-style points.
+      - Primary CTA to registration (only for neprihlásených používateľov).
+      Notes:
+      - The image is placed inside the left column so that on phones it naturally
+        stacks beneath the title divider (see SCSS layout grid).
+    -->
+    <section class="lp-first">
+        <div class="container">
+            <article class="lp-first__card">
+                <div class="lp-first__body">
+                    <h2 class="lp-first__title h1">
+                        PraxSI - Systém na evidenciu odbornej praxi
+                    </h2>
+
+                    <!-- Visual preview; hidden if no URL is provided -->
+                    <div class="lp-first__media" v-if="imgUrl">
+                        <img :src="imgUrl" alt="Ukážka karty / rozhrania systému PraxSI" />
+                    </div>
+
+                    <!-- Key points (icon + short sentence) -->
+                    <div class="lp-first__points">
+                        <p class="lp-first__point">
+                            <img :src="iconUrl" alt="" aria-hidden="true" class="lp-first__point-icon" />
+                            <span>Moderný portál pre <strong>študenta, firmu a garanta</strong> v jednotnom prostredí.</span>
+                        </p>
+                        <p class="lp-first__point">
+                            <img :src="iconUrl" alt="" aria-hidden="true" class="lp-first__point-icon" />
+                            <span><strong>Jasné pravidlá</strong> a <strong>jednotné podmienky</strong> pre všetky strany – žiadne nejasnosti.</span>
+                        </p>
+                        <p class="lp-first__point">
+                            <img :src="iconUrl" alt="" aria-hidden="true" class="lp-first__point-icon" />
+                            <span><strong>Profesionalita</strong> a <strong>transparentnosť</strong>, ktoré uľahčujú spoluprácu.</span>
+                        </p>
+                    </div>
+
+                    <!-- Primary CTA: only visible when NOT authenticated -->
+                    <div class="lp-first__actions">
+                        <a
+                            v-if="!isAuthenticated"
+                            href="/register"
+                            class="btn-primary lp-first__btn-register"
+                            @click.prevent="router.push('/register')"
+                        >
+                        Registrovať
+                        </a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth.js';
+
+const router = useRouter();
+
+const imgUrl  = '/storage/lp-first-1.png';
+const iconUrl = '/storage/icons/tick-box-icon.png';
+
+const authStore = useAuthStore();
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+</script>

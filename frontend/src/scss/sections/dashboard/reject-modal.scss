@@ -1,0 +1,73 @@
+/* OVERLAY */
+.reject-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px; /* safe on small screens */
+}
+
+/* CARD – LOGINFORM PROPORTIONS */
+.reject-modal {
+    width: 100%;
+    max-width: 960px; /* wider, LoginForm-like */
+    padding-top: 36px;
+    padding-bottom: 40px;
+}
+
+/* TITLE */
+.reject-modal .login-form__title {
+    margin-bottom: 12px;
+}
+
+/* DIVIDER */
+.reject-modal .login-form__divider {
+    width: 90%;
+    margin-bottom: 32px;
+}
+
+/* BODY */
+.reject-modal .login-form__body {
+    max-width: 760px; /* text stays readable */
+    margin-inline: auto;
+}
+
+/* TEXTAREA */
+.reject-modal__textarea {
+    resize: vertical;
+    min-height: 180px;
+    font-size: 17px;
+    line-height: 1.5;
+}
+
+/* ACTIONS */
+.reject-modal .login-form__actions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    flex-wrap: wrap;
+}
+
+/* BUTTON BASE */
+.reject-modal .student-prax-item__cta-button {
+    height: 56px;
+    min-width: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* ERROR */
+.reject-modal__error {
+    margin-top: 12px;
+    text-align: center;
+}

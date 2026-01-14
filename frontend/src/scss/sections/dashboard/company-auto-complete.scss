@@ -1,0 +1,120 @@
+@use '../../settings/breakpoints' as *;
+@use '../../settings/colors' as *;
+
+.company-autocomplete {
+    position: relative;
+}
+
+.company-autocomplete__label {
+    display: inline-block;
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-neutral-800);
+}
+
+.company-autocomplete__required {
+    color: var(--color-danger-600);
+}
+
+.company-autocomplete__control {
+    position: relative;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-card);
+    background: #fff;
+    display: flex;
+    align-items: center;
+}
+
+.company-autocomplete__control--error {
+    border-color: var(--color-danger-500);
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.25);
+}
+
+.company-autocomplete__control--disabled {
+    opacity: 0.6;
+}
+
+.company-autocomplete__input {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--color-neutral-900);
+    background: transparent;
+}
+
+.company-autocomplete__clear {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0 10px 0 4px;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--text-secondary);
+
+    &:hover {
+        color: var(--color-neutral-900);
+    }
+}
+
+.company-autocomplete__hint {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.company-autocomplete__error {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-danger-600);
+}
+
+/* DROPDOWN CARD -------------------------------------------------------- */
+
+.company-autocomplete__dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    list-style: none;
+    padding: 0;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-card);
+    background: var(--bg-card, var(--color-primary-50));
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 20;
+}
+
+.company-autocomplete__item {
+    padding: 12px 16px;
+    cursor: pointer;
+    background: transparent;
+
+    & + .company-autocomplete__item {
+        border-top: 1px solid var(--border-subtle, #d1d5db);
+    }
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.04);
+    }
+}
+
+.company-autocomplete__item--muted {
+    cursor: default;
+    color: var(--text-secondary);
+
+    &:hover {
+        background: transparent;
+    }
+}
+
+.company-autocomplete__item-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-neutral-900);
+}

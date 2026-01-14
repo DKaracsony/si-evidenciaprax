@@ -1,0 +1,84 @@
+@use 'settings/normalize';
+@use 'settings/colors' as *;
+@use 'settings/breakpoints' as *;
+
+@use 'sections/navbar/navbar';
+@use 'sections/landingpage/lp-first';
+@use 'sections/landingpage/lp-second';
+@use 'sections/footer/footer';
+@use 'sections/register/register-form';
+@use 'sections/login/login-form';
+@use 'sections/passwordreset/forgot-password-first';
+@use 'sections/passwordreset/forgot-password-second';
+@use 'sections/login/first-login-form';
+@use 'sections/dashboard/internship-status-badge';
+@use 'sections/dashboard/student-prax-list';
+@use 'sections/dashboard/new-prax-form';
+@use 'sections/dashboard/company-auto-complete';
+@use 'sections/dashboard/new-prax-success';
+@use 'sections/dashboard/student-prax-detail';
+@use 'sections/dashboard/edit-prax-form';
+@use 'sections/dashboard/company-prax-list';
+@use 'sections/dashboard/reject-modal';
+@use 'sections/dashboard/company-prax-detail';
+@use 'sections/dashboard/garant-prax-list';
+@use 'sections/dashboard/garant-prax-statistics';
+@use 'sections/dashboard/garant-prax-detail-modal';
+@use 'sections/dashboard/garant-prax-edit-modal';
+@use 'sections/dashboard/student-auto-complete';
+
+@use 'pagestyles/first-login-page';
+@use 'pagestyles/register-page';
+@use 'pagestyles/login-page';
+@use 'pagestyles/dashboard-page';
+@use 'pagestyles/settings-page';
+@use 'pagestyles/forgot-password-page-first';
+@use 'pagestyles/forgot-password-page-second';
+@use 'pagestyles/register-confirmation-page';
+@use 'pagestyles/company-activation-page';
+
+
+//SECTIONS
+
+:root {
+    --container: 1200px;
+    --gutter: 16px;
+}
+
+@include up($bp-md) {
+    :root {
+        --gutter: 24px;
+    }
+}
+
+.container {
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: 16px;
+}
+
+@include up($bp-md) {
+    .container {
+        padding-inline: 24px;
+    }
+}
+
+:root {
+    --h1: 40px;
+    --h1-md: 56px;
+    --lead: 18px;
+}
+
+.h1 {
+    font-size: var(--h1);
+    line-height: 1.1;
+
+    @include up($bp-md) {
+        font-size: var(--h1-md);
+    }
+}
+
+.lead {
+    font-size: var(--lead);
+    color: #555;
+}

@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Faculty extends Model
+{
+    protected $table = 'faculties';
+
+    protected $fillable = [
+        'name',
+        'active',
+    ];
+
+    public function studentProfile()
+    {
+        return $this->hasMany(StudentProfile::class, 'faculty_id');
+    }
+
+    public function garantProfiles()
+    {
+        return $this->belongsToMany(
+            GarantProfile::class,
+            'garant_faculties',
+            'faculty_id',
+            'garant_profile_id'
+        );
+    }
+}

@@ -1,0 +1,107 @@
+// resources/scss/components/internships/new-prax-success.scss
+@use '../../settings/breakpoints' as *;
+@use '../../settings/colors' as *;
+
+.new-prax-success {
+    max-width: 720px;
+    margin-inline: auto;
+    padding-block: clamp(32px, 5vw, 48px);
+}
+
+.new-prax-success__header {
+    margin-bottom: clamp(40px, 6vw, 56px);
+}
+
+.new-prax-success__title {
+    font-size: clamp(24px, 3vw, 28px);
+    font-weight: 700;
+    color: var(--color-neutral-900);
+    text-align: left;
+    margin: 0 0 16px 0;
+}
+
+/* local divider (avoid coupling to StudentPraxList styles) */
+.new-prax-success__divider {
+    height: 2px;
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    background: var(--color-primary-700);
+}
+
+.new-prax-success__content {
+    text-align: center;
+    padding-inline: clamp(16px, 6vw, 80px);
+}
+
+.new-prax-success__text {
+    font-size: clamp(16px, 2vw, 18px);
+    line-height: 1.6;
+    color: var(--color-neutral-900);
+    margin-bottom: clamp(32px, 5vw, 40px);
+}
+
+/* Match the app primary button standard (same look/hover/active/shadow),
+   but slightly smaller for a success screen CTA */
+.new-prax-success__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    text-decoration: none;
+
+    border: 4px solid #a9c9ff;
+    background: #1868DB !important;
+    color: var(--text-inverse) !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+
+    font-size: 15px;
+    font-weight: 700;
+
+    height: 46px;
+    min-height: 46px;
+    max-height: 46px;
+    padding-inline: 44px;
+
+    border-radius: calc(var(--radius, 16px) - 2px);
+
+    will-change: transform;
+    backface-visibility: hidden;
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms ease;
+
+    &:hover {
+        background: #155CC4 !important;
+        color: var(--text-inverse) !important;
+        border-color: var(--color-primary-700);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+    }
+
+    &:active {
+        background: #134FAA !important;
+        transform: translateY(0.5px);
+    }
+
+    &:focus-visible {
+        outline: 3px solid #a9c9ff;
+        outline-offset: 2px;
+    }
+
+    &[disabled],
+    &:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.30);
+    }
+}
+
+/* Hover polish only on hover-capable devices (same behavior as other CTAs) */
+@media (hover: hover) and (pointer: fine) {
+    .new-prax-success__button:hover {
+        transform: scale(1.03);
+    }
+}
